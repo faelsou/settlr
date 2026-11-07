@@ -1,7 +1,7 @@
 [project]
 name = "cobranca-api"
 version = "0.1.0"
-description = "Agente de Cobrança + Conciliação — API, workers e agendador"
+description = "Settlr — API, workers e agendador"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115",

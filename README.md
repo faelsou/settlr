@@ -1,4 +1,4 @@
-# Agente de Cobrança + Conciliação
+# Settlr
 
 Agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que confere cada entrada contra o que foi vendido.
 
@@ -6,12 +6,13 @@ Documentação do que foi implementado:
 
 - Produto e regras de negócio: [`docs/PRODUTO.md`](./docs/PRODUTO.md)
 - Técnica (módulos, API, painel): [`docs/TECNICA.md`](./docs/TECNICA.md)
+- Banco Postgres (criação, roles, RLS): [`docs/BANCO.md`](./docs/BANCO.md)
 - Observabilidade (OTLP, Grafana, três ambientes): [`docs/OBSERVABILIDADE.md`](./docs/OBSERVABILIDADE.md)
 - Troubleshooting: [`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md)
 - AIOps no Slack (alerta → diagnóstico → remediação aprovada): [`docs/AIOPS.md`](./docs/AIOPS.md)
 - Índice: [`docs/README.md`](./docs/README.md)
 
-A fonte de verdade dos fluxos está em [`FLUXOS.md`](./FLUXOS.md). O desenho original está em [`Agente de Cobrança + Conciliação — Arquitetura.md`](./Agente%20de%20Cobran%C3%A7a%20+%20Concilia%C3%A7%C3%A3o%20%E2%80%94%20Arquitetura.md). O runtime (Swarm, redes, secrets) está em [`ARQUITETURA-DEPLOY.md`](./ARQUITETURA-DEPLOY.md).
+A fonte de verdade dos fluxos está em [`FLUXOS.md`](./FLUXOS.md). O desenho original está em [`Settlr — Arquitetura.md`](./Settlr%20%E2%80%94%20Arquitetura.md). O runtime (Swarm, redes, secrets) está em [`ARQUITETURA-DEPLOY.md`](./ARQUITETURA-DEPLOY.md).
 
 **Regra de ouro:** o LLM só lê comprovante, classifica intenção e conversa na negociação. Régua, matching e baixa são código determinístico.
 

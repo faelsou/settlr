@@ -40,6 +40,8 @@ configs:
     file: ./grafana/provisioning/dashboards/dashboards.yml
   grafana_dashboard_cobranca:
     file: ./grafana/dashboards/cobranca.json
+  grafana_dashboard_whatsapp:
+    file: ./grafana/dashboards/whatsapp.json
   otel_collector:
     file: ./otel/collector.yml
   tempo_config:
@@ -235,6 +237,8 @@ services:
         target: /etc/grafana/provisioning/dashboards/dashboards.yml
       - source: grafana_dashboard_cobranca
         target: /etc/grafana/dashboards/cobranca.json
+      - source: grafana_dashboard_whatsapp
+        target: /etc/grafana/dashboards/whatsapp.json
     volumes:
       - grafana_data:/var/lib/grafana
     ports:

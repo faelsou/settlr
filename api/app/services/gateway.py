@@ -57,7 +57,7 @@ async def _lifespan(app: FastAPI):
 app = create_service(
     "gateway",
     [auth.router],
-    title="Agente de Cobrança + Conciliação",
+    title="Settlr",
     lifespan=_lifespan,
     cors=True,
 )

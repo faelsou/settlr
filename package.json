@@ -1,5 +1,5 @@
 {
-  "name": "agente-conciliacao",
+  "name": "settlr",
   "private": true,
   "scripts": {
     "dev": "npm run dev --prefix web",

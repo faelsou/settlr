@@ -10,7 +10,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.agent.policy import brl
+from app.channels.delivery import ACEITO, ENVIADO, counts_as_dispatched
 from app.channels.email import send_email
+from app.channels.metrics import record_message
 from app.channels.outbound import get_or_create_conversation, log_message
 from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
@@ -78,11 +80,12 @@ def process_invoice(
     invoice = session.scalars(select(Invoice).where(Invoice.id == invoice_id).with_for_update()).one()
     debtor = session.get(Debtor, invoice.debtor_id)
 
-    sent = set(
-        session.execute(
-            select(DunningEvent.step, DunningEvent.channel).where(DunningEvent.invoice_id == invoice.id)
-        ).tuples()
-    )
+    recorded = session.execute(
+        select(DunningEvent.step, DunningEvent.channel, DunningEvent.delivery_status).where(
+            DunningEvent.invoice_id == invoice.id
+        )
+    ).tuples()
+    sent = {(step, channel) for step, channel, status in recorded if counts_as_dispatched(status)}
     active_promise = session.scalar(
         select(func.max(Promise.promised_date)).where(
             Promise.invoice_id == invoice.id, Promise.fulfilled.is_(None)
@@ -128,9 +131,11 @@ def _send_step(
 
     for channel in channels:
         message_id = None
+        delivery_status = ENVIADO
         if channel == "whatsapp":
             numbers = contact_phones(debtor.phone, debtor.phones)
             if not numbers or not tenant.whatsapp_instance:
+                record_message("saida", "enviada", "regua", "texto", "falha")
                 continue
             per_minute = int(rules.get("rate_per_minute", DEFAULT_RATE_PER_MINUTE))
             client = client or EvolutionClient()
@@ -138,29 +143,39 @@ def _send_step(
             message_ids: list[str | None] = []
             for number in numbers:
                 if not take_rate_slot(tenant.whatsapp_instance, per_minute):
+                    record_message("saida", "enviada", "regua", "texto", "falha")
                     raise RateLimited(tenant.whatsapp_instance)
-                if official:
-                    message_ids.append(client.send_template(
-                        tenant.whatsapp_instance, number, official["name"],
-                        official.get("language", "pt_BR"),
-                        [render(p, invoice, debtor) for p in official.get("params", [])],
-                    ))
-                else:
-                    message_ids.append(client.send_text(tenant.whatsapp_instance, number, text))
+                try:
+                    if official:
+                        message_ids.append(client.send_template(
+                            tenant.whatsapp_instance, number, official["name"],
+                            official.get("language", "pt_BR"),
+                            [render(p, invoice, debtor) for p in official.get("params", [])],
+                        ))
+                    else:
+                        message_ids.append(client.send_text(tenant.whatsapp_instance, number, text))
+                except Exception:
+                    record_message("saida", "enviada", "regua", "texto", "falha")
+                    raise
+                record_message("saida", "enviada", "regua", "texto", "ok")
             message_id = next((item for item in message_ids if item), None)
             conv = get_or_create_conversation(session, tenant.id, debtor)
-            log_message(session, conv, MessageDirection.OUT, f"regua:{step.key}", text,
-                        invoice_id=invoice.id, wa_message_id=message_id)
+            log_message(
+                session, conv, MessageDirection.OUT, f"regua:{step.key}", text,
+                invoice_id=invoice.id, wa_message_id=message_id, delivery_status=ACEITO,
+            )
+            delivery_status = ACEITO
         elif channel == "email":
             if not debtor.email:
                 continue
             send_email(debtor.email, f"Aviso sobre {invoice.description or 'seu pagamento'}", text)
+            delivery_status = ENVIADO
         else:
             continue
 
         session.add(DunningEvent(
             tenant_id=tenant.id, invoice_id=invoice.id, step=step.key,
-            channel=channel, message_id=message_id,
+            channel=channel, message_id=message_id, delivery_status=delivery_status,
         ))
         sent_to = contact_phones(debtor.phone, debtor.phones) if channel == "whatsapp" else []
         audit(
@@ -170,6 +185,7 @@ def _send_step(
                 "step": step.key,
                 "channel": channel,
                 "message_id": message_id,
+                "delivery_status": delivery_status,
                 "phones": sent_to,
             },
         )

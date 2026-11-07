@@ -55,6 +55,7 @@ configMapGenerator:
   - name: grafana-dashboard-cobranca
     files:
       - cobranca.json=files/cobranca.json
+      - whatsapp.json=files/whatsapp.json
   - name: grafana-dashboard-kubernetes
     files:
       - k8s-metrics.json=files/k8s-metrics.json

@@ -53,7 +53,7 @@ async def _lifespan(app: FastAPI):
 
 configure_logging()
 app = FastAPI(
-    title="Agente de Cobrança — aiops",
+    title="Settlr — aiops",
     version="0.1.0",
     docs_url="/docs" if get_settings().env != "prod" else None,
     lifespan=_lifespan,

@@ -1,4 +1,4 @@
-# Agente de Cobrança + Conciliação — Arquitetura
+# Settlr — Arquitetura
 
 Oct 16, 2026 · @Rafael de Souza
 

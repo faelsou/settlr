@@ -19,7 +19,7 @@ MEDIA_TYPES = {"imageMessage", "documentMessage", "documentWithCaptionMessage"}
 class EvolutionWebhook(BaseModel):
     event: str
     instance: str
-    data: dict[str, Any]
+    data: dict[str, Any] | list[Any]
 
 
 @dataclass(frozen=True)
@@ -93,6 +93,8 @@ def inbound_from_record(instance: str, raw: dict[str, Any]) -> InboundMessage | 
 
 def parse_inbound(payload: EvolutionWebhook) -> InboundMessage | None:
     if payload.event.lower().replace("_", ".") != "messages.upsert":
+        return None
+    if not isinstance(payload.data, dict):
         return None
     data = payload.data
     key = data.get("key") or {}

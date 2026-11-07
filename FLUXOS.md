@@ -1,7 +1,7 @@
-# Fluxos do Agente de Cobrança + Conciliação
+# Fluxos do Settlr
 
 > Documento de detalhamento operacional dos fluxos descritos em
-> [`Agente de Cobrança + Conciliação — Arquitetura.md`](./Agente%20de%20Cobran%C3%A7a%20+%20Concilia%C3%A7%C3%A3o%20%E2%80%94%20Arquitetura.md).
+> [`Settlr — Arquitetura.md`](./Settlr%20%E2%80%94%20Arquitetura.md).
 >
 > Objetivo: descrever **passo a passo** cada fluxo do produto — gatilhos, decisões,
 > estados, regras duras e pontos de escalonamento humano — para servir de base de
@@ -172,7 +172,7 @@ flowchart TD
     E -->|sim| F{Há promessa ativa não vencida?}
     F -->|sim| PAUSE[Régua pausada até data+1]
     F -->|não| G[Calcula etapa pela diferença de dias]
-    G --> H{Etapa já enviada?}
+    G --> H{Etapa aceita, entregue ou lida?}
     H -->|sim| SKIP2[Não reenvia a mesma etapa]
     H -->|não| I{Rate limit do número ok?}
     I -->|não| RL[Reenfileira com backoff]
@@ -197,7 +197,7 @@ flowchart TD
 **Regras duras:**
 
 - Nunca envia fora do horário permitido do tenant.
-- Nunca reenvia uma etapa já registrada em `dunning_events`.
+- Não reenvia etapa aceita, entregue ou lida. Falha de entrega libera a mesma etapa no mesmo canal, ainda dentro do horário e do opt-out.
 - Respeita `opt_out` imediatamente.
 - Usa **templates oficiais** para disparo proativo (evita banimento do número).
 - Promessa ativa **pausa** a régua até `data_prometida + 1`.

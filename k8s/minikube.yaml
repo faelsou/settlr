@@ -69,6 +69,8 @@ data:
   JWT_SECRET: dev-secret-change-me
   WEBHOOK_HMAC: dev-webhook-secret
   EVOLUTION_BASE_URL: https://apiwp.aiagentautomate.com.br
+  # Vazio de propósito. A chave real fica no Secret evolution-api (não versionado)
+  # e os processos que falam com a Evolution leem esse Secret por cima deste valor.
   EVOLUTION_API_KEY: ""
   LLM_API_KEY: ""
   COBRANCA_URL: http://cobranca:8000
@@ -287,6 +289,12 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - { name: SERVICE_NAME, value: cobranca }
+            - name: EVOLUTION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-api
+                  key: EVOLUTION_API_KEY
+                  optional: true
           envFrom:
             - configMapRef:
                 name: cobranca-env
@@ -410,6 +418,12 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - { name: SERVICE_NAME, value: worker-cobranca }
+            - name: EVOLUTION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-api
+                  key: EVOLUTION_API_KEY
+                  optional: true
           envFrom:
             - configMapRef:
                 name: cobranca-env
@@ -443,6 +457,12 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - { name: SERVICE_NAME, value: worker-conciliacao }
+            - name: EVOLUTION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-api
+                  key: EVOLUTION_API_KEY
+                  optional: true
           envFrom:
             - configMapRef:
                 name: cobranca-env
@@ -536,7 +556,7 @@ spec:
     spec:
       containers:
         - name: frontend-web
-          image: faelsouz/cobranca-web:20261104-1457
+          image: faelsouz/cobranca-web:20261106-1750
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

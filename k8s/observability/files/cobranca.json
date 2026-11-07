@@ -1,6 +1,6 @@
 {
   "uid": "cobranca-app",
-  "title": "Cobrança — aplicação",
+  "title": "Settlr — aplicação",
   "description": "Métricas, logs e traces do gateway, cobrança, conciliação, cadastro e workers. O filtro Serviço vale para os três.",
   "tags": ["cobranca"],
   "links": [

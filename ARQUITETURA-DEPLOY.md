@@ -1,7 +1,7 @@
 # Arquitetura e deploy — Docker Swarm
 
-> Desenho de runtime do Agente de Cobrança + Conciliação.
-> Complementa [`Agente de Cobrança + Conciliação — Arquitetura.md`](./Agente%20de%20Cobran%C3%A7a%20+%20Concilia%C3%A7%C3%A3o%20%E2%80%94%20Arquitetura.md)
+> Desenho de runtime do Settlr.
+> Complementa [`Settlr — Arquitetura.md`](./Settlr%20%E2%80%94%20Arquitetura.md)
 > e [`FLUXOS.md`](./FLUXOS.md).
 >
 > A stack sobe no Docker Swarm e é operada pelo Portainer. O arquivo que o deploy
@@ -392,17 +392,16 @@ serviço, para o Swarm redistribuir entre nós `app`.
 | `evolution_instances` | evolution | sessão do WhatsApp | copiar com o nó; perda pede novo QR |
 | `traefik_letsencrypt` | traefik | `acme.json` | copiar; permissão `600` |
 
-Init do Postgres (roda só com o volume vazio) cria o segundo database:
+Init do Postgres (roda só com o volume vazio) cria a role `cobranca_app`, a role
+`evolution` e o database `evolution`. O roteiro completo, com Alembic, RLS e a
+conferência, está em [`docs/BANCO.md`](./docs/BANCO.md).
 
-```sql
-CREATE DATABASE evolution;
-```
-
-A aplicação usa `cobranca`. A Evolution usa `evolution`. Schemas separados
+A aplicação usa `cobranca`. A Evolution usa `evolution`. Databases separados
 evitam a migration da Evolution misturar com o Alembic.
 
 RLS por `tenant_id` fica nas migrations Alembic do database `cobranca`. A role
-da API não é superuser.
+da API (`cobranca_app`) não é superuser nem dona das tabelas. A role `cobranca`
+só entra no job de migração.
 
 ### Secrets
 

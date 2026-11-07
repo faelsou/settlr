@@ -1,4 +1,4 @@
-# Stack do Agente de Cobrança + Conciliação para Docker Swarm (via Portainer).
+# Stack do Settlr para Docker Swarm (via Portainer).
 # Referência: ARQUITETURA-DEPLOY.md §9.
 #
 # Piloto em um nó: remova os blocos `placement`.

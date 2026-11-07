@@ -1,0 +1,1065 @@
+{
+  "uid": "whatsapp-e2e",
+  "title": "WhatsApp — ponta a ponta",
+  "description": "Mensagens de WhatsApp: aceita, roteada, enviada (Evolution aceitou o HTTP) e recibo no aparelho (entregue, lido ou falhou). Arquivo recebido é o comprovante gravado. Arquivo entregue é anexo de saída.",
+  "tags": [
+    "cobranca",
+    "whatsapp"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "context",
+        "label": "Contexto",
+        "type": "custom",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "query": "webhook,sync,ignorado,instancia_desconhecida,grupo,contato_desconhecido,comprovante,promessa,opt_out,escalonado,contestacao,aprovacao,humano,agente,regua,operador,roteamento,ja_paguei,vou_pagar,parcelar_desconto,parar,hostil_sensivel,duvida,outro",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": []
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Mensagens",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Aceitas",
+      "description": "Webhook enfileirou ou a sincronização gravou a mensagem.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"entrada\",stage=\"aceita\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"entrada\",stage=\"aceita\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "aceitas"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Roteadas",
+      "description": "Mensagem classificada num contexto: intenção, grupo, comprovante, régua.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"entrada\",stage=\"roteada\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"entrada\",stage=\"roteada\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "roteadas"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Entrada com falha",
+      "description": "Instância desconhecida, contato fora da base ou erro no roteamento.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"entrada\",result=\"falha\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"entrada\",result=\"falha\"}[$__range])) or vector(0)",
+          "legendFormat": "falha"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Enviadas ok",
+      "description": "A Evolution aceitou o envio. Isso ainda não é o recibo de entrega no aparelho.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "ok"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Enviadas com falha",
+      "description": "Sessão ausente, rate limit, número sem destino ou erro da Evolution.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",result=\"falha\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",result=\"falha\"}[$__range])) or vector(0)",
+          "legendFormat": "falha"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Contextos no período",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "count(sum by (context) (increase(whatsapp_messages_total{stage=\"roteada\",context=~\"$context\"}[$__range])) > 0) or count(sum by (context) (increase(cobranca_whatsapp_messages_total{stage=\"roteada\",context=~\"$context\"}[$__range])) > 0) or vector(0)",
+          "legendFormat": "contextos"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Recibo no aparelho",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Entregues",
+      "description": "O aparelho confirmou que a mensagem chegou. Não é o HTTP 200 da Evolution.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"entregue\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"entregue\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "Entregues"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Lidas",
+      "description": "A pessoa abriu a mensagem. Muita gente desliga a confirmação de leitura.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"lido\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"lido\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "Lidas"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Recibo com falha",
+      "description": "O recibo marcou falha. A mesma etapa da régua pode sair de novo.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"falhou\",result=\"falha\"}[$__range])) or sum(increase(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"recibo\",context=\"falhou\",result=\"falha\"}[$__range])) or vector(0)",
+          "legendFormat": "Recibo com falha"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Entrada por contexto",
+      "description": "Uma mensagem roteada por contexto. O filtro Contexto vale aqui.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "custom": {
+            "spanNulls": false
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (context) (rate(whatsapp_messages_total{stage=\"roteada\",context=~\"$context\"}[5m])) * 60 or sum by (context) (rate(cobranca_whatsapp_messages_total{stage=\"roteada\",context=~\"$context\"}[5m])) * 60",
+          "legendFormat": "{{context}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Entrada ok e falha",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*falha.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ok.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (stage, result) (rate(whatsapp_messages_total{direction=\"entrada\",context=~\"$context\"}[5m])) * 60 or sum by (stage, result) (rate(cobranca_whatsapp_messages_total{direction=\"entrada\",context=~\"$context\"}[5m])) * 60",
+          "legendFormat": "{{stage}} {{result}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Saída por contexto",
+      "description": "Régua, agente, operador e a intenção da conversa. Ok é aceite da Evolution; falha é erro de envio.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (context, result) (rate(whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",context=~\"$context\"}[5m])) * 60 or sum by (context, result) (rate(cobranca_whatsapp_messages_total{direction=\"saida\",stage=\"enviada\",context=~\"$context\"}[5m])) * 60",
+          "legendFormat": "{{context}} {{result}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Texto e arquivo",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (direction, kind, result) (rate(whatsapp_messages_total{context=~\"$context\"}[5m])) * 60 or sum by (direction, kind, result) (rate(cobranca_whatsapp_messages_total{context=~\"$context\"}[5m])) * 60",
+          "legendFormat": "{{direction}} {{kind}} {{result}}"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Arquivos",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Recebidos ok",
+      "description": "Comprovante já conhecido, já conciliado com o banco, ou aguardando o banco.",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_files_total{direction=\"recebido\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_files_total{direction=\"recebido\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "ok"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Recebidos com falha",
+      "description": "Download, leitura de baixa confiança ou erro ao processar o arquivo.",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_files_total{direction=\"recebido\",result=\"falha\"}[$__range])) or sum(increase(cobranca_whatsapp_files_total{direction=\"recebido\",result=\"falha\"}[$__range])) or vector(0)",
+          "legendFormat": "falha"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Entregues ok",
+      "description": "Anexo de saída aceito. A saída atual é texto; este número fica em zero até existir envio de arquivo.",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_files_total{direction=\"entregue\",result=\"ok\"}[$__range])) or sum(increase(cobranca_whatsapp_files_total{direction=\"entregue\",result=\"ok\"}[$__range])) or vector(0)",
+          "legendFormat": "ok"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Entregues com falha",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(increase(whatsapp_files_total{direction=\"entregue\",result=\"falha\"}[$__range])) or sum(increase(cobranca_whatsapp_files_total{direction=\"entregue\",result=\"falha\"}[$__range])) or vector(0)",
+          "legendFormat": "falha"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Arquivos recebidos",
+      "description": "ok: duplicado, ja_recebido, aguardando_banco. falha: baixa_confianca, download, processamento.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result, reason) (rate(whatsapp_files_total{direction=\"recebido\"}[5m])) * 60 or sum by (result, reason) (rate(cobranca_whatsapp_files_total{direction=\"recebido\"}[5m])) * 60",
+          "legendFormat": "{{result}} {{reason}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Arquivos entregues",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result, reason) (rate(whatsapp_files_total{direction=\"entregue\"}[5m])) * 60 or sum by (result, reason) (rate(cobranca_whatsapp_files_total{direction=\"entregue\"}[5m])) * 60",
+          "legendFormat": "{{result}} {{reason}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "table",
+      "title": "Totais do período",
+      "description": "Mensagem por direção, etapa, contexto, tipo e resultado. O filtro Contexto vale aqui.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        }
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "format": "table",
+          "expr": "sum by (direction, stage, context, kind, result) (increase(whatsapp_messages_total{context=~\"$context\"}[$__range])) or sum by (direction, stage, context, kind, result) (increase(cobranca_whatsapp_messages_total{context=~\"$context\"}[$__range]))",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Logs",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 18,
+      "type": "logs",
+      "title": "Mensagens e arquivos",
+      "gridPos": {
+        "h": 10,
+        "w": 14,
+        "x": 0,
+        "y": 48
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service=~\"webhook-api|cobranca|worker-cobranca|worker-conciliacao\"} |~ \"whatsapp\\.(message|file)|receipt\\.processed|inbound\\.(receipt_failed|unknown_contact)\""
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "logs",
+      "title": "Falhas",
+      "gridPos": {
+        "h": 10,
+        "w": 10,
+        "x": 14,
+        "y": 48
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service=~\"webhook-api|cobranca|worker-cobranca|worker-conciliacao\"} |~ \"whatsapp\\.(message|file)|receipt\\.processed|inbound\\.(receipt_failed|unknown_contact)\" |~ \"falha|exception|error|baixa_confianca|download\""
+        }
+      ]
+    }
+  ]
+}
