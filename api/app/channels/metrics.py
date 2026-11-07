@@ -58,7 +58,7 @@ _ROUTE = {
     "roteamento": "roteamento",
 }
 _STAGES = {"aceita", "roteada", "enviada", "recibo"}
-_RECEIPT = {"entregue", "lido", "falhou"}
+_RECEIPT = {"entregue", "lido", "falhou", "sem_recibo"}
 _KINDS = {"texto", "arquivo"}
 _FILE_OK = {"duplicado", "ja_recebido", "aguardando_banco", "armazenado"}
 _FILE_FAIL = {"baixa_confianca", "download", "processamento", "envio"}

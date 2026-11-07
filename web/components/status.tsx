@@ -9,6 +9,7 @@ const LABELS: Record<string, string> = {
   parcialmente_pago: "Parcial",
   pago: "Pago",
   fila_humana: "Fila humana",
+  sessao_canal: "Sessão caída",
   contestado: "Contestado",
   cancelado: "Cancelado",
   recebido_comprovante: "Comprovante",
@@ -55,6 +56,7 @@ const TONES: Record<string, string> = {
   cancelado: "bg-red-100 text-red-800",
   descartado: "bg-red-100 text-red-800",
   fila_humana: "bg-red-100 text-red-800",
+  sessao_canal: "bg-red-100 text-red-800",
   humano: "bg-sky-100 text-sky-800",
 };
 

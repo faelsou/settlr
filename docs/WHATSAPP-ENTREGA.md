@@ -38,12 +38,14 @@ O canal é a Evolution (`api/app/channels/whatsapp.py`). O que já existe e o qu
 
 | Peça | Hoje | Efeito |
 | --- | --- | --- |
-| Régua | `api/app/dunning/service.py` grava `delivery_status = aceito` no HTTP 200 | A etapa só vira `entregue` ou `lido` com o recibo. `falhou` libera reenvio |
+| Régua | A etapa nasce `pendente` e vira `aceito` no HTTP 200 | A etapa só vira `entregue` ou `lido` com o recibo. `falhou` libera reenvio. Timeout deixa `pendente` |
 | Unicidade | Índice único parcial em `(invoice_id, step, channel)` onde o status não é `falhou` | Tentativa que falhou não segura a etapa. Aceite, entrega e leitura seguram |
 | Mensagem | `messages.delivery_status` e `messages.wa_message_id` | O recibo atualiza a linha pelo id. Status terminal não regride |
 | Webhook | `POST /webhooks/evolution` trata `messages.upsert` e `messages.update` | O recibo espelha em `messages` e em `dunning_events` |
-| Entrada perdida | `pull_unseen_replies` em `api/app/channels/inbound_sync.py` | Puxa resposta que o webhook não entregou. No `ENV=dev`, o processo `cobranca` roda isso a cada 8 segundos. Não atualiza recibo do que saiu |
-| Mídia de entrada | `get_media` baixa o base64 na hora de processar o comprovante | Se a Evolution perder o arquivo antes disso, a cópia não existe aqui |
+| Entrada perdida | `pull_unseen_replies` e `reconcile_outbound` | Com `EVOLUTION_API_KEY`, o processo `cobranca` roda os dois a cada 8 segundos, em dev e em produção. A saída em `aceito` é corrigida pelo que a Evolution ainda tem; depois da janela vira `sem_recibo` |
+| Saída | `send_to_debtor` e a régua gravam `pendente` antes do HTTP | Timeout de transporte deixa a linha `pendente`. O aceite grava `aceito` e o `wa_message_id` |
+| Mídia de entrada | Cópia no MinIO na chegada, antes do OCR | O webhook grava o arquivo ao receber. O processamento lê essa cópia. Sem a cópia, baixa e grava antes de chamar o extrator |
+| Sessão | `connection.update` abre exceção `sessao_canal` | Não cria mensagem na conversa do devedor. Alerta repetido da mesma instância não duplica |
 
 ---
 

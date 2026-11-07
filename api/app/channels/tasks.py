@@ -11,9 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.agent.intent import classify_intent
 from app.agent.tasks import run_agent_turn
-from app.channels.metrics import record_message, route_context
+from app.channels.metrics import record_file, record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message, send_to_debtor
-from app.channels.whatsapp import debounce_drain
+from app.channels.turn import claim_turn, release_turn
+from app.channels.whatsapp import EvolutionClient, debounce_drain
 from app.core.audit import audit
 from app.core.db import tenant_session
 from app.core.logging import get_logger
@@ -27,6 +28,7 @@ from app.models.enums import (
     InvoiceStatus,
     MessageDirection,
 )
+from app.receipts.service import stage_receipt_bytes
 from app.receipts.tasks import process_whatsapp_receipt
 from app.reconciliation.service import open_exception, set_invoice_status
 from app.workers.celery_app import celery_app
@@ -95,6 +97,36 @@ def quoted_outbound(session: Session, tenant_id: UUID, quoted_id: str | None) ->
     ).first()
 
 
+class TurnInProgress(Exception):
+    """Outro caminho (webhook ou reconciliação) já ficou com o turno desta mensagem."""
+
+
+def fresh_inbound(session: Session, messages) -> list:
+    """Mensagem cujo `wa_message_id` já está no banco não dispara outro turno."""
+    fresh = []
+    for msg in messages:
+        if msg.message_id and session.scalar(
+            select(Message.id).where(Message.wa_message_id == msg.message_id)
+        ):
+            continue
+        fresh.append(msg)
+    return fresh
+
+
+def cache_inbound_media(tenant_id: str, msg) -> str | None:
+    """Baixa a mídia na chegada e grava no MinIO antes de enfileirar o OCR."""
+    if not msg.has_media:
+        return None
+    try:
+        data, mimetype = EvolutionClient().get_media(msg.instance, msg.key)
+    except Exception:
+        record_file("recebido", "download")
+        log.exception("inbound.media_cache_failed", message_id=msg.message_id)
+        return None
+    content_type = (mimetype or "application/octet-stream").split(";")[0].strip()
+    return stage_receipt_bytes(tenant_id, data, content_type)
+
+
 @celery_app.task(name="app.channels.tasks.process_inbound")
 def process_inbound(tenant_id: str, buffer_key: str) -> str:
     messages = debounce_drain(buffer_key)
@@ -106,69 +138,99 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
 
     try:
         return _route_buffered(tenant_id, tid, messages, first)
+    except TurnInProgress:
+        return "turno_em_andamento"
     except Exception:
         record_message("entrada", "roteada", "roteamento", "texto", "falha")
         raise
 
 
 def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
-    with tenant_session(tid) as session:
-        tenant = session.get(Tenant, tid)
+    media_keys: dict[str, str] = {}
+    for msg in messages:
+        if msg.has_media and msg.message_id and msg.message_id not in media_keys:
+            key = cache_inbound_media(tenant_id, msg)
+            if key:
+                media_keys[msg.message_id] = key
 
-        if first.is_group:
-            # Grupo do cliente: só aceitamos comprovante. Nunca respondemos cobrança em grupo.
-            for msg in messages:
+    claimed_for: tuple[UUID, str] | None = None
+    try:
+        with tenant_session(tid) as session:
+            pending = fresh_inbound(session, messages)
+            if not pending:
+                return "ja_gravada"
+            first = pending[0]
+            tenant = session.get(Tenant, tid)
+
+            if first.is_group:
+                # Grupo do cliente: só aceitamos comprovante. Nunca respondemos cobrança em grupo.
+                for msg in pending:
+                    if msg.has_media:
+                        process_whatsapp_receipt.delay(
+                            tenant_id, msg.instance, msg.key, msg.message_id,
+                            None, None, None, media_keys.get(msg.message_id),
+                        )
+                    record_message(
+                        "entrada", "roteada", "grupo",
+                        "arquivo" if msg.has_media else "texto", "ok",
+                    )
+                return "grupo"
+
+            quoted = quoted_outbound(session, tid, first.quoted_id)
+            conv = session.get(Conversation, quoted.conversation_id) if quoted is not None else None
+            if conv is None:
+                conv = conversation_for_phone(session, tid, first.phone)
+                quoted = None
+            debtor = session.get(Debtor, conv.debtor_id) if conv is not None else find_debtor(session, tid, first.phone)
+            if debtor is None:
+                log.info("inbound.unknown_contact", tenant_id=tenant_id)
+                for msg in pending:
+                    record_message(
+                        "entrada", "roteada", "contato_desconhecido",
+                        "arquivo" if msg.has_media else "texto", "falha",
+                    )
+                return "contato_desconhecido"
+
+            conv = conv or get_or_create_conversation(session, tid, debtor)
+            token = first.message_id or ""
+            if token and not claim_turn(conv.id, token):
+                raise TurnInProgress
+            if token:
+                claimed_for = (conv.id, token)
+            if first.remote_jid.endswith("@s.whatsapp.net"):
+                conv.wa_jid = first.remote_jid
+            for msg in pending:
+                cited = quoted_outbound(session, tid, msg.quoted_id) or quoted
                 if msg.has_media:
-                    process_whatsapp_receipt.delay(tenant_id, msg.instance, msg.key, msg.message_id)
-                record_message(
-                    "entrada", "roteada", "grupo",
-                    "arquivo" if msg.has_media else "texto", "ok",
-                )
-            return "grupo"
+                    process_whatsapp_receipt.delay(
+                        tenant_id, msg.instance, msg.key, msg.message_id,
+                        str(conv.id), str(debtor.id), None, media_keys.get(msg.message_id),
+                    )
+                elif msg.text:
+                    log_message(
+                        session, conv, MessageDirection.IN, "devedor", msg.text,
+                        invoice_id=cited.invoice_id if cited else None,
+                        wa_message_id=msg.message_id,
+                    )
 
-        quoted = quoted_outbound(session, tid, first.quoted_id)
-        conv = session.get(Conversation, quoted.conversation_id) if quoted is not None else None
-        if conv is None:
-            conv = conversation_for_phone(session, tid, first.phone)
-            quoted = None
-        debtor = session.get(Debtor, conv.debtor_id) if conv is not None else find_debtor(session, tid, first.phone)
-        if debtor is None:
-            log.info("inbound.unknown_contact", tenant_id=tenant_id)
-            for msg in messages:
-                record_message(
-                    "entrada", "roteada", "contato_desconhecido",
-                    "arquivo" if msg.has_media else "texto", "falha",
-                )
-            return "contato_desconhecido"
+            text = "\n".join(m.text for m in pending if m.text and not m.has_media).strip()
+            outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
+            context = route_context(outcome, conv.intent)
+            for msg in pending:
+                if msg.has_media:
+                    record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
+                elif msg.text:
+                    record_message("entrada", "roteada", context, "texto", "ok")
 
-        conv = conv or get_or_create_conversation(session, tid, debtor)
-        if first.remote_jid.endswith("@s.whatsapp.net"):
-            conv.wa_jid = first.remote_jid
-        for msg in messages:
-            cited = quoted_outbound(session, tid, msg.quoted_id) or quoted
-            if msg.has_media:
-                process_whatsapp_receipt.delay(
-                    tenant_id, msg.instance, msg.key, msg.message_id, str(conv.id), str(debtor.id)
-                )
-            elif msg.text:
-                log_message(
-                    session, conv, MessageDirection.IN, "devedor", msg.text,
-                    invoice_id=cited.invoice_id if cited else None,
-                    wa_message_id=msg.message_id,
-                )
-
-        text = "\n".join(m.text for m in messages if m.text and not m.has_media).strip()
-        outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
-        context = route_context(outcome, conv.intent)
-        for msg in messages:
-            if msg.has_media:
-                record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
-            elif msg.text:
-                record_message("entrada", "roteada", context, "texto", "ok")
-
-    if turn is not None:
-        run_agent_turn.delay(tenant_id, *turn)
-    return outcome
+        if turn is not None:
+            run_agent_turn.delay(tenant_id, *turn, claimed_for[1] if claimed_for else None)
+        return outcome
+    except TurnInProgress:
+        raise
+    except Exception:
+        if claimed_for is not None:
+            release_turn(*claimed_for)
+        raise
 
 
 def continue_after_inbound(session, tenant, debtor, conv, text: str) -> tuple[str, tuple[str, str, str] | None]:

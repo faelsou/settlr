@@ -33,26 +33,39 @@ def _deliver(tenant_id: UUID, conversation_id: UUID, result: dict) -> None:
 
 
 @celery_app.task(name="app.agent.tasks.run_agent_turn")
-def run_agent_turn(tenant_id: str, conversation_id: str, text: str, intent: str) -> str:
+def run_agent_turn(
+    tenant_id: str,
+    conversation_id: str,
+    text: str,
+    intent: str,
+    turn_token: str | None = None,
+) -> str:
     tid, cid = UUID(tenant_id), UUID(conversation_id)
-    with tenant_session(tid) as session:
-        tenant = session.get(Tenant, tid)
-        conv = session.get(Conversation, cid)
-        debtor = session.get(Debtor, conv.debtor_id)
-        state = {
-            "tenant_id": tenant_id,
-            "tenant_name": tenant.name,
-            "conversation_id": conversation_id,
-            "debtor_id": str(debtor.id),
-            "debtor_document": debtor.document,
-            "thread_id": conversation_id,
-            "today": datetime.now(ZoneInfo(tenant.timezone)).date().isoformat(),
-            "text": text,
-            "intent": intent,
-        }
+    try:
+        with tenant_session(tid) as session:
+            tenant = session.get(Tenant, tid)
+            conv = session.get(Conversation, cid)
+            debtor = session.get(Debtor, conv.debtor_id)
+            state = {
+                "tenant_id": tenant_id,
+                "tenant_name": tenant.name,
+                "conversation_id": conversation_id,
+                "debtor_id": str(debtor.id),
+                "debtor_document": debtor.document,
+                "thread_id": conversation_id,
+                "today": datetime.now(ZoneInfo(tenant.timezone)).date().isoformat(),
+                "text": text,
+                "intent": intent,
+            }
 
-    result = runner.run_turn(state)
-    _deliver(tid, cid, result)
+        result = runner.run_turn(state)
+        _deliver(tid, cid, result)
+    except Exception:
+        if turn_token:
+            from app.channels.turn import release_turn
+
+            release_turn(cid, turn_token)
+        raise
     log.info("agent.turn", conversation_id=conversation_id, outcome=result.get("outcome"))
     return result.get("outcome", "")
 

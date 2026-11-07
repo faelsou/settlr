@@ -20,9 +20,11 @@ LIDO = "lido"
 FALHOU = "falhou"
 PENDENTE = "pendente"
 ENVIADO = "enviado"
+SEM_RECIBO = "sem_recibo"
 
 # `enviado` é o valor antigo, do tempo em que HTTP 200 encerrava a etapa.
-_RANK = {PENDENTE: 1, ACEITO: 2, ENVIADO: 2, ENTREGUE: 3, LIDO: 4}
+# `sem_recibo` fica no mesmo degrau de `aceito`: ainda não chegou, mas a etapa segue presa.
+_RANK = {PENDENTE: 1, ACEITO: 2, ENVIADO: 2, SEM_RECIBO: 2, ENTREGUE: 3, LIDO: 4}
 
 _EVOLUTION_STATUS = {
     "ERROR": FALHOU,
@@ -61,6 +63,10 @@ def advance_status(current: str | None, new: str) -> str | None:
         if current in (ENTREGUE, LIDO):
             return None
         return FALHOU
+    if new == SEM_RECIBO:
+        if current in (ACEITO, ENVIADO, PENDENTE):
+            return SEM_RECIBO
+        return None
     if current is None:
         return new
     if _RANK.get(new, 0) > _RANK.get(current, 0):

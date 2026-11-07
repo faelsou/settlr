@@ -66,6 +66,7 @@ class ExceptionType(StrEnum):
     LEITURA_BAIXA_CONFIANCA = "leitura_baixa_confianca"
     DIFERENCA_VALOR = "diferenca_valor"
     FILA_HUMANA = "fila_humana"
+    SESSAO_CANAL = "sessao_canal"
 
 
 class ExceptionStatus(StrEnum):
