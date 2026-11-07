@@ -6,11 +6,12 @@ from datetime import date, timedelta
 from decimal import Decimal
 from uuid import UUID
 
+import httpx
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.agent.policy import brl
-from app.channels.delivery import ACEITO, ENVIADO, counts_as_dispatched
+from app.channels.delivery import ACEITO, ENVIADO, PENDENTE, counts_as_dispatched
 from app.channels.email import send_email
 from app.channels.metrics import record_message
 from app.channels.outbound import get_or_create_conversation, log_message
@@ -140,6 +141,12 @@ def _send_step(
             per_minute = int(rules.get("rate_per_minute", DEFAULT_RATE_PER_MINUTE))
             client = client or EvolutionClient()
             official = wa_templates.get(step.template)
+            conv = get_or_create_conversation(session, tenant.id, debtor)
+            msg = log_message(
+                session, conv, MessageDirection.OUT, f"regua:{step.key}", text,
+                invoice_id=invoice.id, delivery_status=PENDENTE,
+            )
+            session.flush()
             message_ids: list[str | None] = []
             for number in numbers:
                 if not take_rate_slot(tenant.whatsapp_instance, per_minute):
@@ -154,17 +161,21 @@ def _send_step(
                         ))
                     else:
                         message_ids.append(client.send_text(tenant.whatsapp_instance, number, text))
+                except (httpx.TimeoutException, httpx.TransportError):
+                    record_message("saida", "enviada", "regua", "texto", "falha")
+                    break
                 except Exception:
                     record_message("saida", "enviada", "regua", "texto", "falha")
                     raise
                 record_message("saida", "enviada", "regua", "texto", "ok")
-            message_id = next((item for item in message_ids if item), None)
-            conv = get_or_create_conversation(session, tenant.id, debtor)
-            log_message(
-                session, conv, MessageDirection.OUT, f"regua:{step.key}", text,
-                invoice_id=invoice.id, wa_message_id=message_id, delivery_status=ACEITO,
-            )
-            delivery_status = ACEITO
+            if message_ids:
+                message_id = next((item for item in message_ids if item), None)
+                msg.wa_message_id = message_id
+                msg.delivery_status = ACEITO
+                delivery_status = ACEITO
+            else:
+                message_id = None
+                delivery_status = PENDENTE
         elif channel == "email":
             if not debtor.email:
                 continue

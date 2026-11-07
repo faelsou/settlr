@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.channels.delivery import apply_delivery_updates, is_delivery_event, parse_delivery_updates
 from app.channels.metrics import record_message
+from app.channels.session import alert_session_down, connection_state, session_is_down
 from app.channels.tasks import process_inbound
 from app.channels.whatsapp import EvolutionWebhook, debounce_push, parse_inbound
 from app.core.config import get_settings
@@ -40,6 +41,9 @@ def evolution_webhook(
 ) -> dict:
     if not _same(token or x_webhook_token, get_settings().webhook_hmac):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token inválido")
+
+    if connection_state(payload) is not None:
+        return _apply_session_alert(payload)
 
     if is_delivery_event(payload):
         return _apply_delivery_receipt(payload)
@@ -74,6 +78,21 @@ def _tenant_for_instance(session: Session, instance: str):
             ),
         )
     )
+
+
+def _apply_session_alert(payload: EvolutionWebhook) -> dict:
+    state = connection_state(payload)
+    if not session_is_down(state):
+        return {"status": "sessao_ok"}
+    data = payload.data if isinstance(payload.data, dict) else {}
+    reason = data.get("statusReason", data.get("reason"))
+    with system_session() as session:
+        tenant_id = _tenant_for_instance(session, payload.instance)
+    if tenant_id is None:
+        return {"status": "instancia_desconhecida"}
+    with tenant_session(tenant_id) as session:
+        opened = alert_session_down(session, tenant_id, payload.instance, state or "close", reason)
+    return {"status": "alerta_sessao", "opened": opened}
 
 
 def _apply_delivery_receipt(payload: EvolutionWebhook) -> dict:

@@ -20,11 +20,11 @@ from app.channels.tasks import (
     find_debtor,
     quoted_outbound,
 )
+from app.channels.turn import claim_turn, release_turn
 from app.channels.whatsapp import EvolutionClient, InboundMessage, _contact_jid, inbound_from_record
 from app.core.config import get_settings
 from app.core.db import system_session, tenant_session
 from app.core.logging import get_logger
-from app.core.redis import get_redis
 from app.core.senders import listed_senders
 from app.models import Conversation, Debtor, Message, Tenant
 from app.models.enums import ConversationState, MessageDirection
@@ -74,7 +74,9 @@ def _conversation_for(session, tenant: Tenant, inbound) -> Conversation | None:
     return conv
 
 
-def _store(session, tenant: Tenant, instance: str, raw: dict[str, Any]) -> tuple[str, Conversation] | None:
+def _store(
+    session, tenant: Tenant, instance: str, raw: dict[str, Any],
+) -> tuple[str, Conversation, str] | None:
     inbound = inbound_from_record(instance, raw)
     if inbound is None or inbound.from_me or inbound.is_group:
         return None
@@ -100,10 +102,10 @@ def _store(session, tenant: Tenant, instance: str, raw: dict[str, Any]) -> tuple
     record_message("entrada", "aceita", "sync", "texto", "ok")
     if conv.state == ConversationState.HUMANO:
         record_message("entrada", "roteada", "humano", "texto", "ok")
-    return inbound.text, conv
+    return inbound.text, conv, inbound.message_id
 
 
-def _last_inbound(session, conv: Conversation) -> tuple[str, str] | None:
+def _last_inbound(session, conv: Conversation) -> Message | None:
     last = session.scalars(
         select(Message)
         .where(Message.conversation_id == conv.id)
@@ -111,15 +113,18 @@ def _last_inbound(session, conv: Conversation) -> tuple[str, str] | None:
     ).first()
     if last is None or last.direction != MessageDirection.IN or not last.body:
         return None
-    return last.body, last.wa_message_id or str(last.id)
+    return last
 
 
-def _claim(conversation_id: UUID, token: str) -> bool:
-    return bool(get_redis().set(f"agent:turn:{conversation_id}:{token}", "1", nx=True, ex=600))
-
-
-def _release(conversation_id: UUID, token: str) -> None:
-    get_redis().delete(f"agent:turn:{conversation_id}:{token}")
+def _unanswered(session, conv: Conversation, inbound: Message) -> bool:
+    """Já existe saída depois desta entrada: o turno não roda de novo."""
+    return session.scalar(
+        select(Message.id).where(
+            Message.conversation_id == conv.id,
+            Message.direction == MessageDirection.OUT,
+            Message.created_at >= inbound.created_at,
+        )
+    ) is None
 
 
 def _handle_receipt(
@@ -131,7 +136,7 @@ def _handle_receipt(
     raw: dict[str, Any],
 ) -> None:
     token = f"receipt:{inbound.message_id}"
-    if not _claim(conversation_id, token):
+    if not claim_turn(conversation_id, token):
         return
     record_message("entrada", "aceita", "sync", "arquivo", "ok")
     record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
@@ -146,7 +151,7 @@ def _handle_receipt(
             raw,
         )
     except Exception:
-        _release(conversation_id, token)
+        release_turn(conversation_id, token)
         log.exception("inbound.receipt_failed", message_id=inbound.message_id)
 
 
@@ -154,7 +159,7 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
     if not get_settings().llm_api_key:
         log.warning("inbound.agent_skipped_no_llm", conversation_id=str(conversation_id))
         return
-    if not _claim(conversation_id, token):
+    if not claim_turn(conversation_id, token):
         return
     try:
         with tenant_session(tenant_id) as session:
@@ -165,7 +170,7 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
             context = route_context(outcome, conv.intent)
     except Exception:
         record_message("entrada", "roteada", "roteamento", "texto", "falha")
-        _release(conversation_id, token)
+        release_turn(conversation_id, token)
         log.exception("inbound.agent_failed", conversation_id=str(conversation_id))
         return
     record_message("entrada", "roteada", context, "texto", "ok")
@@ -173,9 +178,9 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
         log.info("inbound.routed", conversation_id=str(conversation_id), outcome=outcome)
         return
     try:
-        run_agent_turn(str(tenant_id), *turn)
+        run_agent_turn(str(tenant_id), *turn, token)
     except Exception:
-        _release(conversation_id, token)
+        release_turn(conversation_id, token)
         log.exception("inbound.agent_failed", conversation_id=str(conversation_id))
 
 
@@ -228,7 +233,7 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
                 conv = session.scalars(
                     select(Conversation).where(Conversation.tenant_id == tenant_id, Conversation.wa_jid == jid)
                 ).first()
-                stored: list[str] = []
+                stored: list[tuple[str, str]] = []
                 for raw in records:
                     inbound = inbound_from_record(instance, raw)
                     if inbound and inbound.has_media and not inbound.from_me:
@@ -240,19 +245,19 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
                             conv = owner
                     result = _store(session, tenant, instance, raw)
                     if result:
-                        text, conv = result
-                        stored.append(text)
+                        text, conv, message_id = result
+                        stored.append((text, message_id))
                         added += 1
                 if conv is None or conv.state == ConversationState.HUMANO:
                     continue
                 if stored:
-                    pending = stored[-1], stored[-1]
+                    follow = (conv.id, stored[-1][0], stored[-1][1])
                 elif conv.state in AGENT_STATES and not receipts:
-                    pending = _last_inbound(session, conv)
+                    last = _last_inbound(session, conv)
+                    if last is not None and _unanswered(session, conv, last):
+                        follow = (conv.id, last.body or "", last.wa_message_id or str(last.id))
                 else:
-                    pending = None
-                if pending:
-                    follow = (conv.id, pending[0], pending[1])
+                    follow = None
             for inbound, conv_id, debtor_id, raw in receipts:
                 _handle_receipt(tenant_id, instance, inbound, conv_id, debtor_id, raw)
                 added += 1

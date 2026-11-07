@@ -1,10 +1,16 @@
-"""Envio 1:1 ao devedor com registro da mensagem. Todo texto que sai passa por aqui."""
+"""Envio 1:1 ao devedor com registro da mensagem. Todo texto que sai passa por aqui.
+
+A linha nasce `pendente` antes da chamada HTTP. Timeout de transporte não apaga
+o registro: a transação segue e a reconciliação acha a mensagem.
+"""
 
 from uuid import UUID
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.channels.delivery import ACEITO, PENDENTE
 from app.channels.metrics import outbound_context, record_message
 from app.channels.whatsapp import GROUP_SUFFIX, EvolutionClient
 from app.core.phones import contact_phones
@@ -65,21 +71,30 @@ def send_to_debtor(
     author: str = "agente",
     invoice_id: UUID | None = None,
     client: EvolutionClient | None = None,
-) -> str | None:
+) -> Message:
     context = outbound_context(author, conv.intent)
+    if conv.wa_jid.endswith(GROUP_SUFFIX):
+        record_message("saida", "enviada", context, "texto", "falha")
+        raise ValueError("nunca cobrar em grupo")
+    if not tenant.whatsapp_instance:
+        record_message("saida", "enviada", context, "texto", "falha")
+        raise ValueError("tenant sem instância de WhatsApp")
+
+    msg = log_message(
+        session, conv, MessageDirection.OUT, author, text,
+        invoice_id=invoice_id, delivery_status=PENDENTE,
+    )
+    session.flush()
+    number = conv.wa_jid.split("@", 1)[0]
     try:
-        if conv.wa_jid.endswith(GROUP_SUFFIX):
-            raise ValueError("nunca cobrar em grupo")
-        if not tenant.whatsapp_instance:
-            raise ValueError("tenant sem instância de WhatsApp")
-        number = conv.wa_jid.split("@", 1)[0]
         message_id = (client or EvolutionClient()).send_text(tenant.whatsapp_instance, number, text)
+    except (httpx.TimeoutException, httpx.TransportError):
+        record_message("saida", "enviada", context, "texto", "falha")
+        return msg
     except Exception:
         record_message("saida", "enviada", context, "texto", "falha")
         raise
-    log_message(
-        session, conv, MessageDirection.OUT, author, text,
-        invoice_id=invoice_id, wa_message_id=message_id,
-    )
+    msg.wa_message_id = message_id
+    msg.delivery_status = ACEITO
     record_message("saida", "enviada", context, "texto", "ok")
-    return message_id
+    return msg

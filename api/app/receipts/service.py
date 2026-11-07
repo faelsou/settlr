@@ -21,6 +21,22 @@ from app.receipts.schemas import ReceiptExtraction
 from app.receipts.validation import validate_extraction
 
 EXTENSIONS = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+_BY_EXT = {ext: mime for mime, ext in EXTENSIONS.items()}
+
+
+def stage_receipt_bytes(tenant_id: UUID | str, data: bytes, content_type: str) -> str:
+    """Grava a cópia no MinIO antes de qualquer leitura. A chave é o hash do arquivo."""
+    content_type = content_type.split(";")[0].strip() or "application/octet-stream"
+    file_hash = hashlib.sha256(data).hexdigest()
+    ext = EXTENSIONS.get(content_type, "bin")
+    key = f"{tenant_id}/{file_hash}.{ext}"
+    storage.put_object(key, data, content_type)
+    return key
+
+
+def content_type_from_key(key: str) -> str:
+    ext = key.rsplit(".", 1)[-1].lower()
+    return _BY_EXT.get(ext, "application/octet-stream")
 
 
 @dataclass
@@ -64,6 +80,7 @@ def process_receipt(
     debtor_id: UUID | None = None,
     source: dict | None = None,
     extractor: Callable[[bytes, str], ReceiptExtraction] = extract_receipt,
+    file_key: str | None = None,
 ) -> ReceiptOutcome:
     file_hash = hashlib.sha256(data).hexdigest()
     duplicate = session.scalars(
@@ -72,8 +89,9 @@ def process_receipt(
     if duplicate:
         return ReceiptOutcome("duplicado", duplicate)
 
-    ext = EXTENSIONS.get(content_type, "bin")
-    file_key = storage.put_object(f"{tenant.id}/{file_hash}.{ext}", data, content_type)
+    content_type = content_type.split(";")[0].strip()
+    if file_key is None:
+        file_key = stage_receipt_bytes(tenant.id, data, content_type)
 
     extraction = extractor(data, content_type)
     now = datetime.now(UTC)

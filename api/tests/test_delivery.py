@@ -70,6 +70,9 @@ def test_receipt_does_not_regress_terminal_status():
     assert advance_status(ENTREGUE, FALHOU) is None
     assert advance_status(FALHOU, ENTREGUE) is None
     assert advance_status("enviado", ENTREGUE) == ENTREGUE
+    assert advance_status(ACEITO, "sem_recibo") == "sem_recibo"
+    assert advance_status("sem_recibo", ENTREGUE) == ENTREGUE
+    assert advance_status(ENTREGUE, "sem_recibo") is None
 
 
 def test_parse_messages_update_object_and_list():

@@ -4,12 +4,14 @@ import httpx
 
 from app.channels.metrics import record_file
 from app.channels.outbound import log_message, send_to_debtor
+from app.channels.turn import claim_once, release_once
 from app.channels.whatsapp import EvolutionClient
+from app.core import storage
 from app.core.db import tenant_session
 from app.core.logging import get_logger
 from app.models import Conversation, Tenant
 from app.models.enums import ConversationState, MessageDirection
-from app.receipts.service import process_receipt
+from app.receipts.service import content_type_from_key, process_receipt, stage_receipt_bytes
 from app.workers.celery_app import celery_app
 
 log = get_logger(__name__)
@@ -41,16 +43,45 @@ def process_whatsapp_receipt(
     conversation_id: str | None = None,
     debtor_id: str | None = None,
     message_raw: dict | None = None,
+    media_key: str | None = None,
 ) -> str:
+    token = f"receipt:{message_id}"
+    if not claim_once(token):
+        return "duplicado"
     try:
-        data, mimetype = EvolutionClient().get_media(instance, message_key, raw=message_raw)
+        data, content_type, media_key = load_receipt_bytes(
+            tenant_id, instance, message_key, message_raw, media_key,
+        )
     except Exception:
+        release_once(token)
         record_file("recebido", "download")
         raise
+    try:
+        return _store_receipt(
+            tenant_id, data, content_type, message_id, conversation_id, debtor_id, media_key,
+        )
+    except Exception:
+        release_once(token)
+        raise
+
+
+def load_receipt_bytes(
+    tenant_id: str,
+    instance: str,
+    message_key: dict,
+    message_raw: dict | None,
+    media_key: str | None,
+) -> tuple[bytes, str, str]:
+    """A cópia no MinIO existe antes do OCR. Se a chegada já gravou, lê de lá."""
+    if media_key:
+        try:
+            return storage.get_object(media_key), content_type_from_key(media_key), media_key
+        except Exception:
+            log.warning("receipt.stored_copy_missing", media_key=media_key)
+    data, mimetype = EvolutionClient().get_media(instance, message_key, raw=message_raw)
     content_type = mimetype.split(";")[0].strip()
-    return _store_receipt(
-        tenant_id, data, content_type, message_id, conversation_id, debtor_id,
-    )
+    key = stage_receipt_bytes(tenant_id, data, content_type)
+    return data, content_type, key
 
 
 def _store_receipt(
@@ -60,6 +91,7 @@ def _store_receipt(
     message_id: str,
     conversation_id: str | None,
     debtor_id: str | None,
+    file_key: str | None = None,
 ) -> str:
     with tenant_session(UUID(tenant_id)) as session:
         tenant = session.get(Tenant, UUID(tenant_id))
@@ -68,6 +100,7 @@ def _store_receipt(
                 session, tenant, data, content_type,
                 debtor_id=UUID(debtor_id) if debtor_id else None,
                 source={"channel": "whatsapp", "message_id": message_id},
+                file_key=file_key,
             )
         except Exception:
             record_file("recebido", "processamento")
@@ -79,7 +112,7 @@ def _store_receipt(
         if conversation_id:
             conv = session.get(Conversation, UUID(conversation_id))
             log_message(session, conv, MessageDirection.IN, "devedor", "[comprovante]",
-                        wa_message_id=message_id)
+                        wa_message_id=message_id, media_key=file_key)
             if conv.state == ConversationState.AGUARDANDO_COMPROVANTE:
                 conv.state = ConversationState.AGENTE
             if conv.state != ConversationState.HUMANO:

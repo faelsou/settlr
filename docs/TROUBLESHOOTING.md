@@ -75,7 +75,7 @@ Painel abre e as chamadas falham: a imagem web foi construída com outro `API_UP
 
 ## 3. WhatsApp e o agente
 
-A Evolution desta instalação fica em outro servidor. O webhook configurado nela com `http://localhost:8000/...` não alcança o Minikube. No `ENV=dev`, com `EVOLUTION_API_KEY` preenchida, o processo `cobranca` puxa as respostas a cada 8 segundos (`api/app/channels/inbound_sync.py`).
+A Evolution desta instalação fica em outro servidor. O webhook configurado nela com `http://localhost:8000/...` não alcança o Minikube. Com `EVOLUTION_API_KEY` preenchida, em dev e em produção, o processo `cobranca` puxa as respostas e reconcilia o recibo de saída a cada 8 segundos (`api/app/channels/inbound_sync.py`, `api/app/channels/reconcile.py`).
 
 Ordem:
 
