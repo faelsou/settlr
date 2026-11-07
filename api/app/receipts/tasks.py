@@ -2,6 +2,7 @@ from uuid import UUID
 
 import httpx
 
+from app.channels.metrics import record_file
 from app.channels.outbound import log_message, send_to_debtor
 from app.channels.whatsapp import EvolutionClient
 from app.core.db import tenant_session
@@ -41,18 +42,39 @@ def process_whatsapp_receipt(
     debtor_id: str | None = None,
     message_raw: dict | None = None,
 ) -> str:
-    data, mimetype = EvolutionClient().get_media(instance, message_key, raw=message_raw)
+    try:
+        data, mimetype = EvolutionClient().get_media(instance, message_key, raw=message_raw)
+    except Exception:
+        record_file("recebido", "download")
+        raise
     content_type = mimetype.split(";")[0].strip()
+    return _store_receipt(
+        tenant_id, data, content_type, message_id, conversation_id, debtor_id,
+    )
 
+
+def _store_receipt(
+    tenant_id: str,
+    data: bytes,
+    content_type: str,
+    message_id: str,
+    conversation_id: str | None,
+    debtor_id: str | None,
+) -> str:
     with tenant_session(UUID(tenant_id)) as session:
         tenant = session.get(Tenant, UUID(tenant_id))
-        outcome = process_receipt(
-            session, tenant, data, content_type,
-            debtor_id=UUID(debtor_id) if debtor_id else None,
-            source={"channel": "whatsapp", "message_id": message_id},
-        )
+        try:
+            outcome = process_receipt(
+                session, tenant, data, content_type,
+                debtor_id=UUID(debtor_id) if debtor_id else None,
+                source={"channel": "whatsapp", "message_id": message_id},
+            )
+        except Exception:
+            record_file("recebido", "processamento")
+            raise
         log.info("receipt.processed", tenant_id=tenant_id, status=outcome.status,
                  payment_id=str(outcome.payment_id) if outcome.payment_id else None)
+        status = outcome.status
 
         if conversation_id:
             conv = session.get(Conversation, UUID(conversation_id))
@@ -61,5 +83,6 @@ def process_whatsapp_receipt(
             if conv.state == ConversationState.AGUARDANDO_COMPROVANTE:
                 conv.state = ConversationState.AGENTE
             if conv.state != ConversationState.HUMANO:
-                send_to_debtor(session, tenant, conv, REPLIES.get(outcome.status, REPLIES["aguardando_banco"]))
-        return outcome.status
+                send_to_debtor(session, tenant, conv, REPLIES.get(status, REPLIES["aguardando_banco"]))
+    record_file("recebido", status)
+    return status

@@ -65,7 +65,7 @@ kubectl apply -f k8s/minikube.yaml
 kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 ```
 
-O job `bootstrap` espera o Postgres, roda `python -m app.cli migrate` e depois `python -m app.cli seed-demo`. O seed cria o tenant `demo` (Clínica Demo). Sem ele o login local responde que o tenant não existe.
+O job `bootstrap` espera o Postgres, roda `python -m app.cli migrate` e depois `python -m app.cli seed-demo`. O seed cria o tenant `demo` (Clínica Demo). Sem ele o login local responde que o tenant não existe. Roles, RLS e a conferência do banco estão em [`BANCO.md`](./BANCO.md).
 
 Confira os pods:
 

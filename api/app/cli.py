@@ -258,22 +258,27 @@ TEST_PHONE = "5511952313944"
 # Cada vencimento cai numa etapa da régua no dia em que o comando roda.
 # offset é o mesmo da etapa: D-3 vence daqui a 3 dias, D+15 venceu há 15.
 ENVIO_CASES = [
-    ("envio-d-3", "Carla Mendes", "20000000191", "180.00", 3, "Consulta de avaliação", "D-3"),
-    ("envio-d0", "Pedro Alves", "20000000272", "240.00", 0, "Sessão de fisioterapia", "D0"),
-    ("envio-d1", "Lúcia Ferreira", "20000000353", "310.00", -1, "Retorno odontológico", "D+1"),
-    ("envio-d5", "Rafael Costa", "20000000434", "420.00", -5, "Pacote de exames", "D+5"),
-    ("envio-d15", "Beatriz Nunes", "20000000515", "560.00", -15, "Tratamento mensal", "D+15"),
+    ("envio-d-3", "Carla Mendes", "20000000191", "180.00", 3, "Lembrete · consulta de avaliação", "D-3"),
+    ("envio-d0", "Pedro Alves", "20000000272", "240.00", 0, "Vence hoje · sessão de fisioterapia", "D0"),
+    ("envio-d1", "Lúcia Ferreira", "20000000353", "310.00", -1, "Atraso · segunda via do retorno", "D+1"),
+    ("envio-d3", "Helena Prado", "20000000606", "390.00", -3, "Atraso · desconto à vista no clareamento", "D+3"),
+    ("envio-d5", "Rafael Costa", "20000000434", "420.00", -5, "Atraso · negociação do pacote de exames", "D+5"),
+    ("envio-d7", "Marcos Vieira", "20000000797", "510.00", -7, "Atraso · parcelamento da manutenção", "D+7"),
+    ("envio-d10", "Camila Duarte", "20000000878", "640.00", -10, "Atraso · entrada e saldo do implante", "D+10"),
+    ("envio-d15", "Beatriz Nunes", "20000000515", "560.00", -15, "Atraso · última tentativa do tratamento", "D+15"),
+    ("envio-d21", "Otávio Ramos", "20000000959", "780.00", -21, "Atraso · aviso de restrição da prótese", "D+21"),
 ]
 
 
 def seed_envio() -> None:
-    """Títulos com nomes e vencimentos diferentes, todos no mesmo telefone.
+    """Grava a régua no tenant e cria um título por etapa, todos no mesmo telefone.
 
     Não envia mensagem. A régua dispara quando o worker roda, dentro do horário
-    do tenant. Sem e-mail, a etapa D+15 sai só pelo WhatsApp.
+    do tenant. Sem e-mail, as etapas com e-mail saem só pelo WhatsApp.
     """
     from app.core.config import get_settings
     from app.core.db import SessionLocal, set_tenant
+    from app.dunning.rules import DEFAULT_DUNNING_RULES
     from app.ingest.schemas import InvoiceIn
     from app.ingest.service import import_invoices
     from app.models import Tenant
@@ -286,6 +291,7 @@ def seed_envio() -> None:
         if tenant is None:
             sys.exit("tenant demo não encontrado — rode python -m app.cli seed-demo")
         set_tenant(session, tenant.id)
+        tenant.dunning_rules = DEFAULT_DUNNING_RULES
 
         today = date.today()
         rows = [
@@ -299,6 +305,7 @@ def seed_envio() -> None:
                 description=desc,
                 txid=f"tx{external_id}",
                 pix_copy_paste=f"00020126{external_id}",
+                payment_url=f"https://pagar.demo.local/{external_id}",
             )
             for external_id, name, doc, amount, offset, desc, _step in ENVIO_CASES
         ]

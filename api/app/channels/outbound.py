@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.channels.metrics import outbound_context, record_message
 from app.channels.whatsapp import GROUP_SUFFIX, EvolutionClient
 from app.core.phones import contact_phones
 from app.models import Conversation, Debtor, Message, Tenant
@@ -38,6 +39,7 @@ def log_message(
     invoice_id: UUID | None = None,
     media_key: str | None = None,
     wa_message_id: str | None = None,
+    delivery_status: str | None = None,
 ) -> Message:
     msg = Message(
         tenant_id=conv.tenant_id,
@@ -48,6 +50,7 @@ def log_message(
         body=body,
         media_key=media_key,
         wa_message_id=wa_message_id,
+        delivery_status=delivery_status,
     )
     session.add(msg)
     return msg
@@ -63,14 +66,20 @@ def send_to_debtor(
     invoice_id: UUID | None = None,
     client: EvolutionClient | None = None,
 ) -> str | None:
-    if conv.wa_jid.endswith(GROUP_SUFFIX):
-        raise ValueError("nunca cobrar em grupo")
-    if not tenant.whatsapp_instance:
-        raise ValueError("tenant sem instância de WhatsApp")
-    number = conv.wa_jid.split("@", 1)[0]
-    message_id = (client or EvolutionClient()).send_text(tenant.whatsapp_instance, number, text)
+    context = outbound_context(author, conv.intent)
+    try:
+        if conv.wa_jid.endswith(GROUP_SUFFIX):
+            raise ValueError("nunca cobrar em grupo")
+        if not tenant.whatsapp_instance:
+            raise ValueError("tenant sem instância de WhatsApp")
+        number = conv.wa_jid.split("@", 1)[0]
+        message_id = (client or EvolutionClient()).send_text(tenant.whatsapp_instance, number, text)
+    except Exception:
+        record_message("saida", "enviada", context, "texto", "falha")
+        raise
     log_message(
         session, conv, MessageDirection.OUT, author, text,
         invoice_id=invoice_id, wa_message_id=message_id,
     )
+    record_message("saida", "enviada", context, "texto", "ok")
     return message_id

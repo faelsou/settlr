@@ -9,7 +9,10 @@ from uuid import UUID
 from fastapi import APIRouter, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
 
+from app.channels.delivery import apply_delivery_updates, is_delivery_event, parse_delivery_updates
+from app.channels.metrics import record_message
 from app.channels.tasks import process_inbound
 from app.channels.whatsapp import EvolutionWebhook, debounce_push, parse_inbound
 from app.core.config import get_settings
@@ -38,29 +41,52 @@ def evolution_webhook(
     if not _same(token or x_webhook_token, get_settings().webhook_hmac):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token inválido")
 
+    if is_delivery_event(payload):
+        return _apply_delivery_receipt(payload)
+
     msg = parse_inbound(payload)
     if msg is None or msg.from_me:
         return {"status": "ignorado"}
 
+    kind = "arquivo" if msg.has_media else "texto"
     with system_session() as session:
-        needle = [{"instance": msg.instance}]
-        tenant_id = session.scalar(
-            select(Tenant.id).where(
-                Tenant.active.is_(True),
-                or_(
-                    Tenant.whatsapp_instance == msg.instance,
-                    Tenant.whatsapp_senders.contains(needle),
-                ),
-            )
-        )
+        tenant_id = _tenant_for_instance(session, msg.instance)
     if tenant_id is None:
+        record_message("entrada", "aceita", "instancia_desconhecida", kind, "falha")
         return {"status": "instancia_desconhecida"}
 
+    record_message("entrada", "aceita", "webhook", kind, "ok")
     buffer_key = debounce_push(str(tenant_id), msg)
     process_inbound.apply_async(
         args=[str(tenant_id), buffer_key], countdown=get_settings().inbound_debounce_seconds + 1
     )
     return {"status": "enfileirado"}
+
+
+def _tenant_for_instance(session: Session, instance: str):
+    needle = [{"instance": instance}]
+    return session.scalar(
+        select(Tenant.id).where(
+            Tenant.active.is_(True),
+            or_(
+                Tenant.whatsapp_instance == instance,
+                Tenant.whatsapp_senders.contains(needle),
+            ),
+        )
+    )
+
+
+def _apply_delivery_receipt(payload: EvolutionWebhook) -> dict:
+    updates = parse_delivery_updates(payload)
+    if not updates:
+        return {"status": "ignorado"}
+    with system_session() as session:
+        tenant_id = _tenant_for_instance(session, payload.instance)
+    if tenant_id is None:
+        return {"status": "instancia_desconhecida"}
+    with tenant_session(tenant_id) as session:
+        changed = apply_delivery_updates(session, updates)
+    return {"status": "recibo", "updated": changed}
 
 
 @issuer_router.post("/emissor", status_code=status.HTTP_202_ACCEPTED)

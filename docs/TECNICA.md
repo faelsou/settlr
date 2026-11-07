@@ -77,7 +77,7 @@ Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base 
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
-Schema único, multi-tenant. O **título** é o centro.
+A criação da instância, das roles e do segundo database está em [`BANCO.md`](./BANCO.md). Schema único, multi-tenant. O **título** é o centro.
 
 | Tabela | Papel |
 | --- | --- |
@@ -155,6 +155,8 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | `/conversations` | Listar, mensagens, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
 | `/settings` | GET/PUT política, régua, horário, conciliação | cadastro |
+| `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco) | cadastro |
+| `/debtors/{id}/whatsapp` | PATCH dos celulares do devedor (até cinco) | cadastro |
 | `/metrics` | Recuperação, DSO, promessas, baixa automática | cadastro |
 | `/admin/tenants` | CRUD e ativação (role `agencia`) | cadastro |
 
@@ -162,16 +164,21 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 
 ## 8. Painel (`web/`)
 
-- Next.js 15 App Router, TypeScript, Tailwind, TanStack Query.
+- Next.js 15 App Router, TypeScript, Tailwind, TanStack Query. A marca na tela e no título da aba é **Settlr**.
 - `output: "standalone"` para a imagem Swarm.
 - Cliente em `web/lib/api.ts` — um fetch autenticado por rota.
+- A sidebar recolhe. O início junta as métricas dos últimos 30 dias e as três filas que pedem gente: exceções abertas, conversas com humano e aprovações.
+- Títulos, pagamentos e exceções usam tabela paginada. Conversas ficam em duas colunas: a lista e a thread na mesma tela.
+- Confirmar ou recusar pede um diálogo. O resultado da ação aparece em toast.
 - Telas em `web/app/(painel)/`:
+  - `/inicio` — filas e métricas
   - `/excecoes` — confirma alocação, corrige comprovante ou resolve contestação
   - `/pagamentos` — status, origem, comprovante, importação de extrato
-  - `/titulos` e `/titulos/[id]` — busca, régua, promessas, matches, mensagens
-  - `/conversas` e `/conversas/[id]` — takeover / release / envio
+  - `/titulos` e `/titulos/[id]` — busca, régua, promessas, matches, mensagens e até cinco celulares do devedor
+  - `/conversas` — assumir, devolver e enviar
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
-  - `/configuracoes` e `/metricas`
+  - `/configuracoes` — política, régua, horário e até cinco WhatsApps de disparo, com escolha de qual envia
+  - `/metricas`
 
 `NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`.
 
@@ -181,7 +188,7 @@ Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `redis_passw
 
 URLs internas montadas no entrypoint a partir dos arquivos em `/run/secrets`, para a senha não aparecer em `docker service inspect`.
 
-Migração: job one-off `python -m app.cli migrate` (Alembic + checkpointer) **antes** de atualizar os serviços da API. Duas réplicas não disputam lock de migration.
+Migração: job one-off `python -m app.cli migrate` (Alembic + checkpointer) **antes** de atualizar os serviços da API. Duas réplicas não disputam lock de migration. O passo a passo de volume vazio, roles e conferência está em [`BANCO.md`](./BANCO.md).
 
 Atualização: `start-first` em frontend-web, gateway, cobrança, conci-pgto, cadastro e nos três workers; `stop-first` e 1 réplica em relo-disp, evolution e dados. O Swarm usa `failure_action: rollback`. A pipeline (`.github/workflows/release.yml`) republica a tag anterior se a nova não ficar saudável.
 
@@ -210,7 +217,7 @@ O Prometheus retém 6 horas. O datasource padrão do Grafana é o Thanos. Um log
 | Minikube | `kubectl apply -k k8s/observability` | `kubectl -n observability port-forward svc/grafana 3001:3000` |
 | Swarm | `BACKEND_NETWORK=cobranca_backend docker stack deploy -c observability/stack.yml cobranca-obs` | porta 3001 no nó de dados, sem router no Traefik |
 
-A pasta **Cobrança** tem o painel `Cobrança — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) nos três ambientes. No Minikube a pasta **Kubernetes** separa os três sinais do cluster:
+A pasta **Cobrança** tem o painel `Settlr — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) e o painel `WhatsApp — ponta a ponta` (mensagem aceita, roteada e enviada, por contexto, e arquivo recebido ou entregue com ok e falha) nos três ambientes. No Minikube a pasta **Kubernetes** separa os três sinais do cluster:
 
 | Painel | O que mostra |
 | --- | --- |
@@ -236,6 +243,9 @@ Cobertura atual (determinística):
 - `tests/test_receipts.py` — confiança, E2E, “não é comprovante”
 - `tests/test_observability.py` — Sentry, Langfuse e OTLP ficam desligados sem variável
 - `tests/test_services.py` — cada caminho HTTP e cada task tem um serviço dono, e o `stack.yml` sobe as filas certas
+- `tests/test_phones.py` — até cinco celulares do devedor, normalização e roteamento
+- `tests/test_senders.py` — até cinco WhatsApps de disparo da empresa e troca do número que envia
+- `tests/test_inbound.py` — mensagem que entra pelo WhatsApp
 
 `python -m app.cli seed-demo` (bloqueado em `ENV=prod`) cria o tenant `demo` (Clínica Demo) com títulos, pagamentos, exceções, conversa e uma aprovação de 8x (acima do teto 6).
 

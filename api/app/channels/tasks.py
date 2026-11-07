@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.agent.intent import classify_intent
 from app.agent.tasks import run_agent_turn
+from app.channels.metrics import record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message, send_to_debtor
 from app.channels.whatsapp import debounce_drain
 from app.core.audit import audit
@@ -103,6 +104,14 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
     tid = UUID(tenant_id)
     first = messages[0]
 
+    try:
+        return _route_buffered(tenant_id, tid, messages, first)
+    except Exception:
+        record_message("entrada", "roteada", "roteamento", "texto", "falha")
+        raise
+
+
+def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
     with tenant_session(tid) as session:
         tenant = session.get(Tenant, tid)
 
@@ -111,6 +120,10 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
             for msg in messages:
                 if msg.has_media:
                     process_whatsapp_receipt.delay(tenant_id, msg.instance, msg.key, msg.message_id)
+                record_message(
+                    "entrada", "roteada", "grupo",
+                    "arquivo" if msg.has_media else "texto", "ok",
+                )
             return "grupo"
 
         quoted = quoted_outbound(session, tid, first.quoted_id)
@@ -121,6 +134,11 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
         debtor = session.get(Debtor, conv.debtor_id) if conv is not None else find_debtor(session, tid, first.phone)
         if debtor is None:
             log.info("inbound.unknown_contact", tenant_id=tenant_id)
+            for msg in messages:
+                record_message(
+                    "entrada", "roteada", "contato_desconhecido",
+                    "arquivo" if msg.has_media else "texto", "falha",
+                )
             return "contato_desconhecido"
 
         conv = conv or get_or_create_conversation(session, tid, debtor)
@@ -141,6 +159,12 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
 
         text = "\n".join(m.text for m in messages if m.text and not m.has_media).strip()
         outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
+        context = route_context(outcome, conv.intent)
+        for msg in messages:
+            if msg.has_media:
+                record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
+            elif msg.text:
+                record_message("entrada", "roteada", context, "texto", "ok")
 
     if turn is not None:
         run_agent_turn.delay(tenant_id, *turn)

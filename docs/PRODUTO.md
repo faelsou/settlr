@@ -1,6 +1,6 @@
 # Produto e regras de negócio
 
-Documento do **Agente de Cobrança + Conciliação** como produto: o que entrega, para quem, e as regras que o código aplica. O detalhe operacional dos fluxos está em [`FLUXOS.md`](../FLUXOS.md). A visão original está em [`Agente de Cobrança + Conciliação — Arquitetura.md`](../Agente%20de%20Cobran%C3%A7a%20+%20Concilia%C3%A7%C3%A3o%20%E2%80%94%20Arquitetura.md).
+Documento do **Settlr** como produto: o que entrega, para quem, e as regras que o código aplica. O detalhe operacional dos fluxos está em [`FLUXOS.md`](../FLUXOS.md). A visão original está em [`Settlr — Arquitetura.md`](../Settlr%20%E2%80%94%20Arquitetura.md).
 
 ---
 

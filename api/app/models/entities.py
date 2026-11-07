@@ -15,6 +15,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -103,17 +104,26 @@ class Invoice(IdMixin, TenantMixin, TimestampMixin, Base):
 
 
 class DunningEvent(IdMixin, TenantMixin, Base):
-    """Cada disparo da régua. A unicidade impede reenviar a mesma etapa."""
+    """Cada disparo da régua. A unicidade vale enquanto a entrega não falhou."""
 
     __tablename__ = "dunning_events"
-    __table_args__ = (UniqueConstraint("invoice_id", "step", "channel"),)
+    __table_args__ = (
+        Index(
+            "uq_dunning_events_step_aberto",
+            "invoice_id",
+            "step",
+            "channel",
+            unique=True,
+            postgresql_where=text("delivery_status <> 'falhou'"),
+        ),
+    )
 
     invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"), index=True)
     step: Mapped[str] = mapped_column(String(16))
     channel: Mapped[str] = mapped_column(String(16))
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    message_id: Mapped[str | None] = mapped_column(String(120))
-    delivery_status: Mapped[str] = mapped_column(String(24), default="enviado")
+    message_id: Mapped[str | None] = mapped_column(String(120), index=True)
+    delivery_status: Mapped[str] = mapped_column(String(24), default="aceito")
 
 
 class Conversation(IdMixin, TenantMixin, TimestampMixin, Base):
@@ -143,7 +153,8 @@ class Message(IdMixin, TenantMixin, Base):
     author: Mapped[str] = mapped_column(String(200))
     body: Mapped[str | None] = mapped_column(Text)
     media_key: Mapped[str | None] = mapped_column(String(300))
-    wa_message_id: Mapped[str | None] = mapped_column(String(120))
+    wa_message_id: Mapped[str | None] = mapped_column(String(120), index=True)
+    delivery_status: Mapped[str | None] = mapped_column(String(24))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -35,6 +35,6 @@ No Minikube o ConfigMap da API já aponta para `otel-collector.observability.svc
 
 ## Painéis
 
-A pasta **Cobrança** abre `Cobrança — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) nos três ambientes.
+A pasta **Cobrança** abre `Cobrança — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) e `WhatsApp — ponta a ponta` (mensagem aceita, roteada e enviada, recibo no aparelho em entregue, lido ou falhou, e arquivo recebido ou entregue com ok e falha) nos três ambientes.
 
 No Minikube a pasta **Kubernetes** separa os sinais do cluster: métricas (USE), logs e traces (RED). O coletor desse ambiente não lê o socket do Docker. CPU, memória, disco e rede vêm do hostmetrics em `/hostfs`.

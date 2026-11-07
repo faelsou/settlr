@@ -9,8 +9,12 @@ DEFAULT_DUNNING_RULES: dict = {
         {"key": "D-3", "offset": -3, "channels": ["whatsapp"], "template": "lembrete"},
         {"key": "D0", "offset": 0, "channels": ["whatsapp"], "template": "vencimento_hoje"},
         {"key": "D+1", "offset": 1, "channels": ["whatsapp"], "template": "segunda_via"},
+        {"key": "D+3", "offset": 3, "channels": ["whatsapp"], "template": "desconto_vista"},
         {"key": "D+5", "offset": 5, "channels": ["whatsapp"], "template": "oferta_negociacao"},
+        {"key": "D+7", "offset": 7, "channels": ["whatsapp"], "template": "parcelamento"},
+        {"key": "D+10", "offset": 10, "channels": ["whatsapp"], "template": "entrada_saldo"},
         {"key": "D+15", "offset": 15, "channels": ["whatsapp", "email"], "template": "ultima_tentativa"},
+        {"key": "D+21", "offset": 21, "channels": ["whatsapp"], "template": "aviso_restricao"},
         {"key": "D+30", "offset": 30, "channels": [], "template": None, "handoff": True},
     ],
     "templates": {
@@ -26,13 +30,31 @@ DEFAULT_DUNNING_RULES: dict = {
             "vencido em {vencimento}. Segue a segunda via: {link}. Se já pagou, é só "
             "responder com o comprovante."
         ),
+        "desconto_vista": (
+            "Olá, {nome}. {descricao} ({valor}) venceu em {vencimento}. "
+            "Se quitar à vista hoje pelo PIX, o valor fica com 15% de desconto. PIX: {pix}"
+        ),
         "oferta_negociacao": (
             "Olá, {nome}. Sabemos que imprevistos acontecem. Se precisar, podemos combinar "
             "uma forma de pagamento para {descricao}. É só responder esta mensagem."
         ),
+        "parcelamento": (
+            "Olá, {nome}. Dá para parcelar {descricao} ({valor}), vencido em {vencimento}, "
+            "em até 6 vezes. Responda com o número de parcelas que cabe no mês."
+        ),
+        "entrada_saldo": (
+            "Olá, {nome}. Para regularizar {descricao} ({valor}), combinamos uma entrada "
+            "agora e o saldo em 3 parcelas. O PIX da entrada é {pix}. "
+            "Se a entrada precisar ser outra, é só responder."
+        ),
         "ultima_tentativa": (
             "Olá, {nome}. Esta é nossa última mensagem automática sobre {descricao} "
             "({valor}). Depois dela, o atendimento passa para nossa equipe."
+        ),
+        "aviso_restricao": (
+            "Olá, {nome}. {descricao} ({valor}) segue em aberto desde {vencimento}. "
+            "Esta é a última oferta antes de o caso ir para análise da equipe, "
+            "com possível restrição do nome. Quite pelo PIX {pix} ou responda para negociar."
         ),
     },
 }

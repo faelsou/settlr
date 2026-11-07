@@ -273,7 +273,7 @@ async def preflight(client: httpx.AsyncClient, base_url: str) -> None:
     if response.status_code == 200:
         return
     title = await _service_title(client)
-    if title and "Cobrança" not in title:
+    if title and "Settlr" not in title:
         raise SystemExit(
             f"{base_url} não é o gateway deste repositório. "
             f"Quem responde aí é «{title}», e essa API não tem /health. "

@@ -12,6 +12,7 @@ from uuid import UUID
 from sqlalchemy import select
 
 from app.agent.tasks import run_agent_turn
+from app.channels.metrics import record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message
 from app.channels.tasks import (
     continue_after_inbound,
@@ -96,6 +97,9 @@ def _store(session, tenant: Tenant, instance: str, raw: dict[str, Any]) -> tuple
         msg.created_at = datetime.fromtimestamp(int(inbound.timestamp), UTC)
         conv.updated_at = msg.created_at
     log.info("inbound.synced", instance=instance, message_id=inbound.message_id)
+    record_message("entrada", "aceita", "sync", "texto", "ok")
+    if conv.state == ConversationState.HUMANO:
+        record_message("entrada", "roteada", "humano", "texto", "ok")
     return inbound.text, conv
 
 
@@ -129,6 +133,8 @@ def _handle_receipt(
     token = f"receipt:{inbound.message_id}"
     if not _claim(conversation_id, token):
         return
+    record_message("entrada", "aceita", "sync", "arquivo", "ok")
+    record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
     try:
         process_whatsapp_receipt(
             str(tenant_id),
@@ -156,9 +162,17 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
             conv = session.get(Conversation, conversation_id)
             debtor = session.get(Debtor, conv.debtor_id)
             outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
-        if turn is None:
-            log.info("inbound.routed", conversation_id=str(conversation_id), outcome=outcome)
-            return
+            context = route_context(outcome, conv.intent)
+    except Exception:
+        record_message("entrada", "roteada", "roteamento", "texto", "falha")
+        _release(conversation_id, token)
+        log.exception("inbound.agent_failed", conversation_id=str(conversation_id))
+        return
+    record_message("entrada", "roteada", context, "texto", "ok")
+    if turn is None:
+        log.info("inbound.routed", conversation_id=str(conversation_id), outcome=outcome)
+        return
+    try:
         run_agent_turn(str(tenant_id), *turn)
     except Exception:
         _release(conversation_id, token)

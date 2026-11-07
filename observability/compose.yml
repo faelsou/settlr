@@ -1,4 +1,4 @@
-# Prometheus + Thanos + Loki + Tempo + Grafana para o Agente de Cobrança.
+# Prometheus + Thanos + Loki + Tempo + Grafana para o Settlr.
 # O coletor OpenTelemetry recebe traces, métricas, logs e métricas de recurso.
 # Sobe à parte e entra na rede do compose de desenvolvimento.
 #
