@@ -69,8 +69,8 @@ data:
   JWT_SECRET: dev-secret-change-me
   WEBHOOK_HMAC: dev-webhook-secret
   EVOLUTION_BASE_URL: https://apiwp.aiagentautomate.com.br
-  # Vazio de propósito. A chave real fica no Secret evolution-api (não versionado)
-  # e os processos que falam com a Evolution leem esse Secret por cima deste valor.
+  # Vazios de propósito. A chave real fica nos Secrets evolution-api e llm-api
+  # (não versionados). Os processos leem o Secret por cima deste valor.
   EVOLUTION_API_KEY: ""
   LLM_API_KEY: ""
   COBRANCA_URL: http://cobranca:8000
@@ -285,7 +285,7 @@ spec:
     spec:
       containers:
         - name: cobranca
-          image: faelsouz/cobranca-api:20261104-1457
+          image: faelsouz/cobranca-api:20261108-agente
           imagePullPolicy: IfNotPresent
           env:
             - { name: SERVICE_NAME, value: cobranca }
@@ -294,6 +294,12 @@ spec:
                 secretKeyRef:
                   name: evolution-api
                   key: EVOLUTION_API_KEY
+                  optional: true
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api
+                  key: LLM_API_KEY
                   optional: true
           envFrom:
             - configMapRef:
@@ -414,7 +420,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: faelsouz/cobranca-api:20261104-1457
+          image: faelsouz/cobranca-api:20261108-agente
           imagePullPolicy: IfNotPresent
           env:
             - { name: SERVICE_NAME, value: worker-cobranca }
@@ -423,6 +429,12 @@ spec:
                 secretKeyRef:
                   name: evolution-api
                   key: EVOLUTION_API_KEY
+                  optional: true
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api
+                  key: LLM_API_KEY
                   optional: true
           envFrom:
             - configMapRef:
@@ -462,6 +474,12 @@ spec:
                 secretKeyRef:
                   name: evolution-api
                   key: EVOLUTION_API_KEY
+                  optional: true
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api
+                  key: LLM_API_KEY
                   optional: true
           envFrom:
             - configMapRef:
