@@ -173,6 +173,7 @@ export type TenantSettings = {
     templates: Record<string, string>;
     whatsapp_templates: Record<string, { name: string; language: string; params: string[] }>;
     rate_per_minute: number;
+    text_version?: string;
   };
   allowed_hours: { start: string; end: string; weekdays: number[] };
   reconciliation_rules: {

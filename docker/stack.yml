@@ -6,6 +6,7 @@
 # Variáveis pedidas no deploy: IMAGE_TAG, REGISTRY, DOMAIN, ACME_EMAIL.
 # Opcionais (vazias = desligado; Sentry e Langfuse não são serviço desta stack):
 # SENTRY_DSN, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST.
+# LEGAL_OPINION_REF vazio bloqueia a ativação do tenant até o parecer do SETL-15.
 # OTEL_EXPORTER_OTLP_ENDPOINT vazio desliga o OTLP. O padrão aponta para o coletor.
 # Métricas, logs e painel: stack à parte em observability/ (coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana).
 #
@@ -42,6 +43,7 @@ x-app-env: &app-env
   LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
   LANGFUSE_HOST: ${LANGFUSE_HOST:-}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+  LEGAL_OPINION_REF: ${LEGAL_OPINION_REF:-}
 
 services:
   traefik:

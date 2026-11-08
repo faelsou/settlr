@@ -321,6 +321,9 @@ export default function ConfiguracoesPage() {
           <p className="mt-1 text-sm text-ink-700/70">
             O texto é o da resposta e do e-mail. O WhatsApp da régua só sai com o template oficial
             aprovado na Meta, no nome preenchido abaixo. Sem esse template e sem o número pareado, a conta não liga a régua.
+            {form.dunning_rules.text_version
+              ? ` Versão ${form.dunning_rules.text_version}, à espera do parecer jurídico.`
+              : ""}
           </p>
         </div>
         {Object.entries(form.dunning_rules.templates).map(([key, value], index) => {

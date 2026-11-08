@@ -192,8 +192,12 @@ flowchart TD
 | D-3 | Lembrete amigável + PIX copia-e-cola | WhatsApp template |
 | D0 | Aviso de vencimento hoje | WhatsApp template |
 | D+1 | "Não identificamos o pagamento" + 2ª via | WhatsApp template |
+| D+3 | Convite a quitar, sem anunciar desconto | WhatsApp template |
 | D+5 | Oferta de negociação dentro da política | WhatsApp template |
+| D+7 | Novo convite a conversar, com o PIX | WhatsApp template |
+| D+10 | Lembrete do título em aberto | WhatsApp template |
 | D+15 | Última tentativa automática + aviso de encaminhamento | WhatsApp + e-mail |
+| D+21 | Aviso de que a equipe assume, sem ameaça | WhatsApp template |
 | D+30 | Sai da régua → fila humana | Painel |
 
 **Regras duras:**
@@ -202,7 +206,7 @@ flowchart TD
 - Não reenvia etapa aceita, entregue ou lida. Falha de entrega libera a mesma etapa no mesmo canal, ainda dentro do horário e do opt-out.
 - Respeita `opt_out` imediatamente.
 - Usa **template oficial aprovado na Meta** para disparo proativo. Sem ele, a etapa de WhatsApp não sai e o texto livre não entra no lugar.
-- A ativação da conta exige número pareado (`open` na Evolution) e template aprovado em cada etapa de WhatsApp. Faltando um dos dois, a régua continua desligada.
+- A ativação da conta exige número pareado (`open` na Evolution) e template aprovado em cada etapa de WhatsApp. Faltando um dos dois, a régua continua desligada. Em produção também exige o parecer do SETL-15 em `LEGAL_OPINION_REF`.
 - Promessa ativa **pausa** a régua até `data_prometida + 1`.
 - Disparo proativo é sempre determinístico — o LLM **não** inicia conversas. O texto livre do modelo só responde quem já falou.
 - Título sem PIX copia-e-cola e sem linha digitável não recebe etapa, nem o handoff de D+30. Quando o código chega, sai só a etapa vigente.

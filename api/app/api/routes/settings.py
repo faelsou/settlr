@@ -69,6 +69,7 @@ class DunningRulesIn(BaseModel):
     templates: dict[str, str] = {}
     whatsapp_templates: dict[str, WhatsappTemplateIn] = {}
     rate_per_minute: int = Field(20, ge=1, le=120)
+    text_version: str = ""
 
     @model_validator(mode="after")
     def _check(self) -> "DunningRulesIn":
