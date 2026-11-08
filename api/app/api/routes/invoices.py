@@ -12,9 +12,9 @@ from app.api.schemas import (
     InvoiceDetail,
     InvoiceOut,
     MatchOut,
-    MessageOut,
     Page,
     PromiseOut,
+    message_out,
 )
 from app.dunning.payment import payment_code_clause
 from app.ingest.service import import_invoices, parse_invoice_csv
@@ -85,7 +85,7 @@ def get_invoice(invoice_id: UUID, db: Session = Depends(get_db)) -> InvoiceDetai
     return InvoiceDetail(
         **InvoiceOut.model_validate(invoice).model_dump(),
         dunning_events=[DunningEventOut.model_validate(e) for e in events],
-        messages=[MessageOut.model_validate(m) for m in messages],
+        messages=[message_out(m) for m in messages],
         promises=[PromiseOut.model_validate(p) for p in promises],
         matches=[MatchOut.model_validate(m) for m in matches],
         installments=[InstallmentOut.model_validate(i) for i in installments],

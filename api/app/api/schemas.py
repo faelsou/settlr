@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.channels.delivery import file_state
+
 
 class ORM(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -71,6 +73,34 @@ class MessageOut(ORM):
     author: str
     body: str | None
     invoice_id: UUID | None
+    created_at: datetime
+    delivery_status: str | None = None
+    file_status: str | None = None
+
+
+def message_out(message) -> MessageOut:
+    """Status de entrega e do arquivo saem da linha. A chave do storage fica no banco."""
+    return MessageOut(
+        id=message.id,
+        direction=message.direction,
+        author=message.author,
+        body=message.body,
+        invoice_id=message.invoice_id,
+        created_at=message.created_at,
+        delivery_status=message.delivery_status,
+        file_status=file_state(message.body, message.media_key),
+    )
+
+
+class DeliveryOut(BaseModel):
+    id: UUID
+    conversation_id: UUID
+    invoice_id: UUID | None
+    debtor_name: str
+    direction: str
+    body: str | None
+    delivery_status: str | None
+    file_status: str | None
     created_at: datetime
 
 

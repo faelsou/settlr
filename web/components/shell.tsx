@@ -14,6 +14,7 @@ import {
   Menu,
   MessageSquare,
   PanelLeft,
+  Send,
   Receipt,
   Search,
   Settings2,
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/pagamentos", label: "Pagamentos", icon: CircleDollarSign, countKey: null },
   { href: "/titulos", label: "Títulos", icon: Receipt, countKey: null },
   { href: "/conversas", label: "Conversas", icon: MessageSquare, countKey: "conversations" },
+  { href: "/entregas", label: "Entregas", icon: Send, countKey: "deliveries" },
   { href: "/aprovacoes", label: "Aprovações", icon: CheckSquare, countKey: "approvals" },
   { href: "/configuracoes", label: "Configurações", icon: Settings2, countKey: null },
   { href: "/metricas", label: "Métricas", icon: Gauge, countKey: null },
@@ -40,6 +42,7 @@ const TITLES: Record<string, string> = {
   "/pagamentos": "Pagamentos",
   "/titulos": "Títulos",
   "/conversas": "Conversas",
+  "/entregas": "Entregas",
   "/aprovacoes": "Aprovações",
   "/configuracoes": "Configurações",
   "/metricas": "Métricas",
@@ -64,6 +67,11 @@ export function Shell({ children }: { children: ReactNode }) {
     queryFn: () => api.conversations("humano"),
     refetchInterval: 15000,
   });
+  const failedDeliveries = useQuery({
+    queryKey: ["deliveries", "falhou"],
+    queryFn: () => api.deliveries(true),
+    refetchInterval: 15000,
+  });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -84,6 +92,7 @@ export function Shell({ children }: { children: ReactNode }) {
     exceptions: exceptions.data?.total,
     approvals: approvals.data?.length,
     conversations: humanChats.data?.total,
+    deliveries: failedDeliveries.data?.total,
   };
   const compact = collapsed && !mobileOpen;
   const section = Object.keys(TITLES).find((href) => pathname === href || pathname.startsWith(`${href}/`));

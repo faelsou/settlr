@@ -26,7 +26,7 @@ O devedor nunca vê o painel. O operador nunca escreve no banco direto: cada aç
 | --- | --- | --- |
 | 1 | Login, Exceções, Pagamentos | Conferir dinheiro que entrou e baixar o que o matcher não fechou |
 | 2 | Títulos | Ver o título, a régua que já rodou e as baixas |
-| 3 | Conversas, Aprovações | Assumir o WhatsApp e decidir pedido fora da política |
+| 3 | Conversas, Entregas, Aprovações | Assumir o WhatsApp, ver se a mensagem chegou e decidir pedido fora da política |
 | 4 | Configurações, Métricas | Política, horário, templates; recuperação, DSO, baixa automática |
 
 A conciliação vem primeiro: não fala com o devedor e gera prova de valor para vender a régua.

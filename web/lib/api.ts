@@ -3,6 +3,7 @@ import type {
   Approval,
   Conversation,
   Debtor,
+  Delivery,
   Invoice,
   InvoiceDetail,
   Me,
@@ -131,6 +132,11 @@ export const api = {
     const q = new URLSearchParams({ limit: "100" });
     if (state) q.set("state", state);
     return request<Page<Conversation>>(`/conversations?${q}`);
+  },
+  deliveries: (failed = false) => {
+    const q = new URLSearchParams({ limit: "100" });
+    if (failed) q.set("falhou", "true");
+    return request<Page<Delivery>>(`/conversations/deliveries?${q}`);
   },
   messages: (id: string) => request<Message[]>(`/conversations/${id}/messages`),
   takeover: (id: string) =>

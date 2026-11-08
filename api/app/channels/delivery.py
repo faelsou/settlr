@@ -21,6 +21,9 @@ FALHOU = "falhou"
 PENDENTE = "pendente"
 ENVIADO = "enviado"
 SEM_RECIBO = "sem_recibo"
+ARQUIVO_RECEBIDO = "recebido"
+ARQUIVO_AUSENTE = "nao_recebido"
+RECEIPT_BODY = "[comprovante]"
 
 # `enviado` é o valor antigo, do tempo em que HTTP 200 encerrava a etapa.
 # `sem_recibo` fica no mesmo degrau de `aceito`: ainda não chegou, mas a etapa segue presa.
@@ -46,6 +49,15 @@ _EVOLUTION_STATUS = {
 
 def normalize_event(event: str) -> str:
     return event.lower().replace("_", ".")
+
+
+def file_state(body: str | None, media_key: str | None) -> str | None:
+    """Cópia no storage, ou comprovante que chegou sem essa cópia. Texto não tem arquivo."""
+    if media_key:
+        return ARQUIVO_RECEBIDO
+    if (body or "").strip() == RECEIPT_BODY:
+        return ARQUIVO_AUSENTE
+    return None
 
 
 def counts_as_dispatched(delivery_status: str) -> bool:

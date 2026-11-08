@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, labelOf } from "@/components/status";
+import { Badge, deliveryCaption, labelOf } from "@/components/status";
 import { Banner, Button, Empty, Segmented, Skeleton, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { clsx, documentBr, money, phonesBr, when } from "@/lib/format";
@@ -215,6 +215,11 @@ function Thread({
                     {message.author} · {when(message.created_at)}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap">{message.body}</p>
+                  {deliveryCaption(message.delivery_status, message.file_status) ? (
+                    <p className={clsx("mt-1 text-[11px]", inbound ? "text-ink-700/60" : "text-white/75")}>
+                      {deliveryCaption(message.delivery_status, message.file_status)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             );
