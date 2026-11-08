@@ -12,11 +12,12 @@ from langchain_core.tools import tool
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from app.agent.policy import NegotiationPolicy, build_payment_options
+from app.agent.policy import Installment, NegotiationPolicy, build_payment_options
 from app.core.audit import audit
 from app.core.db import tenant_session
 from app.dunning.promises import register_promise as _register_promise
-from app.models import Agreement, Approval, Conversation, Invoice, Tenant
+from app.ingest.issuers import IssuedCharge, get_adapter
+from app.models import Agreement, Approval, Conversation, Debtor, Invoice, Tenant
 from app.models.enums import (
     OPEN_INVOICE_STATUSES,
     ApprovalStatus,
@@ -26,6 +27,56 @@ from app.models.enums import (
 from app.reconciliation.service import set_invoice_status
 
 NEGOTIABLE = OPEN_INVOICE_STATUSES
+
+
+def _installment_invoice(
+    session,
+    tenant_id: UUID,
+    debtor_id: UUID,
+    parent_id: UUID,
+    agreement_id: UUID,
+    inst: Installment,
+    charge: IssuedCharge,
+    total: int,
+) -> Invoice:
+    """Grava a parcela com o código do emissor. Se o webhook chegou antes, completa a linha."""
+    description = f"Acordo parcela {inst.number}/{total}"
+    existing = session.scalars(
+        select(Invoice).where(
+            Invoice.tenant_id == tenant_id,
+            Invoice.external_id == charge.external_id,
+        )
+    ).first()
+    if existing is not None:
+        existing.parent_id = parent_id
+        existing.agreement_id = agreement_id
+        existing.description = existing.description or description
+        existing.pix_copy_paste = charge.pix_copy_paste or existing.pix_copy_paste
+        existing.digitable_line = charge.digitable_line or existing.digitable_line
+        existing.payment_url = charge.payment_url or existing.payment_url
+        existing.txid = charge.txid
+        if existing.status == InvoiceStatus.ABERTO:
+            set_invoice_status(existing, InvoiceStatus.EM_COBRANCA)
+        return existing
+
+    new = Invoice(
+        tenant_id=tenant_id,
+        debtor_id=debtor_id,
+        external_id=charge.external_id,
+        description=description,
+        amount=inst.amount,
+        amount_paid=Decimal("0"),
+        due_date=inst.due_date,
+        status=InvoiceStatus.EM_COBRANCA,
+        txid=charge.txid,
+        digitable_line=charge.digitable_line,
+        pix_copy_paste=charge.pix_copy_paste,
+        payment_url=charge.payment_url,
+        parent_id=parent_id,
+        agreement_id=agreement_id,
+    )
+    session.add(new)
+    return new
 
 
 class DebtorRef(BaseModel):
@@ -130,47 +181,67 @@ def create_agreement(
             raise ValueError("títulos mudaram desde a proposta")
 
         total = sum((i.amount_open for i in invoices), Decimal("0"))
-        options = build_payment_options(total, NegotiationPolicy.from_json(tenant.negotiation_policy), today)
+        options = build_payment_options(
+            total, NegotiationPolicy.from_json(tenant.negotiation_policy), today,
+        )
         option = next((o for o in options if o.id == option_id), None)
         if option is None:
             raise ValueError(f"opção fora da política: {option_id}")
+        if not tenant.issuer_provider:
+            raise ValueError("tenant sem emissor")
 
-        agreement = Agreement(
-            tenant_id=tenant_id,
-            debtor_id=debtor_id,
-            source_invoice_ids=[i.id for i in invoices],
-            conditions=option.to_dict(),
-            accepted_at=datetime.now(UTC),
-        )
-        session.add(agreement)
-        session.flush()
+        debtor = session.get(Debtor, debtor_id)
+        if debtor is None:
+            raise ValueError("devedor não encontrado")
+        adapter = get_adapter(tenant.issuer_provider, tenant.issuer_config or {})
+        issued: list[IssuedCharge] = []
+        try:
+            for inst in option.installments:
+                issued.append(adapter.issue(
+                    name=debtor.name,
+                    document=debtor.document,
+                    phone=debtor.phone,
+                    email=debtor.email,
+                    amount=inst.amount,
+                    due_date=inst.due_date,
+                    description=f"Acordo parcela {inst.number}/{len(option.installments)}",
+                ))
 
-        for inv in invoices:
-            if inv.status != InvoiceStatus.EM_NEGOCIACAO:
-                set_invoice_status(inv, InvoiceStatus.EM_NEGOCIACAO)
-            set_invoice_status(inv, InvoiceStatus.RENEGOCIADO)
-
-        parent = invoices[0]
-        created = []
-        for inst in option.installments:
-            new = Invoice(
+            agreement = Agreement(
                 tenant_id=tenant_id,
                 debtor_id=debtor_id,
-                external_id=f"acordo-{str(agreement.id)[:8]}-{inst.number}",
-                description=f"Acordo parcela {inst.number}/{len(option.installments)}",
-                amount=inst.amount,
-                due_date=inst.due_date,
-                status=InvoiceStatus.EM_COBRANCA,
-                parent_id=parent.id,
-                agreement_id=agreement.id,
+                source_invoice_ids=[i.id for i in invoices],
+                conditions=option.to_dict(),
+                accepted_at=datetime.now(UTC),
             )
-            session.add(new)
-            created.append(new)
-        session.flush()
+            session.add(agreement)
+            session.flush()
 
-        audit(session, tenant_id=tenant_id, actor="agente", action="cria_acordo",
-              entity="agreement", entity_id=agreement.id,
-              after={"option": option.to_dict(), "source": [str(i.id) for i in invoices]})
+            for inv in invoices:
+                if inv.status != InvoiceStatus.EM_NEGOCIACAO:
+                    set_invoice_status(inv, InvoiceStatus.EM_NEGOCIACAO)
+                set_invoice_status(inv, InvoiceStatus.RENEGOCIADO)
+
+            parent = invoices[0]
+            created = []
+            for inst, charge in zip(option.installments, issued, strict=True):
+                if not charge.pix_copy_paste and not charge.digitable_line:
+                    raise ValueError("emissor não devolveu PIX nem boleto")
+                new = _installment_invoice(
+                    session, tenant_id, debtor_id, parent.id, agreement.id, inst, charge,
+                    len(option.installments),
+                )
+                created.append(new)
+            session.flush()
+
+            audit(session, tenant_id=tenant_id, actor="agente", action="cria_acordo",
+                  entity="agreement", entity_id=agreement.id,
+                  after={"option": option.to_dict(), "source": [str(i.id) for i in invoices]})
+        except Exception:
+            for charge in issued:
+                adapter.cancel(charge.external_id)
+            raise
+
         return {
             "agreement_id": str(agreement.id),
             "option": option.to_dict(),

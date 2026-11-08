@@ -291,9 +291,12 @@ stateDiagram-v2
 - Qualquer pedido fora da política → `request_human` (não negocia por conta própria).
 - Memória da conversa persistida no Postgres (checkpointer) por devedor.
 
-**Geração de acordo:** ao aceitar, cria `agreements` e novos `invoices` ligados por
-`parent_id` ao(s) título(s) de origem; o(s) título(s) original(is) muda(m) para
-status `renegociado`.
+**Geração de acordo:** ao aceitar, a tool emite cada parcela no emissor do tenant
+(PIX ou boleto) e só então cria `agreements` e os novos `invoices`, com o código
+de pagamento, ligados por `parent_id` ao primeiro título de origem e por
+`agreement_id`. Os títulos originais mudam para `renegociado`. Sem emissor ou sem
+código, nada é gravado e o pedido vai para aprovação. Pedido fora da política
+continua em `request_human`, sem o agente inventar condição.
 
 ---
 

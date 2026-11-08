@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, TypedDict
 
+import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
@@ -45,6 +46,7 @@ class AgentState(TypedDict, total=False):
     options: list[dict]
     chosen_option: str | None
     awaiting_choice: bool
+    approval_reason: str
     replies: list[str]
     outcome: str
 
@@ -52,10 +54,13 @@ class AgentState(TypedDict, total=False):
 def _answer_question(state: AgentState) -> str:
     listing = "\n".join(
         f"- {i['description']}: {brl(Decimal(i['amount_open']))}, "
-        f"vencimento {i['due_date']}, pagamento: {i.get('payment_url') or i.get('pix_copy_paste') or 'sob consulta'}"
+        f"vencimento {i['due_date']}, pagamento: "
+        f"{i.get('payment_url') or i.get('pix_copy_paste') or 'sob consulta'}"
         for i in state.get("invoices", [])
     )
-    system = ANSWER_SYSTEM.format(tenant=state.get("tenant_name", ""), invoices=listing, guardrails=GUARDRAILS)
+    system = ANSWER_SYSTEM.format(
+        tenant=state.get("tenant_name", ""), invoices=listing, guardrails=GUARDRAILS,
+    )
     response = get_chat_model().invoke(
         [SystemMessage(system), HumanMessage(state["text"])],
         config={"callbacks": llm_callbacks(), "run_name": "negotiation_answer"},
@@ -70,9 +75,11 @@ class AgentDeps:
     get_invoices: Callable[[str, str], list[dict]] = lambda t, d: tools.get_debtor_invoices.invoke(
         {"tenant_id": t, "debtor_id": d}
     )
-    get_policy: Callable[[str], dict] = lambda t: tools.get_negotiation_policy.invoke({"tenant_id": t})
-    build_options: Callable[..., list[dict]] = lambda total, policy, today: tools.build_options.invoke(
-        {"total_open": total, "policy": policy, "today": today}
+    get_policy: Callable[[str], dict] = lambda t: tools.get_negotiation_policy.invoke(
+        {"tenant_id": t}
+    )
+    build_options: Callable[..., list[dict]] = lambda total, policy, today: (
+        tools.build_options.invoke({"total_open": total, "policy": policy, "today": today})
     )
     create_agreement: Callable[..., dict] = lambda **kw: tools.create_agreement.invoke(kw)
     request_human: Callable[..., str] = lambda **kw: tools.request_human.invoke(kw)
@@ -98,6 +105,12 @@ def identity_matches(text: str, document: str) -> bool:
 
 def _reply(state: AgentState, *messages: str) -> list[str]:
     return [*state.get("replies", []), *messages]
+
+
+def _parcel_line(invoice: dict) -> str:
+    code = invoice.get("pix_copy_paste") or invoice.get("digitable_line")
+    amount = brl(Decimal(invoice["amount_open"]))
+    return f"- {invoice['description']}: {amount} em {invoice['due_date']}\n  Código: {code}"
 
 
 def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
@@ -169,7 +182,9 @@ def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
         return {
             "awaiting_choice": False,
             "outcome": "sem_pendencias",
-            "replies": _reply(state, "Não encontrei pendências em aberto no seu nome. Posso ajudar em algo mais?"),
+            "replies": _reply(
+                state, "Não encontrei pendências em aberto no seu nome. Posso ajudar em algo mais?",
+            ),
         }
 
     def gerar_propostas(state: AgentState) -> AgentState:
@@ -210,20 +225,28 @@ def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
         }.get(decision, "repetir_opcoes")
 
     def repetir_opcoes(state: AgentState) -> AgentState:
-        return {"replies": _reply(state, "Não entendi qual opção você prefere. Pode responder com o número?")}
+        return {
+            "replies": _reply(
+                state, "Não entendi qual opção você prefere. Pode responder com o número?",
+            ),
+        }
 
     def criar_acordo(state: AgentState) -> AgentState:
-        result = deps.create_agreement(
-            tenant_id=state["tenant_id"],
-            debtor_id=state["debtor_id"],
-            invoice_ids=[i["id"] for i in state["invoices"]],
-            option_id=state["chosen_option"],
-            today=state["today"],
-        )
-        parcels = "\n".join(
-            f"- {i['description']}: {brl(Decimal(i['amount_open']))} em {i['due_date']}"
-            for i in result["invoices"]
-        )
+        try:
+            result = deps.create_agreement(
+                tenant_id=state["tenant_id"],
+                debtor_id=state["debtor_id"],
+                invoice_ids=[i["id"] for i in state["invoices"]],
+                option_id=state["chosen_option"],
+                today=state["today"],
+            )
+        except (ValueError, httpx.HTTPError, NotImplementedError) as exc:
+            return {
+                "awaiting_choice": False,
+                "outcome": "emitir_falhou",
+                "approval_reason": f"Acordo não registrado: {exc}",
+            }
+        parcels = "\n".join(_parcel_line(i) for i in result["invoices"])
         return {
             "awaiting_choice": False,
             "options": [],
@@ -231,8 +254,7 @@ def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
             "outcome": "acordo",
             "replies": _reply(
                 state,
-                f"Combinado! Acordo registrado: {result['label']}.\n{parcels}\n"
-                "Você vai receber os dados de pagamento de cada parcela por aqui.",
+                f"Combinado! Acordo registrado: {result['label']}.\n{parcels}",
             ),
         }
 
@@ -244,12 +266,15 @@ def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
             "replies": _reply(state, "Tudo bem. Se mudar de ideia, é só me chamar por aqui."),
         }
 
+    def after_create(state: AgentState) -> str:
+        return "pedir_aprovacao" if state.get("outcome") == "emitir_falhou" else END
+
     def pedir_aprovacao(state: AgentState) -> AgentState:
         deps.request_human(
             tenant_id=state["tenant_id"],
             conversation_id=state["conversation_id"],
             thread_id=state["thread_id"],
-            reason=f"Pedido do devedor: {state['text']}",
+            reason=state.get("approval_reason") or f"Pedido do devedor: {state['text']}",
             payload={"invoices": state.get("invoices", []), "options": state.get("options", [])},
         )
         return {
@@ -287,20 +312,25 @@ def build_graph(deps: AgentDeps | None = None, checkpointer: Any = None):
     ]:
         g.add_node(name, fn)
 
-    g.add_conditional_edges(START, entry, ["pedir_identidade", "verificar_identidade", "consultar_titulos"])
+    g.add_conditional_edges(
+        START, entry, ["pedir_identidade", "verificar_identidade", "consultar_titulos"],
+    )
     g.add_edge("pedir_identidade", END)
     g.add_conditional_edges("verificar_identidade", after_identity, ["consultar_titulos", END])
     g.add_conditional_edges(
         "consultar_titulos", classificar_pedido,
         ["sem_pendencias", "aguardar_aceite", "gerar_propostas", "responder"],
     )
-    g.add_conditional_edges("gerar_propostas", has_options, ["apresentar_opcoes", "pedir_aprovacao"])
+    g.add_conditional_edges(
+        "gerar_propostas", has_options, ["apresentar_opcoes", "pedir_aprovacao"],
+    )
     g.add_conditional_edges(
         "aguardar_aceite", route_choice,
         ["criar_acordo", "encerrar", "pedir_aprovacao", "repetir_opcoes"],
     )
+    g.add_conditional_edges("criar_acordo", after_create, ["pedir_aprovacao", END])
     g.add_edge("pedir_aprovacao", "aguardar_humano")
-    for terminal in ["sem_pendencias", "apresentar_opcoes", "repetir_opcoes", "criar_acordo",
+    for terminal in ["sem_pendencias", "apresentar_opcoes", "repetir_opcoes",
                      "encerrar", "aguardar_humano", "responder"]:
         g.add_edge(terminal, END)
 

@@ -105,7 +105,7 @@ Política padrão (editável na tela Configurações):
 
 O código gera as opções (`à vista` e `parcelado_Nx`). O LLM **escolhe entre elas**. Pedido fora da política (ex.: 8x quando o teto é 6) **pausa o agente** e abre aprovação no painel.
 
-Ao aceitar um acordo: os títulos de origem viram `renegociado`; nascem parcelas novas ligadas por `parent_id` / `agreement_id`.
+Ao aceitar um acordo: o emissor do tenant gera PIX ou boleto para cada parcela; os títulos de origem viram `renegociado`; nascem parcelas novas ligadas por `parent_id` / `agreement_id`, já com o código de pagamento. Sem emissor ou sem código, o acordo não fica gravado. Pedido fora da política continua na aprovação, sem o agente inventar condição.
 
 ---
 

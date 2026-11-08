@@ -86,7 +86,7 @@ O painel fala só com o gateway. O browser não abre cobrança, conciliação ne
 | Escrita | Onde fecha | O que pode repetir |
 | --- | --- | --- |
 | Baixa, status do título, match, `audit_log` | Uma transação no Postgres | O webhook. A segunda vez não cria pagamento |
-| Acordo e parcelas | A tool grava na mesma sessão; fora da política o grafo para | A decisão humana retoma pelo `approvals` |
+| Acordo e parcelas | A tool emite PIX ou boleto no emissor e grava na mesma sessão; fora da política o grafo para | A decisão humana retoma pelo `approvals` |
 | Régua | Uma transação por título; o evento só entra depois do envio | O cron. Etapa já gravada é `etapa_ja_enviada` |
 | Comprovante | Objeto no MinIO e linha `aguardando_banco` | O arquivo. O hash devolve o pagamento existente |
 | Match provisório | `matches.provisional` até extrato ou webhook | A sugestão. Quem quita é o banco |
