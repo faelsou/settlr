@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
+from app.channels.queue_notice import notify_human_queue
 from app.core.audit import audit
 from app.core.redis import redis_lock
 from app.models import Debtor, Invoice, Match, Payment, Promise, ReviewException, Tenant
@@ -186,6 +187,11 @@ def open_exception(
     audit(
         session, tenant_id=tenant_id, actor="sistema", action="abre_excecao",
         entity="exception", entity_id=exc.id, after={"type": type_, **(details or {})},
+    )
+    kind = type_.value if isinstance(type_, ExceptionType) else str(type_)
+    notify_human_queue(
+        session, tenant_id=tenant_id, kind=kind, entity="exception",
+        entity_id=exc.id, opened_at=exc.created_at,
     )
     return exc
 

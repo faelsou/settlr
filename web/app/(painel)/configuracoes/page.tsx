@@ -80,7 +80,7 @@ export default function ConfiguracoesPage() {
       <PageHeader
         eyebrow="Tenant"
         title="Configurações"
-        hint="Política, régua e horário. O agente só oferece o que cabe aqui — nunca inventa valor."
+        hint="Política, régua, horário e o aviso da fila humana. O agente só oferece o que cabe aqui — nunca inventa valor."
       />
 
       {save.isError ? <Banner>{errorText(save.error)}</Banner> : null}
@@ -99,6 +99,7 @@ export default function ConfiguracoesPage() {
       />
 
       {section === "disparo" ? (
+      <>
       <Card className="space-y-4 p-6">
         <div>
           <h2 className="font-display text-xl">Números de disparo</h2>
@@ -176,6 +177,36 @@ export default function ConfiguracoesPage() {
           </Button>
         </div>
       </Card>
+      <Card className="space-y-4 p-6">
+        <div>
+          <h2 className="font-display text-xl">Aviso da fila humana</h2>
+          <p className="mt-1 text-sm text-ink-700/70">
+            Exceção, contestação, aprovação e título em D+30 avisam o dono. O texto traz o tipo e há quanto tempo está parado. O devedor não recebe, mesmo em opt-out.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="E-mail do dono">
+            <Input
+              type="email"
+              value={form.owner_email ?? ""}
+              placeholder="dono@clinica.com.br"
+              onChange={(event) => setForm({ ...form, owner_email: event.target.value })}
+            />
+          </Field>
+          <Field label="WhatsApp interno do dono">
+            <Input
+              inputMode="tel"
+              value={form.owner_phone ?? ""}
+              placeholder="11988887777"
+              onChange={(event) => setForm({ ...form, owner_phone: event.target.value })}
+            />
+          </Field>
+        </div>
+        <Button type="button" onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? "Salvando…" : "Salvar aviso"}
+        </Button>
+      </Card>
+      </>
       ) : null}
 
       {section === "politica" ? (

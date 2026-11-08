@@ -153,6 +153,8 @@ Todo dinheiro que entra vira um `payment`. O matcher tenta casar com título em 
 | `contestacao` | Devedor contestou | Decide a favor da cobrança (volta à régua) ou do devedor (cancela) |
 | `fila_humana` | Título em D+30 | Sai da régua automática |
 
+Item novo nessa fila — exceção, contestação, aprovação fora da política ou título em D+30 — avisa o dono da empresa. O aviso sai por e-mail ou, sem e-mail, pelo WhatsApp interno cadastrado em Configurações. O texto diz o tipo e há quanto tempo o item está parado. O devedor não recebe esse aviso: contato de quem está em opt-out nunca é o destino.
+
 Confirmar pagamento **sem confirmação do banco** é recusado (409). Rejeitar uma sugestão reabre o pagamento como “não identificado”. Toda decisão grava responsável e `audit_log`.
 
 ---

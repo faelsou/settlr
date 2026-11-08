@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.agent.policy import Installment, NegotiationPolicy, build_payment_options
+from app.channels.queue_notice import notify_human_queue
 from app.core.audit import audit
 from app.core.db import tenant_session
 from app.dunning.promises import register_promise as _register_promise
@@ -270,4 +271,8 @@ def request_human(
         session.flush()
         audit(session, tenant_id=tenant_id, actor="agente", action="pede_aprovacao",
               entity="approval", entity_id=approval.id, after={"reason": reason})
+        notify_human_queue(
+            session, tenant_id=tenant_id, kind="aprovacao", entity="approval",
+            entity_id=approval.id, opened_at=approval.created_at,
+        )
         return str(approval.id)
