@@ -168,6 +168,11 @@ jobs:
   build:
     needs: [test-api, test-web, security]
     runs-on: ubuntu-latest
+    # cache-to type=gha grava no cache do Actions. Sem actions: write o token
+    # recusa a camada e o build, que já tinha concluído, falha no fim.
+    permissions:
+      contents: read
+      actions: write
     strategy:
       fail-fast: true
       matrix:
