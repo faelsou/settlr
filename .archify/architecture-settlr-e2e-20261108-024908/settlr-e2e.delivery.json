@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "62b16e75-33df-48d1-aaa5-6b8277cbbb3b",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+  "output": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+  "specification": {
+    "sha256": "443269f175124bd1c0a231787012b0adb5660d80a036de92761e3e751e19e705",
+    "bytes": 14664
+  },
+  "artifact": {
+    "sha256": "9715453539f3c9adc6baeb9bf8dc2dfbef8720f0562c4e41f8ce5ee74ee0a266",
+    "bytes": 860925
+  }
+}

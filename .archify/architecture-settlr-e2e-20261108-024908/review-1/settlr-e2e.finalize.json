@@ -1,0 +1,1166 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-11-08T06:05:58.682Z",
+  "specification": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+    "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+    "bytes": 14663
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+    "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+    "bytes": 861982
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/home/rafael/www/Settlr",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+          "bytes": 14663
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 859,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/home/rafael/www/Settlr",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "faa86339-bec3-417a-b6dd-48b3735c1907",
+        "ok": true,
+        "command": "deliver",
+        "type": "architecture",
+        "input": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "output": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "specification": {
+          "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+          "bytes": 14663
+        },
+        "artifact": {
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "evidence": {
+          "verified": true,
+          "repository": "git@github.com:faelsou/agent-cobranca",
+          "revision": "a903de13e5b6f412c47014743cc434c84ec6565f",
+          "references": 50,
+          "linkMode": "local-only"
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 172,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "check",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "artifact": {
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "metrics": {
+            "properCrossings": 0,
+            "resolvedCrossovers": 4,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 11,
+            "desktopReadabilityIssues": 0,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 6.0242914979757085,
+            "maxBends": 5,
+            "routesOverSuggestedBends": 3,
+            "maxStretch": 1.633,
+            "routesOverSuggestedStretch": 2,
+            "minSegmentPx": 24,
+            "minInteriorSegmentPx": 88.3,
+            "shortSegmentCount": 0,
+            "shortEndpointSegmentCount": 0,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [
+              {
+                "left": {
+                  "id": "run-cadastro",
+                  "from": "redis",
+                  "to": "wcad",
+                  "label": "cadastro",
+                  "collectionIndex": 16,
+                  "artifactIndex": 17
+                },
+                "right": {
+                  "id": "arquivo",
+                  "from": "wcon",
+                  "to": "minio",
+                  "label": "comprovante",
+                  "collectionIndex": 22,
+                  "artifactIndex": 23
+                },
+                "point": [
+                  477.5,
+                  724
+                ]
+              },
+              {
+                "left": {
+                  "id": "run-cobranca",
+                  "from": "redis",
+                  "to": "wcob",
+                  "label": "cobrança",
+                  "collectionIndex": 18,
+                  "artifactIndex": 19
+                },
+                "right": {
+                  "id": "ocr",
+                  "from": "wcon",
+                  "to": "llm",
+                  "label": "extração",
+                  "collectionIndex": 25,
+                  "artifactIndex": 26
+                },
+                "point": [
+                  846,
+                  716
+                ]
+              },
+              {
+                "left": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "right": {
+                  "id": "ocr",
+                  "from": "wcon",
+                  "to": "llm",
+                  "label": "extração",
+                  "collectionIndex": 25,
+                  "artifactIndex": 26
+                },
+                "point": [
+                  1092.2750000000003,
+                  716
+                ]
+              },
+              {
+                "left": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "right": {
+                  "id": "agente",
+                  "from": "wcob",
+                  "to": "llm",
+                  "label": "agente",
+                  "collectionIndex": 26,
+                  "artifactIndex": 27
+                },
+                "point": [
+                  1092.2750000000003,
+                  724
+                ],
+                "sharedNode": "wcob"
+              }
+            ],
+            "crowdedSides": [
+              {
+                "node": "redis",
+                "label": "Redis 7",
+                "side": "left",
+                "relationships": 3,
+                "sidePx": 48,
+                "neededPx": 60
+              },
+              {
+                "node": "wcob",
+                "label": "Worker cobrança",
+                "side": "left",
+                "relationships": 3,
+                "sidePx": 56,
+                "neededPx": 60
+              }
+            ],
+            "detours": [
+              {
+                "relationship": {
+                  "id": "arquivo",
+                  "from": "wcon",
+                  "to": "minio",
+                  "label": "comprovante",
+                  "collectionIndex": 22,
+                  "artifactIndex": 23
+                },
+                "bends": 4,
+                "stretch": 1.633
+              },
+              {
+                "relationship": {
+                  "id": "midia",
+                  "from": "wcob",
+                  "to": "minio",
+                  "label": "mídia",
+                  "collectionIndex": 23,
+                  "artifactIndex": 24
+                },
+                "bends": 4,
+                "stretch": 1.452
+              },
+              {
+                "relationship": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "bends": 5,
+                "stretch": 1.237
+              }
+            ]
+          },
+          "leadingSpace": {
+            "measured": true,
+            "emptyTopPx": 16,
+            "emptyTopRatio": 0.014,
+            "occupiedTop": 16,
+            "viewBoxTop": 0,
+            "canvasHeight": 1130,
+            "typicalNodeHeight": 56,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "legacy-930",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": 7.5,
+            "requestedTargetMet": false,
+            "hardFloorPx": 6,
+            "hardFloorMet": true,
+            "minimumOwner": {
+              "kind": "edge",
+              "id": "login",
+              "from": "operador",
+              "to": "supabase"
+            },
+            "minimumSourceTextPx": 8,
+            "minimumProjectedTextPx": 6.0242914979757085,
+            "semanticTextCount": 69
+          },
+          "issues": []
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "faa86339-bec3-417a-b6dd-48b3735c1907"
+      }
+    },
+    "browser-check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 3037,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "browser-check",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--json",
+        "--require-provenance",
+        "--out-dir",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "pass",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "faa86339-bec3-417a-b6dd-48b3735c1907",
+        "artifact": {
+          "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "available",
+          "executable": "/usr/bin/google-chrome"
+        },
+        "diagnostics": [],
+        "containment": {
+          "status": "pass",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": [
+            {
+              "width": 1440,
+              "height": 900,
+              "theme": "light",
+              "innerWidth": 1440,
+              "innerHeight": 900,
+              "scrollWidth": 1440,
+              "scrollHeight": 1085,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 12,
+                "headerPx": 52,
+                "diagramChromePx": 78,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1600,
+              "height": 1000,
+              "theme": "light",
+              "innerWidth": 1600,
+              "innerHeight": 1000,
+              "scrollWidth": 1600,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "theme": "light",
+              "innerWidth": 1920,
+              "innerHeight": 1080,
+              "scrollWidth": 1920,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 2048,
+              "height": 1320,
+              "theme": "light",
+              "innerWidth": 2048,
+              "innerHeight": 1320,
+              "scrollWidth": 2048,
+              "scrollHeight": 1320,
+              "overflowX": false,
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
+              "readerLayout": "adaptive",
+              "readerOverflow": null,
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1233,
+              "diagramWidth": 1183,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 68,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 7.663157894736842,
+              "minimumProjectedNonEdgeTextPx": 8.621052631578948,
+              "minimumProjectedEdgeTextPx": 7.663157894736842,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            }
+          ]
+        },
+        "themeStates": {
+          "status": "pass",
+          "viewports": [
+            {
+              "width": 1440,
+              "height": 900,
+              "requestedTheme": "light",
+              "resolvedTheme": "light",
+              "ok": true
+            },
+            {
+              "width": 1600,
+              "height": 1000,
+              "requestedTheme": "light",
+              "resolvedTheme": "light",
+              "ok": true
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "requestedTheme": "light",
+              "resolvedTheme": "light",
+              "ok": true
+            },
+            {
+              "width": 2048,
+              "height": 1320,
+              "requestedTheme": "light",
+              "resolvedTheme": "light",
+              "ok": true
+            },
+            {
+              "width": 1440,
+              "height": 900,
+              "requestedTheme": "dark",
+              "resolvedTheme": "dark",
+              "ok": true
+            },
+            {
+              "width": 2048,
+              "height": 1320,
+              "requestedTheme": "dark",
+              "resolvedTheme": "dark",
+              "ok": true
+            }
+          ]
+        },
+        "readability": {
+          "status": "pass",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": [
+            {
+              "width": 1440,
+              "height": 900,
+              "theme": "light",
+              "innerWidth": 1440,
+              "innerHeight": 900,
+              "scrollWidth": 1440,
+              "scrollHeight": 1085,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 12,
+                "headerPx": 52,
+                "diagramChromePx": 78,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1600,
+              "height": 1000,
+              "theme": "light",
+              "innerWidth": 1600,
+              "innerHeight": 1000,
+              "scrollWidth": 1600,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "theme": "light",
+              "innerWidth": 1920,
+              "innerHeight": 1080,
+              "scrollWidth": 1920,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 2048,
+              "height": 1320,
+              "theme": "light",
+              "innerWidth": 2048,
+              "innerHeight": 1320,
+              "scrollWidth": 2048,
+              "scrollHeight": 1320,
+              "overflowX": false,
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
+              "readerLayout": "adaptive",
+              "readerOverflow": null,
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1233,
+              "diagramWidth": 1183,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 68,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 7.663157894736842,
+              "minimumProjectedNonEdgeTextPx": 8.621052631578948,
+              "minimumProjectedEdgeTextPx": 7.663157894736842,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            }
+          ]
+        },
+        "viewerChrome": {
+          "status": "pass",
+          "viewports": [
+            {
+              "width": 1440,
+              "height": 900,
+              "theme": "light",
+              "innerWidth": 1440,
+              "innerHeight": 900,
+              "scrollWidth": 1440,
+              "scrollHeight": 1085,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 12,
+                "headerPx": 52,
+                "diagramChromePx": 78,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1600,
+              "height": 1000,
+              "theme": "light",
+              "innerWidth": 1600,
+              "innerHeight": 1000,
+              "scrollWidth": 1600,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "theme": "light",
+              "innerWidth": 1920,
+              "innerHeight": 1080,
+              "scrollWidth": 1920,
+              "scrollHeight": 1151,
+              "overflowX": false,
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
+              "readerLayout": "adaptive",
+              "readerOverflow": "authored",
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1060,
+              "diagramWidth": 1030,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 60,
+                "diagramChromePx": 84,
+                "svgPx": 942,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 6.672064777327935,
+              "minimumProjectedNonEdgeTextPx": 7.506072874493927,
+              "minimumProjectedEdgeTextPx": 6.672064777327935,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            },
+            {
+              "width": 2048,
+              "height": 1320,
+              "theme": "light",
+              "innerWidth": 2048,
+              "innerHeight": 1320,
+              "scrollWidth": 2048,
+              "scrollHeight": 1320,
+              "overflowX": false,
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
+              "readerLayout": "adaptive",
+              "readerOverflow": null,
+              "readerFit": "intrinsic-height",
+              "ok": true,
+              "readerWidth": 1233,
+              "diagramWidth": 1183,
+              "pageComposition": {
+                "bodyPaddingPx": 64,
+                "headerPx": 68,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
+                "cardsPx": 0,
+                "viewBoxHeight": 1130
+              },
+              "viewBoxWidth": 1235,
+              "minimumProjectedNodeTextPx": 7.663157894736842,
+              "minimumProjectedNonEdgeTextPx": 8.621052631578948,
+              "minimumProjectedEdgeTextPx": 7.663157894736842,
+              "minimumProjectedNodeText": "login",
+              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeTextOwner": {
+                "kind": "edge",
+                "id": "login",
+                "from": "operador",
+                "to": "supabase"
+              },
+              "minimumRequiredNodeTextPx": 6,
+              "readabilityOk": true,
+              "hasLegend": true,
+              "hasNavigationDock": true,
+              "legendDockIntersectionArea": 0,
+              "dockStageIntersectionArea": 0,
+              "dockStageGap": 10,
+              "requiredDockStageGap": 10,
+              "viewerChromeStageOk": true,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
+              "viewerChromeOk": true,
+              "resolvedTheme": "light"
+            }
+          ]
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "directory": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1",
+          "receipt": "settlr-e2e.browser-check.json",
+          "files": []
+        }
+      }
+    }
+  },
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.finalize-summary.json",
+    "browserCheckReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "finishedAt": "2026-11-08T06:06:02.871Z",
+  "durationMs": 4188,
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-08T06:05:58.756Z",
+    "source": "network",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A newer release is available. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  }
+}

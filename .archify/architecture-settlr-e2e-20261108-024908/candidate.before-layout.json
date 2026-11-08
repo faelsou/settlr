@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Settlr de ponta a ponta",
+    "output": ".archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:faelsou/agent-cobranca.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "a903de13e5b6f412c47014743cc434c84ec6565f"
+    },
+    "views": [
+      {
+        "id": "painel",
+        "label": "Operador no painel",
+        "focus": ["operador", "supabase", "traefik", "painel", "gateway", "cadastro", "cobranca", "conciliacao", "postgres"],
+        "note": "O Next.js só chama o gateway. Quem grava é o serviço dono da rota."
+      },
+      {
+        "id": "whatsapp",
+        "label": "Régua e resposta",
+        "focus": ["devedor", "evolution", "gateway", "redis", "beat", "wcob", "llm"],
+        "note": "A régua é cron. O LLM entra só quando o devedor responde."
+      },
+      {
+        "id": "dinheiro",
+        "label": "Entrada de dinheiro",
+        "focus": ["emissor", "banco", "gateway", "cadastro", "conciliacao", "wcon", "minio", "postgres"],
+        "note": "O título nasce no cadastro. A baixa definitiva espera o banco."
+      }
+    ],
+    "legend": {
+      "entries": {
+        "external": { "label": "Fora do Swarm" },
+        "frontend": { "label": "Painel" },
+        "backend": { "label": "Processo" },
+        "cloud": { "label": "Borda TLS" },
+        "security": { "label": "Identidade" },
+        "database": { "label": "Dados" },
+        "messagebus": { "label": "Fila" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "supabase",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "JWT do painel",
+      "pos": [36, 22],
+      "size": [130, 48],
+      "sources": [
+        { "path": "web/lib/auth.ts", "line": 9, "end_line": 35, "label": "Sessão Supabase" },
+        { "path": "web/app/login/page.tsx", "line": 24, "end_line": 27, "label": "Login de produção" }
+      ]
+    },
+    {
+      "id": "operador",
+      "type": "external",
+      "label": "Operador",
+      "sublabel": "navegador",
+      "pos": [36, 112],
+      "size": [130, 56],
+      "sources": [
+        { "path": "web/app/login/page.tsx", "line": 10, "end_line": 30, "label": "Login do painel" }
+      ]
+    },
+    {
+      "id": "emissor",
+      "type": "external",
+      "label": "Emissor",
+      "sublabel": "Asaas, Inter, Efí",
+      "pos": [36, 268],
+      "size": [130, 52],
+      "sources": [
+        { "path": "api/app/api/routes/webhooks.py", "line": 111, "end_line": 126, "label": "Webhook do emissor" }
+      ]
+    },
+    {
+      "id": "banco",
+      "type": "external",
+      "label": "Banco",
+      "sublabel": "extrato PIX",
+      "pos": [36, 356],
+      "size": [130, 52],
+      "sources": [
+        { "path": "api/app/api/routes/webhooks.py", "line": 143, "end_line": 169, "label": "Webhook do banco" }
+      ]
+    },
+    {
+      "id": "devedor",
+      "type": "external",
+      "label": "Devedor",
+      "sublabel": "WhatsApp",
+      "pos": [1040, 16],
+      "size": [145, 46],
+      "sources": [
+        { "path": "api/app/api/routes/webhooks.py", "line": 36, "end_line": 67, "label": "Mensagem recebida" },
+        { "path": "api/app/channels/outbound.py", "line": 68, "end_line": 81, "label": "Resposta 1:1" }
+      ]
+    },
+    {
+      "id": "evolution",
+      "type": "backend",
+      "label": "Evolution API",
+      "sublabel": "WhatsApp",
+      "pos": [1040, 112],
+      "size": [155, 58],
+      "sources": [
+        { "path": "docker/evolution/entrypoint.sh", "line": 6, "end_line": 9, "label": "Webhook interno" },
+        { "path": "docker/stack.yml", "line": 308, "end_line": 345, "label": "Serviço wa." },
+        { "path": "api/app/channels/whatsapp.py", "line": 168, "end_line": 188, "label": "Envio texto e template" }
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "external",
+      "label": "LLM",
+      "sublabel": "gpt-4o-mini",
+      "pos": [1040, 470],
+      "size": [155, 58],
+      "sources": [
+        { "path": "api/app/core/llm.py", "line": 16, "end_line": 22, "label": "Modelo configurável" },
+        { "path": "api/app/receipts/extractor.py", "line": 24, "end_line": 40, "label": "Leitura do comprovante" },
+        { "path": "api/app/agent/tasks.py", "line": 35, "end_line": 42, "label": "Turno do agente" }
+      ]
+    },
+    {
+      "id": "traefik",
+      "type": "cloud",
+      "label": "Traefik",
+      "sublabel": "TLS :443",
+      "pos": [400, 104],
+      "size": [180, 68],
+      "sources": [
+        { "path": "docker/stack.yml", "line": 47, "end_line": 65, "label": "Entrypoints 80 e 443" },
+        { "path": "docker/stack.yml", "line": 94, "end_line": 100, "label": "Host do painel" },
+        { "path": "docker/stack.yml", "line": 124, "end_line": 131, "label": "Host da API" }
+      ]
+    },
+    {
+      "id": "painel",
+      "type": "frontend",
+      "label": "Painel",
+      "sublabel": "Next.js :3000",
+      "pos": [680, 108],
+      "size": [160, 60],
+      "sources": [
+        { "path": "web/lib/api.ts", "line": 26, "end_line": 34, "label": "Cliente do gateway" },
+        { "path": "web/lib/auth.ts", "line": 5, "end_line": 7, "label": "Base da API" },
+        { "path": "docker/stack.yml", "line": 78, "end_line": 100, "label": "frontend-web" }
+      ]
+    },
+    {
+      "id": "beat",
+      "type": "backend",
+      "label": "Beat",
+      "sublabel": "relo-disp",
+      "tag": "1 réplica",
+      "pos": [210, 616],
+      "size": [145, 50],
+      "sources": [
+        { "path": "api/app/workers/celery_app.py", "line": 38, "end_line": 47, "label": "Agenda da régua" },
+        { "path": "docker/stack.yml", "line": 284, "end_line": 305, "label": "Uma réplica só" }
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "Gateway",
+      "sublabel": "webhook-api",
+      "pos": [400, 268],
+      "size": [180, 130],
+      "sources": [
+        { "path": "api/app/services/gateway.py", "line": 57, "end_line": 84, "label": "Proxy para o dono" },
+        { "path": "api/app/services/routing.py", "line": 4, "end_line": 17, "label": "Rota por caminho" },
+        { "path": "api/app/main.py", "line": 1, "end_line": 5, "label": "Porta pública" }
+      ]
+    },
+    {
+      "id": "cadastro",
+      "type": "backend",
+      "label": "Cadastro",
+      "sublabel": "títulos",
+      "pos": [400, 478],
+      "size": [155, 58],
+      "sources": [
+        { "path": "api/app/services/cadastro.py", "line": 1, "end_line": 10, "label": "Rotas do cadastro" },
+        { "path": "api/app/api/routes/webhooks.py", "line": 111, "end_line": 126, "label": "Enfileira o emissor" },
+        { "path": "api/app/ingest/tasks.py", "line": 19, "end_line": 25, "label": "Importa títulos" }
+      ]
+    },
+    {
+      "id": "conciliacao",
+      "type": "backend",
+      "label": "Conciliação",
+      "sublabel": "pagamentos",
+      "pos": [610, 478],
+      "size": [165, 58],
+      "sources": [
+        { "path": "api/app/services/conciliacao.py", "line": 1, "end_line": 10, "label": "Rotas de pagamento" },
+        { "path": "api/app/api/routes/webhooks.py", "line": 143, "end_line": 169, "label": "Registra e enfileira" },
+        { "path": "api/app/reconciliation/tasks.py", "line": 12, "end_line": 19, "label": "Matching" }
+      ]
+    },
+    {
+      "id": "cobranca",
+      "type": "backend",
+      "label": "Cobrança",
+      "sublabel": "WhatsApp",
+      "pos": [830, 478],
+      "size": [150, 58],
+      "sources": [
+        { "path": "api/app/services/cobranca.py", "line": 55, "end_line": 59, "label": "Rotas da cobrança" },
+        { "path": "api/app/channels/tasks.py", "line": 130, "end_line": 145, "label": "Debounce da entrada" },
+        { "path": "api/app/dunning/tasks.py", "line": 24, "end_line": 34, "label": "Dispara a régua" }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis 7",
+      "sublabel": "filas Celery",
+      "pos": [420, 616],
+      "size": [560, 48],
+      "sources": [
+        { "path": "api/app/workers/celery_app.py", "line": 11, "end_line": 37, "label": "Broker e rotas" },
+        { "path": "api/app/services/queues.py", "line": 6, "end_line": 20, "label": "Fila por serviço" },
+        { "path": "api/app/core/config.py", "line": 128, "end_line": 129, "label": "Broker no Redis" }
+      ]
+    },
+    {
+      "id": "wcad",
+      "type": "backend",
+      "label": "Worker cadastro",
+      "sublabel": "importação",
+      "pos": [400, 748],
+      "size": [155, 56],
+      "sources": [
+        { "path": "docker/stack.yml", "line": 259, "end_line": 262, "label": "Fila cadastro" },
+        { "path": "api/app/ingest/tasks.py", "line": 28, "end_line": 40, "label": "Grava o título" },
+        { "path": "api/app/services/queues.py", "line": 16, "end_line": 19, "label": "Fila do worker" }
+      ]
+    },
+    {
+      "id": "wcon",
+      "type": "backend",
+      "label": "Worker conciliação",
+      "sublabel": "OCR e baixa",
+      "pos": [610, 748],
+      "size": [165, 56],
+      "sources": [
+        { "path": "docker/stack.yml", "line": 231, "end_line": 233, "label": "Filas da conciliação" },
+        { "path": "api/app/receipts/extractor.py", "line": 24, "end_line": 40, "label": "Extrai o comprovante" },
+        { "path": "api/app/reconciliation/tasks.py", "line": 12, "end_line": 19, "label": "Concilia o pagamento" }
+      ]
+    },
+    {
+      "id": "wcob",
+      "type": "backend",
+      "label": "Worker cobrança",
+      "sublabel": "régua e agente",
+      "pos": [830, 748],
+      "size": [150, 56],
+      "sources": [
+        { "path": "docker/stack.yml", "line": 204, "end_line": 206, "label": "Filas da cobrança" },
+        { "path": "api/app/agent/tasks.py", "line": 35, "end_line": 42, "label": "Turno do agente" },
+        { "path": "api/app/dunning/service.py", "line": 163, "end_line": 179, "label": "Template da régua" }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "Postgres 16",
+      "sublabel": "RLS por tenant",
+      "pos": [400, 878],
+      "size": [580, 56],
+      "sources": [
+        { "path": "api/app/core/db.py", "line": 10, "end_line": 24, "label": "Sessão do tenant" },
+        { "path": "api/app/models/migrations/versions/0001_schema_inicial.py", "line": 299, "end_line": 304, "label": "Policy de RLS" }
+      ]
+    },
+    {
+      "id": "minio",
+      "type": "database",
+      "label": "MinIO",
+      "sublabel": "comprovantes",
+      "pos": [400, 990],
+      "size": [200, 52],
+      "sources": [
+        { "path": "api/app/core/storage.py", "line": 13, "end_line": 28, "label": "Cliente S3" },
+        { "path": "api/app/receipts/service.py", "line": 27, "end_line": 34, "label": "Grava antes do OCR" },
+        { "path": "docker/stack.yml", "line": 405, "end_line": 412, "label": "Bucket no Swarm" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Rede backend",
+      "pad": 14,
+      "wraps": ["gateway", "cadastro", "conciliacao", "cobranca", "redis", "beat", "wcad", "wcon", "wcob", "postgres", "minio"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Única porta pública da API",
+      "pad": 8,
+      "wraps": ["gateway"]
+    }
+  ],
+  "connections": [
+    { "id": "login", "from": "operador", "to": "supabase", "label": "login", "variant": "security" },
+    { "id": "app", "from": "operador", "to": "traefik", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "host-app", "from": "traefik", "to": "painel", "label": "app." },
+    { "id": "host-api", "from": "traefik", "to": "gateway", "label": "api.", "variant": "emphasis" },
+    { "id": "jwt", "from": "painel", "to": "gateway", "label": "JWT", "variant": "security" },
+    { "id": "emissor-in", "from": "emissor", "to": "gateway", "label": "emissor", "variant": "security" },
+    { "id": "banco-in", "from": "banco", "to": "gateway", "label": "HMAC", "variant": "security" },
+    { "id": "whatsapp", "from": "devedor", "to": "evolution", "label": "WhatsApp", "variant": "emphasis" },
+    { "id": "wa-hook", "from": "evolution", "to": "gateway", "label": "webhook" },
+    { "id": "to-cadastro", "from": "gateway", "to": "cadastro", "label": "cadastro" },
+    { "id": "to-conciliacao", "from": "gateway", "to": "conciliacao", "label": "pagamentos" },
+    { "id": "to-cobranca", "from": "gateway", "to": "cobranca", "label": "cobrança" },
+    { "id": "q-cadastro", "from": "cadastro", "to": "redis", "label": "fila", "variant": "dashed" },
+    { "id": "q-conciliacao", "from": "conciliacao", "to": "redis", "label": "fila", "variant": "dashed" },
+    { "id": "q-cobranca", "from": "cobranca", "to": "redis", "label": "fila", "variant": "dashed" },
+    { "id": "regua", "from": "beat", "to": "redis", "label": "régua", "variant": "dashed" },
+    { "id": "run-cadastro", "from": "redis", "to": "wcad", "label": "cadastro" },
+    { "id": "run-conciliacao", "from": "redis", "to": "wcon", "label": "conciliação" },
+    { "id": "run-cobranca", "from": "redis", "to": "wcob", "label": "cobrança" },
+    { "id": "sql-cadastro", "from": "wcad", "to": "postgres", "label": "SQL" },
+    { "id": "sql-conciliacao", "from": "wcon", "to": "postgres", "label": "SQL" },
+    { "id": "sql-cobranca", "from": "wcob", "to": "postgres", "label": "SQL" },
+    { "id": "arquivo", "from": "wcon", "to": "minio", "label": "comprovante" },
+    { "id": "midia", "from": "wcob", "to": "minio", "label": "mídia" },
+    { "id": "envio", "from": "wcob", "to": "evolution", "label": "envio" },
+    { "id": "ocr", "from": "wcon", "to": "llm", "label": "extração" },
+    { "id": "agente", "from": "wcob", "to": "llm", "label": "agente" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Regra de ouro",
+      "items": [
+        "O LLM lê comprovante, classifica intenção e conversa",
+        "Régua, matching e baixa são código determinístico",
+        "Baixa definitiva só com confirmação do banco"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Um Postgres",
+      "items": [
+        "Os serviços HTTP também gravam na transação do pedido",
+        "Eles não se chamam para escrever; o trabalho cruzado vai à fila",
+        "RLS por tenant. O painel não acessa o banco"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Borda",
+      "items": [
+        "Traefik publica app. e api. Em dev, o gateway emite o JWT",
+        "wa. tem allowlist; o webhook da Evolution chama o gateway por dentro",
+        "OTLP, Sentry e Langfuse ficam desligados sem variável"
+      ]
+    }
+  ]
+}
