@@ -81,6 +81,25 @@ jobs:
     defaults:
       run:
         working-directory: api
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: cobranca
+          POSTGRES_PASSWORD: cobranca
+          POSTGRES_DB: cobranca
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cobranca -d cobranca"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_PG_HOST: 127.0.0.1
+      TEST_PG_PORT: "5432"
+      TEST_PG_USER: cobranca
+      TEST_PG_PASSWORD: cobranca
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
