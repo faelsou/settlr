@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
@@ -9,6 +10,7 @@ from app.api.schemas import ImportResultOut, MatchOut, Page, PaymentOut
 from app.core import storage
 from app.models import Match, Payment
 from app.models.enums import PaymentOrigin
+from app.reconciliation.export import render_accountant_csv, settlement_rows
 from app.reconciliation.service import register_bank_payment
 from app.reconciliation.statement import parse_statement
 from app.reconciliation.tasks import reconcile
@@ -59,6 +61,29 @@ def list_payments(
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = db.scalars(query.order_by(Payment.paid_at.desc()).limit(limit).offset(offset)).all()
     return Page(items=payments_out(db, list(items)), total=total or 0)
+
+
+@router.get("/export")
+def export_settlements(
+    start: date,
+    end: date,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_tenant_user),
+) -> Response:
+    """CSV do período para o contador. Só entra baixa definitiva."""
+    if end < start:
+        raise HTTPException(422, "o fim do período é anterior ao início")
+    if (end - start).days > 366:
+        raise HTTPException(422, "o período passa de um ano")
+    if user.tenant_id is None:
+        raise HTTPException(403, "usuário sem tenant")
+    body = render_accountant_csv(settlement_rows(db, user.tenant_id, start, end))
+    filename = f"baixas-{start.isoformat()}-{end.isoformat()}.csv"
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{payment_id}/receipt")

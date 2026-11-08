@@ -89,6 +89,41 @@ export const api = {
       body: data,
     });
   },
+  exportSettlements: async (start: string, end: string) => {
+    const token = await resolveAccessToken();
+    const query = new URLSearchParams({ start, end });
+    const res = await fetch(`${apiBase()}/payments/export?${query}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (res.status === 401) {
+      clearToken();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    if (!res.ok) {
+      const raw = await res.text();
+      let detail: unknown = raw || res.statusText;
+      try {
+        const body = JSON.parse(raw) as { detail?: unknown };
+        detail = body.detail ?? body;
+      } catch {
+        detail = raw || res.statusText;
+      }
+      throw new ApiError(res.status, detail);
+    }
+    const blob = await res.blob();
+    const header = res.headers.get("Content-Disposition") ?? "";
+    const name = header.match(/filename="([^"]+)"/)?.[1] ?? `baixas-${start}-${end}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
   receiptUrl: async (paymentId: string) => {
     const token = await resolveAccessToken();
     const res = await fetch(`${apiBase()}/payments/${paymentId}/receipt`, {

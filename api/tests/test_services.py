@@ -18,6 +18,7 @@ TASKS = {
     "app.receipts.tasks.process_whatsapp_receipt": "conciliacao-llm",
     "app.ingest.tasks.import_invoices": "cadastro",
     "app.ingest.tasks.handle_issuer_event": "cadastro",
+    "app.ingest.tasks.settle_issuer_charges": "cadastro",
 }
 
 PATHS = {
@@ -27,6 +28,7 @@ PATHS = {
     "/approvals/1/decide": "cobranca",
     "/webhooks/evolution": "cobranca",
     "/payments": "conciliacao",
+    "/payments/export": "conciliacao",
     "/payments/1/receipt": "conciliacao",
     "/exceptions/1/confirm": "conciliacao",
     "/webhooks/banco": "conciliacao",

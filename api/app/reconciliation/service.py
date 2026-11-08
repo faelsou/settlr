@@ -5,11 +5,12 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, event, or_, select
 from sqlalchemy.orm import Session
 
 from app.channels.queue_notice import notify_human_queue
 from app.core.audit import audit
+from app.core.logging import get_logger
 from app.core.redis import redis_lock
 from app.models import Debtor, Invoice, Match, Payment, Promise, ReviewException, Tenant
 from app.models.enums import (
@@ -32,6 +33,8 @@ from app.reconciliation.matcher import (
     document_matches,
     match_payment,
 )
+
+log = get_logger(__name__)
 
 DECISION_TO_EXCEPTION = {
     Decision.SUGGESTION: ExceptionType.SUGESTAO_MATCH,
@@ -100,6 +103,35 @@ def to_payment_data(payment: Payment) -> PaymentData:
     )
 
 
+def _schedule_issuer_settlement(session: Session, tenant_id: UUID, invoice_id: UUID) -> None:
+    """A fila do cadastro marca a cobrança no emissor só depois que a baixa commitou."""
+    pending = session.info.setdefault("issuer_settle", [])
+    key = (str(tenant_id), str(invoice_id))
+    if key not in pending:
+        pending.append(key)
+    if session.info.get("issuer_settle_hook"):
+        return
+    session.info["issuer_settle_hook"] = True
+
+    def _after_commit(sess: Session) -> None:
+        by_tenant: dict[str, list[str]] = {}
+        for tid, iid in sess.info.get("issuer_settle") or []:
+            bucket = by_tenant.setdefault(tid, [])
+            if iid not in bucket:
+                bucket.append(iid)
+        if not by_tenant:
+            return
+        try:
+            from app.ingest.tasks import settle_issuer_charges
+
+            for tid, ids in by_tenant.items():
+                settle_issuer_charges.delay(tid, ids)
+        except Exception:
+            log.exception("issuer.settle_enqueue_failed", tenant_id=str(tenant_id))
+
+    event.listen(session, "after_commit", _after_commit, once=True)
+
+
 def _fulfil_promises(session: Session, invoice: Invoice, today: date) -> None:
     pending = session.scalars(
         select(Promise).where(Promise.invoice_id == invoice.id, Promise.fulfilled.is_(None))
@@ -138,6 +170,7 @@ def apply_allocations(
         if invoice.amount_open <= 0:
             set_invoice_status(invoice, InvoiceStatus.PAGO)
             _fulfil_promises(session, invoice, today)
+            _schedule_issuer_settlement(session, payment.tenant_id, invoice.id)
         else:
             set_invoice_status(invoice, InvoiceStatus.PARCIALMENTE_PAGO)
 

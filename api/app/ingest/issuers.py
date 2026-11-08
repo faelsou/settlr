@@ -137,6 +137,24 @@ class AsaasAdapter:
         except httpx.HTTPError:
             log.warning("issuer.cancel_failed", payment_id=payment_id)
 
+    def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
+        """Marca a cobrança como recebida. Cobrança que o Asaas já quitou conta como feita."""
+        try:
+            self._request(
+                "POST",
+                f"/payments/{payment_id}/receiveInCash",
+                json={
+                    "paymentDate": paid_on.isoformat(),
+                    "value": float(value.quantize(CENT)),
+                    "notifyCustomer": False,
+                },
+            )
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 400 and _already_received(exc.response):
+                return "already_paid"
+            raise
+        return "paid"
+
     def _customer_id(
         self, name: str, document: str, phone: str | None, email: str | None,
     ) -> str:
@@ -171,6 +189,16 @@ class AsaasAdapter:
         if not pix and not line and not answered and errors:
             raise errors[-1]
         return pix, line
+
+
+def _already_received(response: httpx.Response) -> bool:
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    text = str(body).lower()
+    settled = "recebid" in text or "confirmad" in text
+    return settled and ("já" in text or "ja " in text)
 
 
 def get_adapter(
