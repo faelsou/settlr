@@ -13,6 +13,7 @@ from app.models.entities import (
     Promise,
     ReviewException,
     Tenant,
+    TenantMember,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "Promise",
     "ReviewException",
     "Tenant",
+    "TenantMember",
 ]

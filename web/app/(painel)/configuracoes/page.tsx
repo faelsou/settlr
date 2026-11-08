@@ -3,6 +3,7 @@
 import { useToast } from "@/components/toast";
 import { Banner, Button, Card, Field, Input, PageHeader, Segmented, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
+import { canConfigure, roleLabel } from "@/lib/roles";
 import type { TenantSettings } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -27,10 +28,14 @@ export default function ConfiguracoesPage() {
   const client = useQueryClient();
   const toast = useToast();
   const query = useQuery({ queryKey: ["settings"], queryFn: api.settings });
+  const me = useQuery({ queryKey: ["me"], queryFn: api.me });
   const [form, setForm] = useState<TenantSettings | null>(null);
   const [section, setSection] = useState("disparo");
   const [senders, setSenders] = useState<Sender[]>([{ instance: "", number: "" }]);
   const [senderError, setSenderError] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("financeiro");
+  const locked = me.data ? !canConfigure(me.data.role) : false;
 
   useEffect(() => {
     if (!query.data) return;
@@ -55,6 +60,37 @@ export default function ConfiguracoesPage() {
       client.setQueryData<TenantSettings>(["settings"], (current) =>
         current ? { ...current, whatsapp_senders: saved } : current,
       );
+    },
+  });
+
+  const activate = useMutation({
+    mutationFn: async () => {
+      const saved = await api.saveSettings(form!);
+      setForm(saved);
+      return api.activate();
+    },
+    onSuccess: (data) => {
+      setForm(data);
+      toast(data.active ? "Conta ativa." : "Ainda falta algo para ativar.");
+    },
+  });
+
+  const team = useQuery({
+    queryKey: ["members"],
+    queryFn: api.members,
+    enabled: section === "equipe" && canConfigure(me.data?.role),
+  });
+
+  const invite = useMutation({
+    mutationFn: () => api.invite(inviteEmail.trim(), inviteRole),
+    onSuccess: (member) => {
+      setInviteEmail("");
+      toast(
+        member.delivered
+          ? "Convite enviado por e-mail. O link é só dessa pessoa."
+          : "Convite registrado. O e-mail não saiu porque o SMTP não está configurado.",
+      );
+      client.invalidateQueries({ queryKey: ["members"] });
     },
   });
 
@@ -83,7 +119,11 @@ export default function ConfiguracoesPage() {
         hint="Política, régua, horário e o aviso da fila humana. O agente só oferece o que cabe aqui — nunca inventa valor."
       />
 
+      {locked ? (
+        <Banner>A política, a régua e o horário ficam com o dono. O financeiro confirma a baixa.</Banner>
+      ) : null}
       {save.isError ? <Banner>{errorText(save.error)}</Banner> : null}
+      {activate.isError ? <Banner>{errorText(activate.error)}</Banner> : null}
 
       <Segmented
         label="Seção das configurações"
@@ -95,8 +135,16 @@ export default function ConfiguracoesPage() {
           { value: "horario", label: "Horário" },
           { value: "conciliacao", label: "Conciliação" },
           { value: "regua", label: "Régua" },
+          ...(!locked
+            ? [
+                { value: "conta", label: "Conta" },
+                { value: "equipe", label: "Equipe" },
+              ]
+            : []),
         ]}
       />
+
+      <fieldset disabled={locked} className="space-y-6 border-0 p-0">
 
       {section === "disparo" ? (
       <>
@@ -405,11 +453,82 @@ export default function ConfiguracoesPage() {
       </Card>
       ) : null}
 
-      {section === "disparo" ? null : (
+      {section === "disparo" || section === "conta" || section === "equipe" ? null : (
       <Button onClick={() => save.mutate()} disabled={save.isPending}>
         {save.isPending ? "Salvando…" : "Salvar configurações"}
       </Button>
       )}
+      </fieldset>
+
+      {!locked && section === "conta" ? (
+        <Card className="space-y-4 p-6">
+          <div>
+            <h2 className="font-display text-xl">Conta</h2>
+            <p className="mt-1 text-sm text-ink-700/70">
+              A ativação recusa a conta se faltar política, régua, horário, WhatsApp ou base legal.
+              {form.active ? " Esta conta já está ativa." : " Esta conta ainda não está ativa."}
+            </p>
+          </div>
+          {form.missing?.length ? <Banner>Falta: {form.missing.join(", ")}</Banner> : null}
+          <Field label="Base legal (LGPD)">
+            <Textarea
+              rows={3}
+              value={form.legal_basis ?? ""}
+              placeholder="Execução de contrato (LGPD art. 7º, V)"
+              onChange={(event) => setForm({ ...form, legal_basis: event.target.value })}
+            />
+          </Field>
+          <Button type="button" onClick={() => activate.mutate()} disabled={activate.isPending}>
+            {activate.isPending ? "Ativando…" : "Salvar e ativar"}
+          </Button>
+        </Card>
+      ) : null}
+
+      {!locked && section === "equipe" ? (
+        <Card className="space-y-4 p-6">
+          <div>
+            <h2 className="font-display text-xl">Equipe</h2>
+            <p className="mt-1 text-sm text-ink-700/70">
+              O convite sai por e-mail, com um link só da pessoa. Não compartilhe o seu login.
+            </p>
+          </div>
+          {invite.isError ? <Banner>{errorText(invite.error)}</Banner> : null}
+          <div className="grid gap-3 md:grid-cols-[1fr_180px_auto] md:items-end">
+            <Field label="E-mail">
+              <Input
+                type="email"
+                value={inviteEmail}
+                placeholder="financeiro@clinica.com.br"
+                onChange={(event) => setInviteEmail(event.target.value)}
+              />
+            </Field>
+            <Field label="Papel">
+              <select
+                value={inviteRole}
+                onChange={(event) => setInviteRole(event.target.value)}
+                className="w-full rounded-xl border border-paper-200 bg-paper-50 px-3 py-2 text-sm text-ink-900"
+              >
+                <option value="financeiro">Financeiro</option>
+                <option value="atendente">Atendente</option>
+                <option value="dono">Dono</option>
+              </select>
+            </Field>
+            <Button type="button" onClick={() => invite.mutate()} disabled={invite.isPending || !inviteEmail.trim()}>
+              {invite.isPending ? "Enviando…" : "Enviar convite"}
+            </Button>
+          </div>
+          <ul className="divide-y divide-paper-200 text-sm">
+            {(team.data ?? []).map((member) => (
+              <li key={member.id} className="flex items-center justify-between py-2">
+                <span>{member.email}</span>
+                <span className="text-ink-700/70">
+                  {roleLabel(member.role)} · {member.status === "ativo" ? "entrou" : "convidado"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
     </div>
   );
 }

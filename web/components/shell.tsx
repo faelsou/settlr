@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { roleLabel } from "@/lib/roles";
 import { clearToken, supabase, supabaseEnabled } from "@/lib/auth";
 import { clsx } from "@/lib/format";
 import { useQuery } from "@tanstack/react-query";
@@ -184,7 +185,7 @@ export function Shell({ children }: { children: ReactNode }) {
           ) : (
             <>
               <p className="truncate text-sm text-paper-50">{me.data?.email}</p>
-              <p className="text-xs capitalize text-paper-200/70">{me.data?.role}</p>
+              <p className="text-xs text-paper-200/70">{roleLabel(me.data?.role)}</p>
             </>
           )}
           <button

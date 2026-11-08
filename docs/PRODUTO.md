@@ -18,7 +18,17 @@ O cliente da primeira onda é PME com recorrência ou parcelamento (clínicas, e
 | Agente de WhatsApp | Devedor | Responde quando a pessoa fala: comprovante, promessa, parcelamento, contestação, opt-out |
 | Painel | Operador do tenant | Resolve o que o sistema não baixa sozinho e configura a política |
 
-O devedor nunca vê o painel. O operador nunca escreve no banco direto: cada ação passa pela API e deixa rastro no `audit_log`.
+O devedor nunca vê o painel. Quem opera nunca escreve no banco direto: cada ação passa pela API e deixa rastro no `audit_log`.
+
+A empresa cria a própria conta pela tela: política, régua, horário, WhatsApp e base legal. Sem um desses, a ativação recusa.
+
+| Papel | O que faz |
+| --- | --- |
+| Dono | Configura a política, a régua, o horário e convida a equipe |
+| Financeiro | Confirma a baixa |
+| Atendente | Acompanha a fila e não confirma baixa |
+
+O convite sai por e-mail, com um link só da pessoa. Não há senha nesse e-mail e ninguém compartilha o próprio login.
 
 ## 3. O que o operador vê (fases do MVP)
 

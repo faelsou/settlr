@@ -5,6 +5,7 @@ import { Badge, labelOf } from "@/components/status";
 import { useToast } from "@/components/toast";
 import { Banner, Button, Card, Dialog, Empty, Field, Input, PageHeader, Segmented, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
+import { canSettle } from "@/lib/roles";
 import { day, documentBr, money, when } from "@/lib/format";
 import type { Invoice, ReviewException, Suggestion } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -87,6 +88,8 @@ export default function ExcecoesPage() {
 
 function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () => void }) {
   const toast = useToast();
+  const me = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const settles = canSettle(me.data?.role);
   const suggestions = item.details.suggestions ?? [];
   const [note, setNote] = useState("");
   const [ask, setAsk] = useState<"confirm" | "reject" | null>(null);
@@ -290,10 +293,14 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
       {reject.isError ? <Banner>{errorText(reject.error)}</Banner> : null}
 
       {item.status === "aberta" ? (
-        <div className="mt-4 flex gap-2">
-          <Button onClick={() => setAsk("confirm")} disabled={confirm.isPending}>
-            Confirmar
-          </Button>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {PAYMENT_TYPES.has(item.type) && me.data && !settles ? (
+            <p className="w-full text-sm text-ink-700/70">O financeiro confirma a baixa. O atendente acompanha a fila.</p>
+          ) : (
+            <Button onClick={() => setAsk("confirm")} disabled={confirm.isPending}>
+              Confirmar
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setAsk("reject")} disabled={reject.isPending}>
             Rejeitar
           </Button>
