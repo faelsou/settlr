@@ -241,6 +241,7 @@ Cobertura atual (determinística):
 - `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
 - `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
+- `tests/test_money_http.py` — baixa, rejeição, extrato e acordo pelo HTTP, com isolamento entre tenants
 - `tests/test_receipts.py` — confiança, E2E, “não é comprovante”
 - `tests/test_observability.py` — Sentry, Langfuse e OTLP ficam desligados sem variável
 - `tests/test_services.py` — cada caminho HTTP e cada task tem um serviço dono, e o `stack.yml` sobe as filas certas
