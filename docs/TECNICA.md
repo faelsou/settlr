@@ -73,7 +73,7 @@ A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovant
 4. Role `agencia` acessa `/admin/tenants` sem RLS de um tenant só.
 5. Role da aplicação **não** é superuser nem dona das tabelas, para o RLS valer.
 
-Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → importar base → `POST /admin/tenants/{id}/activate`. Sem esses campos, a ativação devolve 422.
+Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → `POST /admin/tenants/{id}/activate`. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada.
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
@@ -238,7 +238,7 @@ cd api && pytest
 Cobertura atual (determinística):
 
 - `tests/test_matcher.py` — camadas 1–4, parcial, documento mascarado, soma de títulos
-- `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário, título sem PIX ou boleto
+- `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário, título sem PIX ou boleto, template oficial e número pareado
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
 - `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
 - `tests/test_money_http.py` — baixa, rejeição, extrato e acordo pelo HTTP, com isolamento entre tenants
@@ -259,7 +259,6 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 
 ## 13. O que ainda não é o piloto completo
 
-- Pareamento real do número na Evolution e templates oficiais do WhatsApp
 - Webhooks assinados de Asaas/Inter/Efí em cliente vivo
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
 - Revisão jurídica dos textos da régua e do contrato

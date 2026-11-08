@@ -316,24 +316,58 @@ export default function ConfiguracoesPage() {
 
       {section === "regua" ? (
       <Card className="space-y-4 p-6">
-        <h2 className="font-display text-xl">Templates da régua</h2>
-        {Object.entries(form.dunning_rules.templates).map(([key, value]) => (
-          <Field key={key} label={key}>
-            <Textarea
-              rows={3}
-              value={value}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  dunning_rules: {
-                    ...form.dunning_rules,
-                    templates: { ...form.dunning_rules.templates, [key]: e.target.value },
-                  },
-                })
-              }
-            />
-          </Field>
-        ))}
+        <div>
+          <h2 className="font-display text-xl">Templates da régua</h2>
+          <p className="mt-1 text-sm text-ink-700/70">
+            O texto é o da resposta e do e-mail. O WhatsApp da régua só sai com o template oficial
+            aprovado na Meta, no nome preenchido abaixo. Sem esse template e sem o número pareado, a conta não liga a régua.
+          </p>
+        </div>
+        {Object.entries(form.dunning_rules.templates).map(([key, value], index) => {
+          const official = form.dunning_rules.whatsapp_templates?.[key] ?? {
+            name: "",
+            language: "pt_BR",
+            params: [],
+          };
+          const setOfficial = (patch: Partial<typeof official>) =>
+            setForm({
+              ...form,
+              dunning_rules: {
+                ...form.dunning_rules,
+                whatsapp_templates: {
+                  ...form.dunning_rules.whatsapp_templates,
+                  [key]: { ...official, ...patch },
+                },
+              },
+            });
+          return (
+            <div key={key} className={index === 0 ? "space-y-3" : "space-y-3 border-t border-paper-200 pt-4"}>
+              <Field label={`${key} — texto da resposta e do e-mail`}>
+                <Textarea
+                  rows={3}
+                  value={value}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      dunning_rules: {
+                        ...form.dunning_rules,
+                        templates: { ...form.dunning_rules.templates, [key]: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </Field>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Template oficial (nome na Meta)">
+                  <Input value={official.name} placeholder="lembrete_pix" onChange={(e) => setOfficial({ name: e.target.value })} />
+                </Field>
+                <Field label="Idioma do template">
+                  <Input value={official.language} placeholder="pt_BR" onChange={(e) => setOfficial({ language: e.target.value })} />
+                </Field>
+              </div>
+            </div>
+          );
+        })}
       </Card>
       ) : null}
 

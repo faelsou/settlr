@@ -1,21 +1,31 @@
 """Régua de cobrança — 100% determinística (FLUXOS.md §5)."""
 
 from datetime import date, datetime
+from decimal import Decimal
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from app.dunning.official import (
+    commit_activation,
+    parse_connection_state,
+    parse_template_catalog,
+    preserve_approved,
+    read_evolution,
+)
 from app.dunning.payment import has_payment_code
 from app.dunning.rules import (
     AllowedHours,
+    Step,
     decide,
     parse_steps,
     promise_pauses,
     within_allowed_hours,
 )
-from app.dunning.service import process_invoice
+from app.dunning.service import Dispatch, _send_step, process_invoice
+from app.models import DunningEvent
 from app.models.enums import InvoiceStatus
-
 
 STEPS = parse_steps(None)
 
@@ -197,8 +207,9 @@ def test_process_invoice_sends_only_the_current_step_when_the_code_arrives(monke
     tenant = SimpleNamespace(id=uuid4(), dunning_rules=None)
     sent: list[str] = []
 
-    def grab(_session, _tenant, _invoice, _debtor, step, _channels, _client=None) -> None:
+    def grab(_session, _tenant, _invoice, _debtor, step, _channels, _client=None) -> Dispatch:
         sent.append(step.key)
+        return Dispatch(sent=True)
 
     monkeypatch.setattr("app.dunning.service._send_step", grab)
 
@@ -208,6 +219,194 @@ def test_process_invoice_sends_only_the_current_step_when_the_code_arrives(monke
     assert outcome.reason == "D+5"
     assert sent == ["D+5"]
     assert invoice.status == InvoiceStatus.EM_COBRANCA
+
+
+def _regua_de_um_passo() -> dict:
+    return {
+        "steps": [
+            {"key": "D-3", "offset": -3, "channels": ["whatsapp"], "template": "lembrete"},
+            {"key": "D+30", "offset": 30, "channels": [], "template": None, "handoff": True},
+        ],
+        "whatsapp_templates": {
+            "lembrete": {"name": "lembrete_pix", "language": "pt_BR", "params": ["{nome}"]},
+        },
+    }
+
+
+def _catalogo_aprovado() -> list[dict]:
+    return [{"name": "lembrete_pix", "language": "pt_BR", "status": "approved"}]
+
+
+def test_activation_stays_off_without_a_paired_number():
+    tenant = SimpleNamespace(active=False, dunning_rules=_regua_de_um_passo())
+    missing = commit_activation(tenant, "close", _catalogo_aprovado())
+    assert missing == ["número pareado"]
+    assert tenant.active is False
+    assert "approved_templates" not in tenant.dunning_rules
+
+
+def test_activation_stays_off_without_an_approved_template():
+    tenant = SimpleNamespace(active=False, dunning_rules=_regua_de_um_passo())
+    catalog = [{"name": "lembrete_pix", "language": "pt_BR", "status": "pending"}]
+    missing = commit_activation(tenant, "open", catalog)
+    assert missing == ["template oficial aprovado"]
+    assert tenant.active is False
+
+
+def test_activation_turns_on_when_the_number_is_paired_and_the_template_is_approved():
+    tenant = SimpleNamespace(active=False, dunning_rules=_regua_de_um_passo())
+    assert commit_activation(tenant, "open", _catalogo_aprovado()) == []
+    assert tenant.active is True
+    assert tenant.dunning_rules["approved_templates"]["lembrete"]["name"] == "lembrete_pix"
+
+
+def test_settings_cannot_invent_an_approved_template():
+    previous = {
+        "approved_templates": {
+            "lembrete": {"name": "lembrete_pix", "language": "pt_BR", "params": ["{nome}"]},
+        },
+    }
+    forged = {
+        "approved_templates": {
+            "lembrete": {"name": "falso", "language": "pt_BR", "params": []},
+        },
+        "whatsapp_templates": {},
+    }
+    assert "approved_templates" not in preserve_approved({}, forged)
+
+    renamed = {
+        "whatsapp_templates": {
+            "lembrete": {"name": "outro", "language": "pt_BR", "params": ["{nome}"]},
+        },
+    }
+    assert "approved_templates" not in preserve_approved(previous, renamed)
+
+    same = {
+        "whatsapp_templates": {
+            "lembrete": {"name": "lembrete_pix", "language": "pt_BR", "params": ["{valor}"]},
+        },
+    }
+    kept = preserve_approved(previous, same)
+    assert kept["approved_templates"]["lembrete"]["params"] == ["{valor}"]
+
+
+def test_evolution_payloads_mean_paired_and_approved():
+    state = parse_connection_state({"instance": {"instanceName": "loja", "state": "open"}})
+    catalog = parse_template_catalog([
+        {"name": "lembrete_pix", "language": "pt-BR", "status": "APPROVED"},
+    ])
+    assert state == "open"
+    assert catalog[0]["status"] == "approved"
+    tenant = SimpleNamespace(active=False, dunning_rules=_regua_de_um_passo())
+    assert commit_activation(tenant, state, catalog) == []
+
+
+def test_evolution_down_counts_as_not_ready():
+    class Fora:
+        def connection_state(self, _instance: str) -> str:
+            raise RuntimeError("sem rede")
+
+        def list_templates(self, _instance: str) -> list[dict]:
+            raise RuntimeError("sem rede")
+
+    assert read_evolution(Fora(), "loja") == (None, [])
+
+
+def _devedor_com_telefone() -> SimpleNamespace:
+    return SimpleNamespace(
+        id=uuid4(), name="Maria Souza", phone="5511999999999", phones=[], email=None,
+    )
+
+
+def _titulo_com_pix() -> SimpleNamespace:
+    return SimpleNamespace(
+        id=uuid4(),
+        debtor_id=uuid4(),
+        status=InvoiceStatus.ABERTO,
+        due_date=date(2026, 10, 17),
+        description="mensalidade",
+        amount=Decimal("10"),
+        amount_open=Decimal("10"),
+        external_id="1",
+        pix_copy_paste="00020126PIX",
+        payment_url=None,
+        digitable_line=None,
+    )
+
+
+def test_proactive_send_never_uses_free_text(monkeypatch):
+    invoice = _titulo_com_pix()
+    debtor = _devedor_com_telefone()
+    tenant = SimpleNamespace(
+        id=uuid4(),
+        whatsapp_instance="cobranca",
+        dunning_rules={"templates": {"oferta_negociacao": "texto livre do modelo"}},
+    )
+    added: list[object] = []
+    session = MagicMock()
+    session.add.side_effect = added.append
+    monkeypatch.setattr("app.dunning.service.record_message", lambda *_a, **_k: None)
+    client = MagicMock()
+    client.send_text.side_effect = AssertionError("texto livre no disparo")
+    step = Step("D+5", 5, ("whatsapp",), "oferta_negociacao")
+
+    dispatch = _send_step(session, tenant, invoice, debtor, step, ("whatsapp",), client)
+
+    client.send_template.assert_not_called()
+    assert dispatch.blocked_template is True
+    assert dispatch.sent is False
+    assert not any(isinstance(item, DunningEvent) for item in added)
+
+
+def test_proactive_send_uses_the_approved_template(monkeypatch):
+    invoice = _titulo_com_pix()
+    debtor = _devedor_com_telefone()
+    tenant = SimpleNamespace(
+        id=uuid4(),
+        whatsapp_instance="cobranca",
+        dunning_rules={
+            "templates": {"oferta_negociacao": "texto livre do modelo"},
+            "approved_templates": {
+                "oferta_negociacao": {
+                    "name": "oferta_oficial",
+                    "language": "pt_BR",
+                    "params": ["{nome}"],
+                },
+            },
+        },
+    )
+    session = MagicMock()
+    monkeypatch.setattr("app.dunning.service.record_message", lambda *_a, **_k: None)
+    monkeypatch.setattr("app.dunning.service.take_rate_slot", lambda *_a, **_k: True)
+    monkeypatch.setattr("app.dunning.service.audit", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        "app.dunning.service.get_or_create_conversation",
+        lambda *_a, **_k: SimpleNamespace(id=uuid4(), tenant_id=tenant.id),
+    )
+    client = MagicMock()
+    client.send_template.return_value = "WA1"
+    step = Step("D+5", 5, ("whatsapp",), "oferta_negociacao")
+
+    dispatch = _send_step(session, tenant, invoice, debtor, step, ("whatsapp",), client)
+
+    client.send_text.assert_not_called()
+    client.send_template.assert_called_once()
+    assert client.send_template.call_args.args[2] == "oferta_oficial"
+    assert dispatch.sent is True
+
+
+def test_process_invoice_skips_when_the_official_template_is_missing(monkeypatch):
+    invoice = _titulo_com_pix()
+    debtor = _devedor_com_telefone()
+    debtor.opt_out = False
+    tenant = SimpleNamespace(id=uuid4(), dunning_rules={}, whatsapp_instance="cobranca")
+    monkeypatch.setattr("app.dunning.service.record_message", lambda *_a, **_k: None)
+
+    outcome = process_invoice(_Sessao(invoice, debtor), tenant, invoice.id, date(2026, 10, 22))
+
+    assert outcome.action == "skip"
+    assert outcome.reason == "sem_template_oficial"
+    assert invoice.status == InvoiceStatus.ABERTO
 
 
 def test_allowed_hours_respects_timezone_and_weekday():

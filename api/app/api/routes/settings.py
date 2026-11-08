@@ -12,6 +12,7 @@ from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
 from app.api.deps import CurrentUser, get_db, require_tenant_user
 from app.core.audit import audit
 from app.core.senders import apply_senders, listed_senders, normalize_senders
+from app.dunning.official import preserve_approved
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
 from app.reconciliation.matcher import ReconciliationRules
@@ -158,6 +159,7 @@ def update_settings(
     tenant = db.get(Tenant, user.tenant_id)
     before = current_settings(tenant).model_dump(mode="json")
     data = body.model_dump(mode="json")
+    data["dunning_rules"] = preserve_approved(tenant.dunning_rules, data["dunning_rules"])
     tenant.timezone = data["timezone"]
     tenant.negotiation_policy = data["negotiation_policy"]
     tenant.dunning_rules = data["dunning_rules"]
