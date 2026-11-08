@@ -180,7 +180,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/configuracoes` — política, régua, horário e até cinco WhatsApps de disparo, com escolha de qual envia
   - `/metricas`
 
-`NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`.
+`NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`. Sora e Manrope vêm do pacote npm (`@fontsource`); o `next build` não baixa o CSS do Google Fonts.
 
 ## 9. Persistência, secrets e deploy
 
@@ -240,6 +240,7 @@ Cobertura atual (determinística):
 - `tests/test_matcher.py` — camadas 1–4, parcial, documento mascarado, soma de títulos
 - `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
+- `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
 - `tests/test_receipts.py` — confiança, E2E, “não é comprovante”
 - `tests/test_observability.py` — Sentry, Langfuse e OTLP ficam desligados sem variável
 - `tests/test_services.py` — cada caminho HTTP e cada task tem um serviço dono, e o `stack.yml` sobe as filas certas
