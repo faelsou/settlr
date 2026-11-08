@@ -16,8 +16,10 @@ from app.api.schemas import (
     Page,
     PromiseOut,
 )
+from app.dunning.payment import payment_code_clause
 from app.ingest.service import import_invoices, parse_invoice_csv
 from app.models import Conversation, Debtor, DunningEvent, Invoice, Match, Message, Promise
+from app.models.enums import DUNNING_STATUSES
 
 router = APIRouter(prefix="/invoices", tags=["titulos"])
 
@@ -25,13 +27,16 @@ router = APIRouter(prefix="/invoices", tags=["titulos"])
 @router.get("", response_model=Page[InvoiceOut])
 def list_invoices(
     status: str | None = None,
+    sem_pagamento: bool = Query(False, description="só títulos da régua sem PIX e sem boleto"),
     q: str | None = Query(None, description="nome ou documento do devedor"),
     limit: int = Query(50, le=200),
     offset: int = 0,
     db: Session = Depends(get_db),
 ) -> Page[InvoiceOut]:
     query = select(Invoice).join(Debtor).options(joinedload(Invoice.debtor))
-    if status:
+    if sem_pagamento:
+        query = query.where(Invoice.status.in_(DUNNING_STATUSES)).where(~payment_code_clause())
+    elif status:
         query = query.where(Invoice.status == status)
     if q:
         digits = "".join(c for c in q if c.isdigit())

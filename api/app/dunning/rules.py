@@ -136,6 +136,7 @@ def decide(
     opt_out: bool,
     active_promise: date | None,
     sent: set[tuple[str, str]],
+    has_payment_code: bool = True,
 ) -> DunningDecision:
     """Decide o que fazer com um título neste ciclo. A checagem de horário e de rate
     limit fica no chamador, porque depende do relógio e do Redis."""
@@ -143,6 +144,8 @@ def decide(
         return DunningDecision("skip", reason="opt_out")
     if promise_pauses(today, active_promise):
         return DunningDecision("skip", reason="promessa_ativa")
+    if not has_payment_code:
+        return DunningDecision("skip", reason="sem_meio_pagamento")
 
     step = current_step(today, due_date, steps)
     if step is None:

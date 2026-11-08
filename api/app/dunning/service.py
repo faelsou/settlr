@@ -19,6 +19,7 @@ from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
 from app.core.phones import contact_phones
 from app.core.redis import get_redis
+from app.dunning.payment import has_payment_code, payment_code_clause
 from app.dunning.rules import DEFAULT_DUNNING_RULES, Step, decide, parse_steps
 from app.models import Debtor, DunningEvent, Invoice, Promise, Tenant
 from app.models.enums import DUNNING_STATUSES, ExceptionType, InvoiceStatus, MessageDirection
@@ -49,6 +50,7 @@ def eligible_invoice_ids(session: Session, tenant: Tenant, today: date) -> list[
             .where(Invoice.tenant_id == tenant.id)
             .where(Invoice.status.in_(DUNNING_STATUSES))
             .where(Invoice.due_date <= horizon)
+            .where(payment_code_clause())
             .order_by(Invoice.due_date)
         )
     )
@@ -100,6 +102,7 @@ def process_invoice(
         opt_out=debtor.opt_out,
         active_promise=active_promise,
         sent=sent,
+        has_payment_code=has_payment_code(invoice.pix_copy_paste, invoice.digitable_line),
     )
 
     if decision.action == "handoff":

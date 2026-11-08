@@ -54,6 +54,7 @@ class InvoiceOut(ORM):
     txid: str | None
     parent_id: UUID | None
     agreement_id: UUID | None
+    has_payment_code: bool
     debtor: DebtorOut
 
 

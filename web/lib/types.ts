@@ -39,6 +39,7 @@ export type Invoice = {
   txid: string | null;
   parent_id: string | null;
   agreement_id: string | null;
+  has_payment_code: boolean;
   debtor: Debtor;
 };
 

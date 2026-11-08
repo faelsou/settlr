@@ -32,7 +32,7 @@ Marque isso com a empresa antes de importar a planilha. Se faltar um item, o tí
 4. **Horário de envio.** O padrão é das 8h às 20h, de segunda a sábado. Domingo e madrugada ficam quietos.
 5. **Régua.** O padrão avisa 3 dias antes do vencimento, no dia, e depois em D+1, D+5 e D+15. Em D+30 o título sai da régua automática e cai na fila humana do painel.
 6. **Celulares de quem paga**, com DDD, até cinco por devedor. Sem telefone, aquele título não recebe WhatsApp. O e-mail só entra na etapa D+15.
-7. **PIX copia e cola ou link de pagamento**, quando a empresa tiver. A mensagem usa esse texto. Se vier vazio, o cliente recebe um traço no lugar do PIX e não consegue pagar por ali.
+7. **PIX copia e cola ou linha digitável do boleto.** Sem um dos dois, o título entra na base e aparece na lista **Sem PIX ou boleto**, mas não recebe etapa da régua. O link sozinho não libera o disparo. Quando o código chega, o título entra só na etapa do dia, sem rajada das anteriores.
 
 Política de negociação, régua e horário já nascem com um padrão sensato na hora de criar a conta. Dá para ajustar depois em **Configurações**. O que a criação **não** preenche sozinha é o WhatsApp e a base legal. Os números de disparo também se cadastram em **Configurações**: até cinco, com a instância da Evolution e o celular. Se um número cair, apague essa linha e cadastre outro. O disparo passa a sair pelo primeiro que restar. Para trocar o que envia sem apagar os demais, use **Usar este** e salve.
 
@@ -142,9 +142,11 @@ Ainda em **Títulos**, olhe a lista. Para cada linha que você espera cobrar, co
 - o vencimento;
 - o status **Aberto**.
 
-Abra um título. Os celulares aparecem no topo e no bloco **WhatsApp**, onde dá para incluir ou tirar números (no máximo cinco) e salvar. A lista vale para todos os títulos daquele devedor. A régua manda a mesma mensagem para cada número. Se o PIX foi enviado, ele aparece no título. Sem PIX, o lembrete sai mesmo assim, mas o cliente não recebe o código para pagar.
+Abra um título. Os celulares aparecem no topo e no bloco **WhatsApp**, onde dá para incluir ou tirar números (no máximo cinco) e salvar. A lista vale para todos os títulos daquele devedor. A régua manda a mesma mensagem para cada número.
 
-Se a conta ainda estiver desligada, este é o momento de ativar (passo 1). A partir daí a régua passa a olhar esses títulos.
+Na mesma tela, a lista **Sem PIX ou boleto** fica separada da carteira. É a conferência de antes de ligar a conta: esses títulos não são cobrados. Se o código chegar depois, por planilha ou pelo emissor, a régua manda só a etapa em que o título está naquele dia.
+
+Se a conta ainda estiver desligada, este é o momento de ativar (passo 1). A partir daí a régua passa a olhar os títulos que já têm PIX ou boleto.
 
 ---
 
@@ -217,7 +219,7 @@ Use esta lista na implantação. Quando todos os itens estiverem sim, a empresa 
 - [ ] Horário e régua revisados com o cliente (ou o padrão aceito por escrito).
 - [ ] Planilha só com cobranças em aberto.
 - [ ] Cada linha tem referência única, CNPJ válido, pelo menos um celular com DDD e vencimento. Se houver mais de um WhatsApp, estão na mesma célula separados por `|` ou nas colunas `telefone2` a `telefone5`.
-- [ ] PIX ou link preenchido nas cobranças que já têm código de pagamento.
+- [ ] PIX ou boleto preenchido nas cobranças que devem entrar na régua. As que ficaram sem código estão na lista separada e não são cobradas até o código chegar.
 - [ ] Importação terminou com “criados” e zero erro.
 - [ ] Na tela Títulos, um caso real bate com a NF: nome, valor, vencimento e os números de WhatsApp (até cinco).
 - [ ] Conta ativada só depois dessa conferência.

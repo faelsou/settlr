@@ -646,3 +646,76 @@ def _semear_acordo(banco: Banco, *, slug: str, email: str, nome: str) -> Caso:
         session.add(invoice)
         session.flush()
         return Caso(tenant.id, email, debtor.id, invoice.id)
+
+
+def test_lista_separa_titulo_sem_pix_ou_boleto(banco: Banco) -> None:
+    from app.dunning.service import eligible_invoice_ids
+
+    hoje = date(2026, 11, 7)
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Clínica", slug="clinica-regua", active=False, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="Padaria", document="12345678000190", phone="11988887777",
+        )
+        session.add(debtor)
+        session.flush()
+
+        def titulo(external_id: str, **codes: str | None) -> Invoice:
+            row = Invoice(
+                tenant_id=tenant.id,
+                debtor_id=debtor.id,
+                external_id=external_id,
+                description="mensalidade",
+                amount=Decimal("150.00"),
+                amount_paid=Decimal("0"),
+                due_date=hoje,
+                status=InvoiceStatus.ABERTO,
+                pix_copy_paste=codes.get("pix"),
+                digitable_line=codes.get("boleto"),
+                payment_url=codes.get("link"),
+            )
+            session.add(row)
+            return row
+
+        sem = titulo("SEM", link="https://pagar.exemplo/sem-codigo")
+        branco = titulo("BRANCO", pix="   ")
+        pago = titulo("PAGO")
+        pago.status = InvoiceStatus.PAGO
+        com_pix = titulo("PIX", pix="00020126PIX")
+        com_boleto = titulo("BOLETO", boleto="34191790010104351004791020150008291070026000")
+        session.flush()
+        caso = Caso(tenant.id, "operador@clinica.test", debtor.id, sem.id)
+        elegiveis = set(eligible_invoice_ids(session, tenant, hoje))
+
+    assert elegiveis == {com_pix.id, com_boleto.id}
+
+    resposta = banco.cad.get("/invoices?sem_pagamento=true", headers=_auth(caso))
+    assert resposta.status_code == 200, resposta.text
+    corpo = resposta.json()
+    assert corpo["total"] == 2
+    assert {item["external_id"] for item in corpo["items"]} == {"SEM", "BRANCO"}
+    assert all(item["has_payment_code"] is False for item in corpo["items"])
+
+    carteira = banco.cad.get("/invoices", headers=_auth(caso))
+    assert carteira.status_code == 200
+    assert {item["external_id"] for item in carteira.json()["items"]} == {
+        "SEM", "BRANCO", "PAGO", "PIX", "BOLETO",
+    }
+
+    from app.dunning.service import process_invoice
+    from app.models import DunningEvent
+
+    with banco.admin() as session, session.begin():
+        row = session.get(Invoice, sem.id)
+        tenant = session.get(Tenant, caso.tenant_id)
+        assert row is not None and tenant is not None
+        row.pix_copy_paste = "00020126AGORA"
+        row.due_date = hoje - timedelta(days=5)
+        session.flush()
+        outcome = process_invoice(session, tenant, row.id, hoje)
+        eventos = session.scalars(select(DunningEvent).where(DunningEvent.invoice_id == row.id)).all()
+    assert outcome.action == "send"
+    assert outcome.reason == "D+5"
+    assert eventos == []

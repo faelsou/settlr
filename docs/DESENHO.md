@@ -55,6 +55,7 @@ Cenário de qualidade: quando o estímulo acontece, na condição dada, o sistem
 | Dois workers pegam o mesmo pagamento | Baixa em andamento | O segundo não adquire `lock:payment:{id}` | `LockNotAcquired`, uma baixa |
 | Devedor manda o mesmo arquivo outra vez | `file_hash` já existe no tenant | A leitura devolve `duplicado` | Um objeto no MinIO |
 | Cron da régua atrasa | Várias etapas já vencidas | Sai só a etapa de maior offset ainda não enviada | Um `dunning_events` por título, etapa e canal |
+| Planilha sem PIX nem boleto | Mensagem promete o copia-e-cola e o devedor não consegue pagar | O título fica fora da régua e aparece numa lista separada | Quando o código chega, entra só a etapa vigente |
 | Evolution falha no envio | Etapa ainda não gravada | A transação daquele título desfaz | A etapa volta no próximo ciclo |
 | Horário fora da janela do tenant | `run_dunning_tenant` | A task retorna `fora_do_horario` | Zero disparos |
 | Rate limit do número | Slot por minuto esgotado | A task do tenant reagenda em 60 s | `RateLimited` |
