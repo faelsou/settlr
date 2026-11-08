@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "browser-check",
+  "evidenceKind": "automated-browser",
+  "status": "fail",
+  "visualReview": "not-requested",
+  "provenance": "current",
+  "deliveryReceiptId": "02bbd309-7d6e-4665-b2e4-df865fe4b574",
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+    "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+    "bytes": 861982
+  },
+  "state": {
+    "detail": "read",
+    "motion": "still"
+  },
+  "chrome": {
+    "status": "available",
+    "executable": "/usr/bin/google-chrome"
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/browser-check-runtime",
+      "severity": "error",
+      "message": "browser-check could not complete its Chrome inspection.",
+      "subject": {
+        "artifact": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html"
+      },
+      "evidence": {
+        "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[2574007:2574007:1108/030534.125621:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.125754:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.126757:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1108/030534.126908:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1108/030534.127035:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1108/030534.127046:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=2574007, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      },
+      "supportedFixes": [
+        "resolve the reported Chrome inspection error, then rerun browser-check"
+      ]
+    }
+  ],
+  "containment": {
+    "status": "fail",
+    "policy": "fit-or-reader-declared-readable-vertical-scroll",
+    "viewports": []
+  },
+  "themeStates": {
+    "status": "fail",
+    "viewports": []
+  },
+  "readability": {
+    "status": "fail",
+    "minimumProjectedNodeTextPx": 6,
+    "viewports": []
+  },
+  "viewerChrome": {
+    "status": "fail",
+    "viewports": []
+  },
+  "captures": {
+    "status": "not-requested",
+    "screenshots": [],
+    "contactSheet": null
+  },
+  "sidecars": {
+    "receipt": "settlr-e2e.browser-check.json",
+    "files": []
+  },
+  "error": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[2574007:2574007:1108/030534.125621:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.125754:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.126757:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1108/030534.126908:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1108/030534.127035:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1108/030534.127046:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=2574007, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+}

@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+    "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+    "bytes": 14663
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+    "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+    "bytes": 861982
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.finalize-summary.json",
+    "browserCheckReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/review-1/settlr-e2e.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-08T06:05:58.756Z",
+    "source": "network",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A newer release is available. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4188,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 4,
+      "routesOverSuggestedBends": 3,
+      "routesOverSuggestedStretch": 2
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "run-cadastro",
+            "from": "redis",
+            "to": "wcad",
+            "label": "cadastro",
+            "collectionIndex": 16,
+            "artifactIndex": 17
+          },
+          "right": {
+            "id": "arquivo",
+            "from": "wcon",
+            "to": "minio",
+            "label": "comprovante",
+            "collectionIndex": 22,
+            "artifactIndex": 23
+          },
+          "point": [
+            477.5,
+            724
+          ]
+        },
+        {
+          "left": {
+            "id": "run-cobranca",
+            "from": "redis",
+            "to": "wcob",
+            "label": "cobrança",
+            "collectionIndex": 18,
+            "artifactIndex": 19
+          },
+          "right": {
+            "id": "ocr",
+            "from": "wcon",
+            "to": "llm",
+            "label": "extração",
+            "collectionIndex": 25,
+            "artifactIndex": 26
+          },
+          "point": [
+            846,
+            716
+          ]
+        },
+        {
+          "left": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "right": {
+            "id": "ocr",
+            "from": "wcon",
+            "to": "llm",
+            "label": "extração",
+            "collectionIndex": 25,
+            "artifactIndex": 26
+          },
+          "point": [
+            1092.2750000000003,
+            716
+          ]
+        },
+        {
+          "left": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "right": {
+            "id": "agente",
+            "from": "wcob",
+            "to": "llm",
+            "label": "agente",
+            "collectionIndex": 26,
+            "artifactIndex": 27
+          },
+          "point": [
+            1092.2750000000003,
+            724
+          ],
+          "sharedNode": "wcob"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "arquivo",
+            "from": "wcon",
+            "to": "minio",
+            "label": "comprovante",
+            "collectionIndex": 22,
+            "artifactIndex": 23
+          },
+          "bends": 4,
+          "stretch": 1.633
+        },
+        {
+          "relationship": {
+            "id": "midia",
+            "from": "wcob",
+            "to": "minio",
+            "label": "mídia",
+            "collectionIndex": 23,
+            "artifactIndex": 24
+          },
+          "bends": 4,
+          "stretch": 1.452
+        },
+        {
+          "relationship": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "bends": 5,
+          "stretch": 1.237
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "redis has 3 relationships facing its left side, which fits 2 ports: make that side at least 60px, or move some of those neighbours so they face another side of redis.",
+      "wcob has 3 relationships facing its left side, which fits 2 ports: make that side at least 60px, or move some of those neighbours so they face another side of wcob.",
+      "redis → wcad crosses wcon → minio: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "redis → wcob crosses wcon → llm: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "wcob → evolution crosses wcon → llm: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "wcob → evolution and wcob → llm cross next to wcob: move node evolution or llm so the two reach wcob from different sides (for example one level with it, one directly above or below it).",
+      "wcon → minio needs 4 bends: move node wcon or minio so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "wcob → minio needs 4 bends: move node wcob or minio so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

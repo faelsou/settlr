@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-11-08T06:05:33.024Z",
+  "specification": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+    "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+    "bytes": 14663
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+    "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+    "bytes": 861982
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/home/rafael/www/Settlr",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+          "bytes": 14663
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 804,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/home/rafael/www/Settlr",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "02bbd309-7d6e-4665-b2e4-df865fe4b574",
+        "ok": true,
+        "command": "deliver",
+        "type": "architecture",
+        "input": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/candidate.json",
+        "output": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "specification": {
+          "sha256": "4f469a4c2d4f5cf49201938c26ffbb798c530902b993922b39d920cde0c32b15",
+          "bytes": 14663
+        },
+        "artifact": {
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "evidence": {
+          "verified": true,
+          "repository": "git@github.com:faelsou/agent-cobranca",
+          "revision": "a903de13e5b6f412c47014743cc434c84ec6565f",
+          "references": 50,
+          "linkMode": "local-only"
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 159,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "check",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "artifact": {
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "metrics": {
+            "properCrossings": 0,
+            "resolvedCrossovers": 4,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 11,
+            "desktopReadabilityIssues": 0,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 6.0242914979757085,
+            "maxBends": 5,
+            "routesOverSuggestedBends": 3,
+            "maxStretch": 1.633,
+            "routesOverSuggestedStretch": 2,
+            "minSegmentPx": 24,
+            "minInteriorSegmentPx": 88.3,
+            "shortSegmentCount": 0,
+            "shortEndpointSegmentCount": 0,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [
+              {
+                "left": {
+                  "id": "run-cadastro",
+                  "from": "redis",
+                  "to": "wcad",
+                  "label": "cadastro",
+                  "collectionIndex": 16,
+                  "artifactIndex": 17
+                },
+                "right": {
+                  "id": "arquivo",
+                  "from": "wcon",
+                  "to": "minio",
+                  "label": "comprovante",
+                  "collectionIndex": 22,
+                  "artifactIndex": 23
+                },
+                "point": [
+                  477.5,
+                  724
+                ]
+              },
+              {
+                "left": {
+                  "id": "run-cobranca",
+                  "from": "redis",
+                  "to": "wcob",
+                  "label": "cobrança",
+                  "collectionIndex": 18,
+                  "artifactIndex": 19
+                },
+                "right": {
+                  "id": "ocr",
+                  "from": "wcon",
+                  "to": "llm",
+                  "label": "extração",
+                  "collectionIndex": 25,
+                  "artifactIndex": 26
+                },
+                "point": [
+                  846,
+                  716
+                ]
+              },
+              {
+                "left": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "right": {
+                  "id": "ocr",
+                  "from": "wcon",
+                  "to": "llm",
+                  "label": "extração",
+                  "collectionIndex": 25,
+                  "artifactIndex": 26
+                },
+                "point": [
+                  1092.2750000000003,
+                  716
+                ]
+              },
+              {
+                "left": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "right": {
+                  "id": "agente",
+                  "from": "wcob",
+                  "to": "llm",
+                  "label": "agente",
+                  "collectionIndex": 26,
+                  "artifactIndex": 27
+                },
+                "point": [
+                  1092.2750000000003,
+                  724
+                ],
+                "sharedNode": "wcob"
+              }
+            ],
+            "crowdedSides": [
+              {
+                "node": "redis",
+                "label": "Redis 7",
+                "side": "left",
+                "relationships": 3,
+                "sidePx": 48,
+                "neededPx": 60
+              },
+              {
+                "node": "wcob",
+                "label": "Worker cobrança",
+                "side": "left",
+                "relationships": 3,
+                "sidePx": 56,
+                "neededPx": 60
+              }
+            ],
+            "detours": [
+              {
+                "relationship": {
+                  "id": "arquivo",
+                  "from": "wcon",
+                  "to": "minio",
+                  "label": "comprovante",
+                  "collectionIndex": 22,
+                  "artifactIndex": 23
+                },
+                "bends": 4,
+                "stretch": 1.633
+              },
+              {
+                "relationship": {
+                  "id": "midia",
+                  "from": "wcob",
+                  "to": "minio",
+                  "label": "mídia",
+                  "collectionIndex": 23,
+                  "artifactIndex": 24
+                },
+                "bends": 4,
+                "stretch": 1.452
+              },
+              {
+                "relationship": {
+                  "id": "envio",
+                  "from": "wcob",
+                  "to": "evolution",
+                  "label": "envio",
+                  "collectionIndex": 24,
+                  "artifactIndex": 25
+                },
+                "bends": 5,
+                "stretch": 1.237
+              }
+            ]
+          },
+          "leadingSpace": {
+            "measured": true,
+            "emptyTopPx": 16,
+            "emptyTopRatio": 0.014,
+            "occupiedTop": 16,
+            "viewBoxTop": 0,
+            "canvasHeight": 1130,
+            "typicalNodeHeight": 56,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "legacy-930",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": 7.5,
+            "requestedTargetMet": false,
+            "hardFloorPx": 6,
+            "hardFloorMet": true,
+            "minimumOwner": {
+              "kind": "edge",
+              "id": "login",
+              "from": "operador",
+              "to": "supabase"
+            },
+            "minimumSourceTextPx": 8,
+            "minimumProjectedTextPx": 6.0242914979757085,
+            "semanticTextCount": 69
+          },
+          "issues": []
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "02bbd309-7d6e-4665-b2e4-df865fe4b574"
+      }
+    },
+    "browser-check": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": 5214,
+      "command": [
+        "/home/rafael/.hermes/node/bin/node",
+        "/home/rafael/www/archify/archify/bin/archify.mjs",
+        "browser-check",
+        "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+        "--json",
+        "--require-provenance"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "fail",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "02bbd309-7d6e-4665-b2e4-df865fe4b574",
+        "artifact": {
+          "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html",
+          "sha256": "aa6730b43626ad77cfe6599d0409575afb3d5fe0c9e8d8fe748b362b22727acb",
+          "bytes": 861982
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "available",
+          "executable": "/usr/bin/google-chrome"
+        },
+        "diagnostics": [
+          {
+            "code": "viewer/browser-check-runtime",
+            "severity": "error",
+            "message": "browser-check could not complete its Chrome inspection.",
+            "subject": {
+              "artifact": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html"
+            },
+            "evidence": {
+              "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[2574007:2574007:1108/030534.125621:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.125754:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.126757:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1108/030534.126908:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1108/030534.127035:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1108/030534.127046:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=2574007, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+            },
+            "supportedFixes": [
+              "resolve the reported Chrome inspection error, then rerun browser-check"
+            ]
+          }
+        ],
+        "containment": {
+          "status": "fail",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": []
+        },
+        "themeStates": {
+          "status": "fail",
+          "viewports": []
+        },
+        "readability": {
+          "status": "fail",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": []
+        },
+        "viewerChrome": {
+          "status": "fail",
+          "viewports": []
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "receipt": "settlr-e2e.browser-check.json",
+          "files": []
+        },
+        "error": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[2574007:2574007:1108/030534.125621:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.125754:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.126757:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1108/030534.126908:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1108/030534.127035:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1108/030534.127046:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=2574007, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/browser-check-runtime",
+      "severity": "error",
+      "message": "browser-check could not complete its Chrome inspection.",
+      "subject": {
+        "artifact": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.html"
+      },
+      "evidence": {
+        "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[2574007:2574007:1108/030534.125621:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.125754:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[2574007:2574007:1108/030534.126757:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1108/030534.126908:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1108/030534.127035:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1108/030534.127046:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=2574007, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      },
+      "supportedFixes": [
+        "resolve the reported Chrome inspection error, then rerun browser-check"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.finalize-summary.json",
+    "browserCheckReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261108-024908/settlr-e2e.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "browser-check",
+  "finishedAt": "2026-11-08T06:05:39.303Z",
+  "durationMs": 6278,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "cache-unavailable"
+  }
+}
