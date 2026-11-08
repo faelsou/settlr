@@ -5,8 +5,18 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import CurrentUser, get_db, require_tenant_user
-from app.api.schemas import ConversationOut, DebtorOut, MessageOut, Page, SendMessageIn
+from app.api.schemas import (
+    ConversationOut,
+    DebtorOut,
+    DeliveryOut,
+    MessageOut,
+    Page,
+    SendMessageIn,
+    message_out,
+)
+from app.channels.delivery import file_state
 from app.channels.outbound import send_to_debtor
+from app.channels.queue import deliveries_statement
 from app.core.audit import audit
 from app.models import Conversation, Debtor, Message, Tenant
 from app.models.enums import ConversationState
@@ -48,13 +58,43 @@ def list_conversations(
     return Page(items=[_out(c, d) for c, d in rows], total=total or 0)
 
 
+@router.get("/deliveries", response_model=Page[DeliveryOut])
+def list_deliveries(
+    falhou: bool = False,
+    limit: int = Query(50, le=200),
+    offset: int = 0,
+    db: Session = Depends(get_db),
+) -> Page[DeliveryOut]:
+    """Fila do operador. O status já está em `messages`; esta rota não chama a Evolution."""
+    query = deliveries_statement(failed_only=falhou)
+    total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    rows = db.execute(query.limit(limit).offset(offset)).all()
+    return Page(
+        items=[
+            DeliveryOut(
+                id=message.id,
+                conversation_id=message.conversation_id,
+                invoice_id=message.invoice_id,
+                debtor_name=debtor_name,
+                direction=message.direction,
+                body=message.body,
+                delivery_status=message.delivery_status,
+                file_status=file_state(message.body, message.media_key),
+                created_at=message.created_at,
+            )
+            for message, debtor_name in rows
+        ],
+        total=total,
+    )
+
+
 @router.get("/{conversation_id}/messages", response_model=list[MessageOut])
 def list_messages(conversation_id: UUID, db: Session = Depends(get_db)) -> list[MessageOut]:
     _get(db, conversation_id)
     messages = db.scalars(
         select(Message).where(Message.conversation_id == conversation_id).order_by(Message.created_at)
     ).all()
-    return [MessageOut.model_validate(m) for m in messages]
+    return [message_out(m) for m in messages]
 
 
 @router.post("/{conversation_id}/takeover", response_model=ConversationOut)
@@ -105,4 +145,4 @@ def send_message(
     last = db.scalars(
         select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.desc())
     ).first()
-    return MessageOut.model_validate(last)
+    return message_out(last)

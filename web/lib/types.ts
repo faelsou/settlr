@@ -136,6 +136,20 @@ export type Message = {
   author: string;
   body: string | null;
   invoice_id: string | null;
+  delivery_status: string | null;
+  file_status: string | null;
+  created_at: string;
+};
+
+export type Delivery = {
+  id: string;
+  conversation_id: string;
+  invoice_id: string | null;
+  debtor_name: string;
+  direction: string;
+  body: string | null;
+  delivery_status: string | null;
+  file_status: string | null;
   created_at: string;
 };
 

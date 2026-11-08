@@ -23,6 +23,14 @@ const LABELS: Record<string, string> = {
   resolvida: "Resolvida",
   rejeitada: "Rejeitada",
   pendente: "Pendente",
+  aceito: "Enviada",
+  enviado: "Enviada",
+  entregue: "Entregue",
+  lido: "Lida",
+  falhou: "Falha",
+  sem_recibo: "Sem recibo",
+  recebido: "Recebido",
+  nao_recebido: "Não recebido",
   aprovada: "Aprovada",
   agente: "Com o agente",
   aguardando_identidade: "Identidade",
@@ -48,6 +56,14 @@ const TONES: Record<string, string> = {
   em_excecao: "bg-amber-100 text-amber-800",
   aberta: "bg-amber-100 text-amber-800",
   pendente: "bg-amber-100 text-amber-800",
+  aceito: "bg-sky-100 text-sky-800",
+  enviado: "bg-sky-100 text-sky-800",
+  sem_recibo: "bg-amber-100 text-amber-800",
+  entregue: "bg-signal-400 text-ink-950",
+  lido: "bg-signal-400 text-ink-950",
+  recebido: "bg-signal-400 text-ink-950",
+  falhou: "bg-red-100 text-red-800",
+  nao_recebido: "bg-red-100 text-red-800",
   aguardando_banco: "bg-amber-100 text-amber-800",
   aguardando_aprovacao: "bg-amber-100 text-amber-800",
   contestado: "bg-red-100 text-red-800",
@@ -59,6 +75,17 @@ const TONES: Record<string, string> = {
   sessao_canal: "bg-red-100 text-red-800",
   humano: "bg-sky-100 text-sky-800",
 };
+
+export function deliveryCaption(
+  delivery: string | null | undefined,
+  file: string | null | undefined,
+): string | null {
+  const parts: string[] = [];
+  if (delivery) parts.push(labelOf(delivery));
+  if (file === "recebido") parts.push("Arquivo recebido");
+  if (file === "nao_recebido") parts.push("Arquivo não recebido");
+  return parts.length ? parts.join(" · ") : null;
+}
 
 export function labelOf(value: string | null | undefined): string {
   if (!value) return "—";

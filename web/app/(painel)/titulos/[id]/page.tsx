@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, labelOf } from "@/components/status";
+import { Badge, deliveryCaption, labelOf } from "@/components/status";
 import { useToast } from "@/components/toast";
 import { Banner, Breadcrumb, Button, Card, Field, Input, Skeleton } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
@@ -172,7 +172,7 @@ export default function TituloDetalhePage() {
                       {ev.step} · {ev.channel}
                     </span>
                     <span className="text-xs text-ink-700/60">
-                      {when(ev.sent_at)} · {ev.delivery_status}
+                      {when(ev.sent_at)} · {labelOf(ev.delivery_status)}
                     </span>
                   </span>
                 </li>
@@ -240,6 +240,11 @@ export default function TituloDetalhePage() {
                       {inbound ? "Devedor" : m.author} · {when(m.created_at)}
                     </p>
                     <p className="mt-1 whitespace-pre-wrap">{m.body}</p>
+                    {deliveryCaption(m.delivery_status, m.file_status) ? (
+                      <p className={inbound ? "mt-1 text-[11px] text-ink-700/60" : "mt-1 text-[11px] text-white/75"}>
+                        {deliveryCaption(m.delivery_status, m.file_status)}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               );

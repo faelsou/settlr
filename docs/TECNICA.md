@@ -152,7 +152,7 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | `/exceptions` | Listar, confirmar, rejeitar | conciliacao |
 | `/payments` | Listar, comprovante, importar OFX/CSV | conciliacao |
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
-| `/conversations` | Listar, mensagens, assumir, devolver, enviar | cobranca |
+| `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
 | `/settings` | GET/PUT política, régua, horário, conciliação | cadastro |
 | `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco) | cadastro |
@@ -167,7 +167,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 - Next.js 15 App Router, TypeScript, Tailwind, TanStack Query. A marca na tela e no título da aba é **Settlr**.
 - `output: "standalone"` para a imagem Swarm.
 - Cliente em `web/lib/api.ts` — um fetch autenticado por rota.
-- A sidebar recolhe. O início junta as métricas dos últimos 30 dias e as três filas que pedem gente: exceções abertas, conversas com humano e aprovações.
+- A sidebar recolhe. O início junta as métricas dos últimos 30 dias e as filas que pedem gente: exceções abertas, conversas com humano, entregas que falharam e aprovações.
 - Títulos, pagamentos e exceções usam tabela paginada. Conversas ficam em duas colunas: a lista e a thread na mesma tela.
 - Confirmar ou recusar pede um diálogo. O resultado da ação aparece em toast.
 - Telas em `web/app/(painel)/`:
@@ -176,6 +176,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/pagamentos` — status, origem, comprovante, importação de extrato
   - `/titulos` e `/titulos/[id]` — busca, lista separada sem PIX ou boleto, régua, promessas, matches, mensagens e até cinco celulares do devedor
   - `/conversas` — assumir, devolver e enviar
+  - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
   - `/configuracoes` — política, régua, horário e até cinco WhatsApps de disparo, com escolha de qual envia
   - `/metricas`

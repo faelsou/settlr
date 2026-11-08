@@ -2,6 +2,7 @@ from uuid import UUID
 
 import httpx
 
+from app.channels.delivery import RECEIPT_BODY
 from app.channels.metrics import record_file
 from app.channels.outbound import log_message, send_to_debtor
 from app.channels.turn import claim_once, release_once
@@ -111,7 +112,7 @@ def _store_receipt(
 
         if conversation_id:
             conv = session.get(Conversation, UUID(conversation_id))
-            log_message(session, conv, MessageDirection.IN, "devedor", "[comprovante]",
+            log_message(session, conv, MessageDirection.IN, "devedor", RECEIPT_BODY,
                         wa_message_id=message_id, media_key=file_key)
             if conv.state == ConversationState.AGUARDANDO_COMPROVANTE:
                 conv.state = ConversationState.AGENTE

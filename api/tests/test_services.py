@@ -22,6 +22,7 @@ TASKS = {
 
 PATHS = {
     "/conversations": "cobranca",
+    "/conversations/deliveries": "cobranca",
     "/conversations/abc/messages": "cobranca",
     "/approvals/1/decide": "cobranca",
     "/webhooks/evolution": "cobranca",

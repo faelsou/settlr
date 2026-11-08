@@ -44,6 +44,7 @@ O canal é a Evolution (`api/app/channels/whatsapp.py`). O que já existe e o qu
 | Webhook | `POST /webhooks/evolution` trata `messages.upsert` e `messages.update` | O recibo espelha em `messages` e em `dunning_events` |
 | Entrada perdida | `pull_unseen_replies` e `reconcile_outbound` | Com `EVOLUTION_API_KEY`, o processo `cobranca` roda os dois a cada 8 segundos, em dev e em produção. A saída em `aceito` é corrigida pelo que a Evolution ainda tem; depois da janela vira `sem_recibo` |
 | Saída | `send_to_debtor` e a régua gravam `pendente` antes do HTTP | Timeout de transporte deixa a linha `pendente`. O aceite grava `aceito` e o `wa_message_id` |
+| Painel | `GET /conversations/deliveries` lê `messages` | Mostra enviada, entregue, falha e arquivo recebido ou não. `?falhou=true` filtra a falha. Não chama a Evolution |
 | Mídia de entrada | Cópia no MinIO na chegada, antes do OCR | O webhook grava o arquivo ao receber. O processamento lê essa cópia. Sem a cópia, baixa e grava antes de chamar o extrator |
 | Sessão | `connection.update` abre exceção `sessao_canal` | Não cria mensagem na conversa do devedor. Alerta repetido da mesma instância não duplica |
 
@@ -99,6 +100,8 @@ Ações do operador:
 - abrir a conversa e o título ligados à mensagem
 - baixar o arquivo do storage
 
+A fila está em `/entregas`. Ela lê `GET /conversations/deliveries`. Reenvio a partir do registro local continua fora desta tela.
+
 A régua não reenvia etapa que já está `entregue` ou `lido`. Reenvio automático só existe para `falhou` com motivo transitório (sessão caída, timeout). Número inválido e template recusado ficam na fila humana.
 
 Alerta de sessão (`connection.update`) é separado da fila de mensagens. Sessão caída perde o canal inteiro; olhar mensagem por mensagem chega tarde.
@@ -111,9 +114,9 @@ Alerta de sessão (`connection.update`) é separado da fila de mensagens. Sessã
 2. `messages.update` no webhook, idempotente por `wa_message_id`.
 3. Job de reconciliação de entrada e de recibo de saída, em dev e em produção.
 4. Cópia da mídia no storage na chegada e na saída.
-5. Fila no painel com os três recortes e a ação de reenviar.
+5. Fila no painel com enviada, entregue, falha, arquivo recebido ou não, e o filtro do que falhou. Feito em `/entregas`.
 
-Sem os quatro primeiros, a tela só mostra `enviado`.
+Sem os quatro primeiros, a tela só mostraria `enviado`.
 
 ---
 

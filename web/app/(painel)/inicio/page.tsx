@@ -25,6 +25,11 @@ export default function InicioPage() {
     queryFn: () => api.conversations("humano"),
     refetchInterval: 15000,
   });
+  const deliveries = useQuery({
+    queryKey: ["deliveries", "falhou"],
+    queryFn: () => api.deliveries(true),
+    refetchInterval: 15000,
+  });
 
   return (
     <div className="space-y-6">
@@ -34,7 +39,7 @@ export default function InicioPage() {
         hint="Filas que pedem gente, e o ritmo da recuperação nos últimos 30 dias. A baixa continua passando pela API."
       />
       <MetricsBoard />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Queue
           title="Exceções abertas"
           href="/excecoes"
@@ -65,6 +70,25 @@ export default function InicioPage() {
             <Link key={item.id} href={`/conversas?id=${item.id}`} className="block py-3">
               <span className="font-semibold">{item.debtor.name}</span>
               <span className="mt-0.5 block truncate text-sm text-ink-700/70">{item.summary ?? "Sem resumo"}</span>
+            </Link>
+          ))}
+        </Queue>
+        <Queue
+          title="Entregas que falharam"
+          href="/entregas"
+          pending={deliveries.isPending}
+          error={deliveries.isError ? errorText(deliveries.error) : null}
+          empty="Nenhuma mensagem falhou."
+        >
+          {deliveries.data?.items.slice(0, 5).map((item) => (
+            <Link key={item.id} href={`/conversas?id=${item.conversation_id}`} className="flex items-center justify-between gap-3 py-3">
+              <span className="min-w-0">
+                <span className="font-semibold">{item.debtor_name}</span>
+                <span className="mt-0.5 block truncate text-sm text-ink-700/70">
+                  {item.body === "[comprovante]" ? "Comprovante" : item.body ?? "Sem texto"}
+                </span>
+              </span>
+              <Badge value={item.delivery_status} />
             </Link>
           ))}
         </Queue>
