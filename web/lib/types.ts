@@ -8,6 +8,14 @@ export type Me = {
   tenant_name: string | null;
 };
 
+export type Member = {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  delivered?: boolean | null;
+};
+
 export type Debtor = {
   id: string;
   name: string;
@@ -202,6 +210,9 @@ export type TenantSettings = {
   whatsapp_senders?: { instance: string; number: string }[];
   owner_email?: string;
   owner_phone?: string;
+  legal_basis?: string;
+  active?: boolean;
+  missing?: string[];
 };
 
 export type Metrics = {

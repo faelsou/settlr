@@ -4,6 +4,7 @@ import { Logo } from "@/components/logo";
 import { Banner, Button, Field, Input } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { setToken, supabase, supabaseEnabled } from "@/lib/auth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -75,6 +76,12 @@ export default function LoginPage() {
             {busy ? "Entrando…" : "Entrar"}
           </Button>
         </form>
+        <p className="mt-6 text-sm text-ink-700/70">
+          Primeira vez na empresa?{" "}
+          <Link href="/comecar" className="font-semibold text-brand-700">
+            Criar a conta
+          </Link>
+        </p>
       </div>
       </section>
     </main>

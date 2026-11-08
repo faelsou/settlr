@@ -7,6 +7,7 @@ import type {
   Invoice,
   InvoiceDetail,
   Me,
+  Member,
   Message,
   Metrics,
   Page,
@@ -194,6 +195,24 @@ export const api = {
   settings: () => request<TenantSettings>("/settings"),
   saveSettings: (body: TenantSettings) =>
     request<TenantSettings>("/settings", { method: "PUT", body: JSON.stringify(body) }),
+  activate: () => request<TenantSettings>("/settings/activate", { method: "POST" }),
+  onboardingDefaults: () =>
+    request<Pick<TenantSettings, "timezone" | "negotiation_policy" | "dunning_rules" | "allowed_hours">>(
+      "/onboarding/defaults",
+    ),
+  createCompany: (body: Record<string, unknown>) =>
+    request<{ access_token: string; tenant_name: string; email: string; role: string; missing: string[]; active: boolean }>(
+      "/onboarding",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  members: () => request<Member[]>("/members"),
+  invite: (email: string, role: string) =>
+    request<Member>("/members/invites", { method: "POST", body: JSON.stringify({ email, role }) }),
+  acceptInvite: (token: string) =>
+    request<{ access_token: string; tenant_name: string; email: string; role: string }>("/members/accept", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
   saveWhatsappSenders: (senders: { instance: string; number: string }[]) =>
     request<{ instance: string; number: string }[]>("/settings/whatsapp", {
       method: "PUT",

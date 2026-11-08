@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    panel_base_url: str = "http://localhost:3000"
 
     # O gateway encaminha para estes processos. No Swarm são os nomes DNS da rede backend.
     cobranca_url: str = "http://127.0.0.1:8001"

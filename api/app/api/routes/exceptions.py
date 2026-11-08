@@ -12,6 +12,7 @@ from app.api.routes.payments import payments_out
 from app.api.schemas import ConfirmExceptionIn, ExceptionOut, Page, RejectExceptionIn
 from app.core import storage
 from app.core.audit import audit
+from app.core.roles import can_settle
 from app.models import Invoice, Payment, ReviewException, Tenant
 from app.models.enums import (
     ExceptionStatus,
@@ -113,6 +114,8 @@ def confirm_exception(
     user: CurrentUser = Depends(require_tenant_user),
 ) -> ExceptionOut:
     exc = _get_open(db, exception_id)
+    if exc.type in PAYMENT_TYPES and not can_settle(user.role):
+        raise HTTPException(403, "atendente não confirma baixa")
 
     if exc.type in PAYMENT_TYPES:
         if not body.allocations:

@@ -68,6 +68,14 @@ def _ensure_unique_instances(session, tenant: Tenant) -> None:
             raise HTTPException(422, f"instância já usada por outra empresa: {name}")
 
 
+def activate_record(tenant: Tenant) -> list[str]:
+    """O que ainda impede ligar a conta. Vazio quando a ativação gravou o tenant."""
+    if missing := missing_requirements(tenant):
+        return missing
+    state, catalog = read_evolution(EvolutionClient(), tenant.whatsapp_instance or "")
+    return commit_activation(tenant, state, catalog)
+
+
 def _out(t: Tenant) -> TenantOut:
     return TenantOut(
         id=t.id, name=t.name, slug=t.slug, active=t.active, whatsapp_instance=t.whatsapp_instance,
@@ -142,11 +150,8 @@ def activate_tenant(tenant_id: UUID, user: CurrentUser = Depends(require_agency)
         tenant = session.get(Tenant, tenant_id)
         if tenant is None:
             raise HTTPException(404, "tenant não encontrado")
-        if missing := missing_requirements(tenant):
+        if missing := activate_record(tenant):
             raise HTTPException(422, {"missing": missing})
-        state, catalog = read_evolution(EvolutionClient(), tenant.whatsapp_instance or "")
-        if blockers := commit_activation(tenant, state, catalog):
-            raise HTTPException(422, {"missing": blockers})
         set_tenant(session, tenant.id)
         audit(session, tenant_id=tenant.id, actor=user.actor, action="ativa_tenant",
               entity="tenant", entity_id=tenant.id)

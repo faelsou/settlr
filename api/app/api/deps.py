@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal, set_tenant
+from app.core.roles import can_configure
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,12 @@ def require_tenant_user(user: CurrentUser = Depends(get_current_user)) -> Curren
 def require_agency(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
     if user.role != "agencia":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "apenas a agência")
+    return user
+
+
+def require_owner(user: CurrentUser = Depends(require_tenant_user)) -> CurrentUser:
+    if not can_configure(user.role):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "só o dono configura a política")
     return user
 
 

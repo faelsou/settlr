@@ -154,8 +154,11 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
-| `/settings` | GET/PUT política, régua, horário, conciliação | cadastro |
-| `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco) | cadastro |
+| `/onboarding` | A empresa cria a conta (política, régua, horário, WhatsApp, base legal) | cadastro |
+| `/members` | Lista e convite por e-mail; aceite do link | cadastro |
+| `/settings` | GET para a equipe; PUT da política só o dono | cadastro |
+| `/settings/activate` | Liga a conta; 422 com o que falta | cadastro |
+| `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco); só o dono | cadastro |
 | `/debtors/{id}/whatsapp` | PATCH dos celulares do devedor (até cinco) | cadastro |
 | `/metrics` | Recuperação, DSO, promessas, baixa automática | cadastro |
 | `/admin/tenants` | CRUD e ativação (role `agencia`) | cadastro |
@@ -178,7 +181,9 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/conversas` — assumir, devolver e enviar
   - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
-  - `/configuracoes` — política, régua, horário, até cinco WhatsApps de disparo e o e-mail ou WhatsApp interno que recebe o aviso da fila humana
+  - `/comecar` — a empresa cria tenant, política, régua, horário, WhatsApp e base legal
+  - `/convite/[token]` — a pessoa aceita o convite do e-mail e entra sem senha compartilhada
+  - `/configuracoes` — política (só o dono), régua, horário, até cinco WhatsApps de disparo, base legal, ativação, convite da equipe e o aviso da fila humana
   - `/metricas`
 
 `NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`. Sora e Manrope vêm do pacote npm (`@fontsource`); o `next build` não baixa o CSS do Google Fonts.

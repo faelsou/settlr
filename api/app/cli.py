@@ -93,6 +93,9 @@ def seed_demo() -> None:
         if upgraded := adopt_canonical_texts(tenant.dunning_rules):
             tenant.dunning_rules = upgraded
         set_tenant(session, tenant.id)
+        from app.onboarding.members import ensure_active_member
+
+        ensure_active_member(session, tenant.id, "operador@demo.local", "dono")
 
         today = date.today()
         rows = [

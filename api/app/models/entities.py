@@ -54,6 +54,20 @@ class Tenant(IdMixin, TimestampMixin, Base):
     owner_phone: Mapped[str | None] = mapped_column(String(20))
 
 
+class TenantMember(IdMixin, TenantMixin, TimestampMixin, Base):
+    """Quem entra no painel da empresa. O convite guarda o hash do link, nunca a senha."""
+
+    __tablename__ = "tenant_members"
+    __table_args__ = (UniqueConstraint("tenant_id", "email"),)
+
+    email: Mapped[str] = mapped_column(String(200))
+    role: Mapped[str] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(16))
+    invite_token_hash: Mapped[str | None] = mapped_column(String(64))
+    invite_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class Debtor(IdMixin, TenantMixin, TimestampMixin, Base):
     __tablename__ = "debtors"
     __table_args__ = (

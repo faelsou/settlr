@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
-from app.api.deps import CurrentUser, get_db, require_tenant_user
+from app.api.deps import CurrentUser, get_db, require_owner, require_tenant_user
 from app.core.audit import audit
 from app.core.phones import normalize_br_phone
 from app.core.senders import apply_senders, listed_senders, normalize_senders
@@ -134,6 +134,7 @@ class TenantSettings(BaseModel):
     whatsapp_senders: list[WhatsappSenderOut] = []
     owner_email: str = ""
     owner_phone: str = ""
+    legal_basis: str = ""
 
     @field_validator("owner_email")
     @classmethod
@@ -157,33 +158,54 @@ class TenantSettings(BaseModel):
         except ValueError as exc:
             raise ValueError("WhatsApp interno inválido") from exc
 
+    @field_validator("legal_basis")
+    @classmethod
+    def _legal_basis(cls, value: str) -> str:
+        return value.strip()
 
-def current_settings(tenant: Tenant) -> TenantSettings:
-    return TenantSettings(
+
+class TenantSettingsOut(TenantSettings):
+    active: bool
+    missing: list[str]
+
+
+def current_settings(tenant: Tenant) -> TenantSettingsOut:
+    from app.api.routes.admin import missing_requirements
+
+    body = TenantSettings(
         timezone=tenant.timezone,
         negotiation_policy={**DEFAULT_NEGOTIATION_POLICY, **(tenant.negotiation_policy or {})},
         dunning_rules=tenant.dunning_rules or DEFAULT_DUNNING_RULES,
         allowed_hours=tenant.allowed_hours or DEFAULT_ALLOWED_HOURS,
-        reconciliation_rules={**DEFAULT_RECONCILIATION_RULES, **(tenant.reconciliation_rules or {})},
+        reconciliation_rules={
+            **DEFAULT_RECONCILIATION_RULES,
+            **(tenant.reconciliation_rules or {}),
+        },
         whatsapp_senders=listed_senders(tenant),
         owner_email=tenant.owner_email or "",
         owner_phone=tenant.owner_phone or "",
+        legal_basis=tenant.legal_basis or "",
+    )
+    return TenantSettingsOut(
+        **body.model_dump(),
+        active=bool(tenant.active),
+        missing=missing_requirements(tenant),
     )
 
 
-@router.get("", response_model=TenantSettings)
+@router.get("", response_model=TenantSettingsOut)
 def get_settings_(
     db: Session = Depends(get_db), user: CurrentUser = Depends(require_tenant_user)
-) -> TenantSettings:
+) -> TenantSettingsOut:
     return current_settings(db.get(Tenant, user.tenant_id))
 
 
-@router.put("", response_model=TenantSettings)
+@router.put("", response_model=TenantSettingsOut)
 def update_settings(
     body: TenantSettings,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(require_tenant_user),
-) -> TenantSettings:
+    user: CurrentUser = Depends(require_owner),
+) -> TenantSettingsOut:
     tenant = db.get(Tenant, user.tenant_id)
     before = current_settings(tenant).model_dump(mode="json")
     data = body.model_dump(mode="json")
@@ -195,6 +217,7 @@ def update_settings(
     tenant.reconciliation_rules = data["reconciliation_rules"]
     tenant.owner_email = data["owner_email"] or None
     tenant.owner_phone = data["owner_phone"] or None
+    tenant.legal_basis = data["legal_basis"] or None
     audit(db, tenant_id=tenant.id, actor=user.actor, action="atualiza_configuracoes",
           entity="tenant", entity_id=tenant.id, before=before, after=data)
     return current_settings(tenant)
@@ -215,7 +238,7 @@ def _instances_taken(db: Session, tenant_id, instances: list[str]) -> str | None
 def update_whatsapp_senders(
     body: WhatsappSendersIn,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(require_tenant_user),
+    user: CurrentUser = Depends(require_owner),
 ) -> list[dict]:
     """Substitui os números de disparo. O primeiro envia. Apagar um que caiu
     promove o seguinte. No máximo cinco."""
@@ -233,3 +256,23 @@ def update_whatsapp_senders(
         before={"senders": before}, after={"senders": body.senders},
     )
     return body.senders
+
+
+@router.post("/activate", response_model=TenantSettingsOut)
+def activate_account(
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_owner),
+) -> TenantSettingsOut:
+    """Liga a conta. Sem política, régua, horário, WhatsApp ou base legal, devolve 422."""
+    from app.api.routes.admin import activate_record
+
+    tenant = db.get(Tenant, user.tenant_id)
+    if tenant is None:
+        raise HTTPException(404, "empresa não encontrada")
+    if missing := activate_record(tenant):
+        raise HTTPException(422, {"missing": missing})
+    audit(
+        db, tenant_id=tenant.id, actor=user.actor, action="ativa_tenant",
+        entity="tenant", entity_id=tenant.id,
+    )
+    return current_settings(tenant)

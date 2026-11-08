@@ -118,7 +118,15 @@ flowchart TD
 - **Integração do emissor** para webhooks de PIX/boleto.
 
 **Regra:** nenhum tenant entra em produção sem política, régua, horário e base
-legal (LGPD) registrados.
+legal (LGPD) registrados. A ativação devolve 422 com a lista do que falta.
+
+**Pela tela.** A empresa cria a conta em `/comecar`: nome, política, régua padrão,
+horário, WhatsApp e base legal. O dono entra na hora. A agência continua podendo
+cadastrar pelo `POST /admin/tenants`.
+
+**Papéis.** Dono configura a política. Financeiro confirma a baixa. Atendente não
+confirma baixa. O convite sai por e-mail com um link só da pessoa, sem senha e
+sem login compartilhado.
 
 ---
 
