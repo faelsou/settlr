@@ -3,7 +3,7 @@
 import { DataTable, type Column } from "@/components/data-table";
 import { Badge } from "@/components/status";
 import { useToast } from "@/components/toast";
-import { Banner, Button, Card, FileButton, PageHeader, Segmented } from "@/components/ui";
+import { Banner, Button, Card, Field, FileButton, Input, PageHeader, Segmented } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { documentBr, money, when } from "@/lib/format";
 import type { Payment } from "@/lib/types";
@@ -25,12 +25,22 @@ const ORIGINS = [
   { value: "webhook", label: "Webhook" },
 ];
 
+function isoLocal(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export default function PagamentosPage() {
   const toast = useToast();
   const [status, setStatus] = useState("");
   const [origin, setOrigin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const today = isoLocal(new Date());
+  const [start, setStart] = useState(() => isoLocal(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+  const [end, setEnd] = useState(today);
   const list = useQuery({
     queryKey: ["payments", status, origin],
     queryFn: () => api.payments({ status: status || undefined, origin: origin || undefined }),
@@ -51,6 +61,23 @@ export default function PagamentosPage() {
       list.refetch();
     } catch (err) {
       setError(errorText(err));
+    }
+  }
+
+  async function onExport() {
+    setError(null);
+    if (end < start) {
+      setError("O fim do período é anterior ao início.");
+      return;
+    }
+    setExporting(true);
+    try {
+      await api.exportSettlements(start, end);
+      toast("Arquivo do contador baixado.");
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -101,13 +128,34 @@ export default function PagamentosPage() {
       <PageHeader
         eyebrow="Conciliação"
         title="Pagamentos"
-        hint="Comprovante sozinho nunca baixa. Só vira definitivo com extrato ou webhook."
+        hint="Comprovante sozinho nunca baixa. A baixa confirmada volta ao emissor, e o arquivo do período sai para o contador."
         actions={<FileButton label="Importar OFX/CSV" accept=".ofx,.csv,.txt" onFile={onImport} />}
       />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         <Segmented label="Status do pagamento" value={status} onChange={setStatus} options={STATUSES} />
         <Segmented label="Origem do pagamento" value={origin} onChange={setOrigin} options={ORIGINS} />
+        <Field label="De">
+          <Input
+            type="date"
+            aria-label="Início do período"
+            value={start}
+            onChange={(event) => setStart(event.target.value)}
+            className="w-40"
+          />
+        </Field>
+        <Field label="Até">
+          <Input
+            type="date"
+            aria-label="Fim do período"
+            value={end}
+            onChange={(event) => setEnd(event.target.value)}
+            className="w-40"
+          />
+        </Field>
+        <Button variant="outline" onClick={onExport} disabled={exporting}>
+          {exporting ? "Gerando…" : "Arquivo do contador"}
+        </Button>
       </div>
 
       {error ? <Banner>{error}</Banner> : null}

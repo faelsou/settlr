@@ -118,7 +118,7 @@ Transições de status ficam em `app/models/states.py`. Mudar status fora dali �
 
 ### 6.2 Matcher
 
-`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`.
+`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro, que chama `receiveInCash` no Asaas. `GET /payments/export` devolve o CSV do período.
 
 Locks Redis em `payment:{id}` evitam baixa duplicada em concorrência.
 
@@ -150,7 +150,7 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | Prefixo | Ações | Serviço |
 | --- | --- | --- |
 | `/exceptions` | Listar, confirmar, rejeitar | conciliacao |
-| `/payments` | Listar, comprovante, importar OFX/CSV | conciliacao |
+| `/payments` | Listar, comprovante, importar OFX/CSV, exportar CSV do período | conciliacao |
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |

@@ -133,6 +133,8 @@ Todo dinheiro que entra vira um `payment`. O matcher tenta casar com título em 
 - **Comprovante falso:** origem `comprovante` fica `aguardando_banco`. Só vira baixa definitiva com extrato ou webhook.
 - **Diferença de valor:** juros/desconto dentro da regra do tenant aplica; parcial deixa o título `parcialmente_pago`; fora da regra vira exceção.
 - Um pagamento pode quitar vários títulos; vários pagamentos podem quitar um título (`matches` N:N).
+- Título que fica `pago` marca a cobrança como recebida no emissor do piloto (Asaas, id `pay_`). O devedor não recebe aviso novo do emissor. Cobrança que o próprio webhook do emissor já quitou não é marcada de novo. Referência de planilha não vai para o emissor.
+- Em Pagamentos, o arquivo do período traz título, valor, data e identificador bancário (o E2E; se o banco não mandou, o txid). Só entra baixa definitiva. Comprovante ainda sem banco fica de fora.
 
 ### Janela de data (padrão)
 

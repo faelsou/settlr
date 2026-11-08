@@ -412,6 +412,10 @@ isolado fica `aguardando banco`.
   duplicada em concorrência.
 - `matches` é N:N (um pagamento pode quitar vários títulos; vários pagamentos podem
   quitar um título).
+- Título que fica `pago` marca a cobrança `pay_` como recebida no Asaas, sem avisar
+  o devedor de novo. O webhook do próprio emissor não dispara essa chamada.
+- `GET /payments/export` entrega ao contador o período com título, valor, data e
+  identificador bancário. Match provisório não entra.
 
 ---
 

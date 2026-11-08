@@ -48,6 +48,7 @@ ENV_KEYS = (
 )
 HOJE = date(2026, 11, 7)
 PAGO_EM = datetime(2026, 11, 7, 15, tzinfo=UTC)
+baixas_emissor: list[tuple] = []
 
 
 @dataclass(frozen=True)
@@ -239,8 +240,13 @@ def _banco_limpo(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> Iterator[None
 
     original = dbmod.SessionLocal
     dbmod.SessionLocal = banco.app
+    baixas_emissor.clear()
     monkeypatch.setattr("app.reconciliation.service.redis_lock", lambda *_a, **_k: nullcontext())
     monkeypatch.setattr("app.api.routes.payments.reconcile.delay", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        "app.ingest.tasks.settle_issuer_charges.delay",
+        lambda *args, **_kwargs: baixas_emissor.append(args),
+    )
     banco.limpar()
     try:
         yield
@@ -282,9 +288,19 @@ def _semear_pagamento(
     origin: PaymentOrigin,
     status: PaymentStatus,
     exc_type: ExceptionType,
+    e2e_id: str | None = None,
+    issuer: str | None = None,
+    raw: dict | None = None,
 ) -> Caso:
     with banco.admin() as session, session.begin():
-        tenant = Tenant(name=nome, slug=slug, active=True, timezone="America/Sao_Paulo")
+        tenant = Tenant(
+            name=nome,
+            slug=slug,
+            active=True,
+            timezone="America/Sao_Paulo",
+            issuer_provider=issuer,
+            issuer_config={"api_key": "k"} if issuer else {},
+        )
         session.add(tenant)
         session.flush()
         debtor = Debtor(tenant_id=tenant.id, name=nome, document=documento, phone="11999999999")
@@ -311,6 +327,8 @@ def _semear_pagamento(
             payer_name=nome,
             payer_doc=documento,
             debtor_id=debtor.id,
+            e2e_id=e2e_id,
+            raw=raw or {},
             bank_confirmed_at=datetime.now(UTC) if bank else None,
         )
         session.add(payment)
@@ -719,3 +737,146 @@ def test_lista_separa_titulo_sem_pix_ou_boleto(banco: Banco) -> None:
     assert outcome.action == "send"
     assert outcome.reason == "D+5"
     assert eventos == []
+
+
+def _confirmar(banco: Banco, caso: Caso) -> None:
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "100.00"}]},
+    )
+    assert resposta.status_code == 200, resposta.text
+
+
+def test_exportacao_do_periodo_traz_titulo_valor_data_e_identificador(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco,
+        slug="clinica",
+        email="operador@clinica.test",
+        nome="Clínica",
+        documento="12345678901",
+        external_id="NF-1",
+        bank=True,
+        origin=PaymentOrigin.EXTRATO,
+        status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+        e2e_id="E2E-PIX-001",
+    )
+    _confirmar(banco, caso)
+    with banco.admin() as session, session.begin():
+        session.add(
+            Match(
+                tenant_id=caso.tenant_id,
+                payment_id=caso.payment_id,
+                invoice_id=caso.invoice_id,
+                amount_applied=Decimal("1.00"),
+                method="manual",
+                score=1,
+                provisional=True,
+                confirmed_by="sistema",
+            )
+        )
+
+    arquivo = banco.conc.get(
+        "/payments/export",
+        headers=_auth(caso),
+        params={"start": "2026-11-01", "end": "2026-11-30"},
+    )
+    assert arquivo.status_code == 200, arquivo.text
+    assert "text/csv" in arquivo.headers["content-type"]
+    assert arquivo.headers["content-disposition"] == 'attachment; filename="baixas-2026-11-01-2026-11-30.csv"'
+    assert arquivo.content.decode("utf-8-sig").splitlines() == [
+        "titulo;valor;data;identificador_bancario",
+        "NF-1;100.00;2026-11-07;E2E-PIX-001",
+    ]
+
+    fora = banco.conc.get(
+        "/payments/export",
+        headers=_auth(caso),
+        params={"start": "2026-10-01", "end": "2026-10-31"},
+    )
+    assert fora.status_code == 200
+    assert fora.content.decode("utf-8-sig").splitlines() == ["titulo;valor;data;identificador_bancario"]
+
+    invertido = banco.conc.get(
+        "/payments/export",
+        headers=_auth(caso),
+        params={"start": "2026-11-30", "end": "2026-11-01"},
+    )
+    assert invertido.status_code == 422
+    assert invertido.json()["detail"] == "o fim do período é anterior ao início"
+
+
+def test_titulo_conciliado_marca_cobranca_no_emissor(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> None:
+    caso = _semear_pagamento(
+        banco,
+        slug="clinica",
+        email="operador@clinica.test",
+        nome="Clínica",
+        documento="12345678901",
+        external_id="pay_piloto",
+        bank=True,
+        origin=PaymentOrigin.EXTRATO,
+        status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+        e2e_id="E2E-PIX-001",
+        issuer="asaas",
+    )
+    _confirmar(banco, caso)
+    assert baixas_emissor == [(str(caso.tenant_id), [str(caso.invoice_id)])]
+
+    chamadas: list[tuple] = []
+
+    class _Emissor:
+        def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
+            chamadas.append((payment_id, paid_on, value))
+            return "paid"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_args, **_kwargs: _Emissor())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "paga"
+    assert chamadas == [("pay_piloto", date(2026, 11, 7), Decimal("100.00"))]
+
+    with banco.como_app(caso.tenant_id) as session:
+        trilha = session.scalars(select(AuditLog).where(AuditLog.action == "baixa_emissor")).one()
+    assert trilha.actor == "sistema"
+    assert trilha.after["charge_id"] == "pay_piloto"
+    assert trilha.after["resultado"] == "paga"
+    assert trilha.after["valor"] == "100.00"
+    assert trilha.after["data"] == "2026-11-07"
+
+
+def test_webhook_do_emissor_nao_marca_a_cobranca_de_novo(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caso = _semear_pagamento(
+        banco,
+        slug="clinica",
+        email="operador@clinica.test",
+        nome="Clínica",
+        documento="12345678901",
+        external_id="pay_piloto",
+        bank=True,
+        origin=PaymentOrigin.WEBHOOK,
+        status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+        issuer="asaas",
+        raw={"provider": "asaas", "event": "PAYMENT_RECEIVED"},
+    )
+    _confirmar(banco, caso)
+    chamadas: list[tuple] = []
+
+    class _Emissor:
+        def mark_paid(self, *_args, **_kwargs) -> str:
+            chamadas.append(_args)
+            return "paid"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_args, **_kwargs: _Emissor())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "ja_no_emissor"
+    assert chamadas == []
+    with banco.como_app(caso.tenant_id) as session:
+        trilha = session.scalars(select(AuditLog).where(AuditLog.action == "baixa_emissor")).one()
+    assert trilha.after["resultado"] == "ja_no_emissor"

@@ -7,6 +7,7 @@ from app.core.logging import get_logger
 from app.ingest.issuers import get_adapter
 from app.ingest.schemas import InvoiceIn
 from app.ingest.service import import_invoices, upsert_invoice
+from app.ingest.settlement import plan_issuer_settlements, record_issuer_settlement
 from app.models import Tenant
 from app.models.enums import PaymentOrigin
 from app.reconciliation.service import BankPaymentIn, register_bank_payment
@@ -48,3 +49,47 @@ def handle_issuer_event(tenant_id: str, body: dict) -> str:
 
     reconcile.delay(tenant_id, payment_id)
     return "payment"
+
+
+@celery_app.task(
+    name="app.ingest.tasks.settle_issuer_charges",
+    autoretry_for=(httpx.TransportError,),
+    retry_backoff=True,
+    max_retries=5,
+)
+def settle_issuer_charges(tenant_id: str, invoice_ids: list[str]) -> str:
+    """Depois da baixa no Settlr, marca a cobrança como paga no emissor do piloto."""
+    tid = UUID(tenant_id)
+    ids = [UUID(invoice_id) for invoice_id in invoice_ids]
+    with tenant_session(tid) as session:
+        tenant = session.get(Tenant, tid)
+        if tenant is None or not tenant.issuer_provider:
+            return "sem_emissor"
+        provider = tenant.issuer_provider
+        config = dict(tenant.issuer_config or {})
+        work, skipped = plan_issuer_settlements(session, tenant, ids)
+        for invoice_id, reason in skipped:
+            record_issuer_settlement(
+                session, tid, invoice_id, charge_id=None, result=reason,
+            )
+
+    outcomes: list[str] = [reason for _, reason in skipped]
+    if not work:
+        log.info("issuer.settled", tenant_id=tenant_id, results=outcomes)
+        return ",".join(outcomes) if outcomes else "nada"
+
+    adapter = get_adapter(provider, config)
+    done: list[tuple] = []
+    for item in work:
+        status = adapter.mark_paid(item.charge_id, item.paid_on, item.value)
+        done.append((item, "paga" if status == "paid" else "ja_recebida"))
+
+    with tenant_session(tid) as session:
+        for item, status in done:
+            record_issuer_settlement(
+                session, tid, item.invoice_id, charge_id=item.charge_id, result=status,
+                paid_on=item.paid_on, value=item.value,
+            )
+    outcomes.extend(status for _, status in done)
+    log.info("issuer.settled", tenant_id=tenant_id, results=outcomes)
+    return ",".join(outcomes)
