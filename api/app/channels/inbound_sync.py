@@ -12,6 +12,7 @@ from uuid import UUID
 from sqlalchemy import select
 
 from app.agent.tasks import run_agent_turn
+from app.channels.delivery import RECEIPT_BODY
 from app.channels.metrics import record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message
 from app.channels.tasks import (
@@ -105,26 +106,50 @@ def _store(
     return inbound.text, conv, inbound.message_id
 
 
-def _last_inbound(session, conv: Conversation) -> Message | None:
-    last = session.scalars(
+def unanswered_inbound(rows: list[tuple[str, str | None, str | None]]) -> tuple[str, str] | None:
+    """Junta o que o devedor disse desde a última saída.
+
+    `rows` vem da mais nova para a mais antiga: (direção, texto, token).
+    O comprovante não entra no texto. O token é o da mensagem mais recente,
+    para o turno não disparar de novo.
+    """
+    pending: list[tuple[str, str]] = []
+    for direction, body, token in rows:
+        if direction == MessageDirection.OUT:
+            break
+        text = (body or "").strip()
+        if direction == MessageDirection.IN and text and text != RECEIPT_BODY:
+            pending.append((text, token or ""))
+    if not pending:
+        return None
+    pending.reverse()
+    return "\n".join(item[0] for item in pending), pending[-1][1]
+
+
+def agent_follow(
+    state: ConversationState,
+    stored: list[tuple[str, str]],
+    pending: tuple[str, str] | None,
+) -> tuple[str, str] | None:
+    """Texto e token do turno. Comprovante na mesma rodada não silencia a resposta."""
+    if state == ConversationState.HUMANO:
+        return None
+    if stored:
+        return pending or stored[-1]
+    if state in AGENT_STATES and pending is not None:
+        return pending
+    return None
+
+
+def _pending_text(session, conv: Conversation) -> tuple[str, str] | None:
+    rows = session.scalars(
         select(Message)
         .where(Message.conversation_id == conv.id)
         .order_by(Message.created_at.desc())
-    ).first()
-    if last is None or last.direction != MessageDirection.IN or not last.body:
-        return None
-    return last
-
-
-def _unanswered(session, conv: Conversation, inbound: Message) -> bool:
-    """Já existe saída depois desta entrada: o turno não roda de novo."""
-    return session.scalar(
-        select(Message.id).where(
-            Message.conversation_id == conv.id,
-            Message.direction == MessageDirection.OUT,
-            Message.created_at >= inbound.created_at,
-        )
-    ) is None
+    ).all()
+    return unanswered_inbound([
+        (msg.direction, msg.body, msg.wa_message_id or str(msg.id)) for msg in rows
+    ])
 
 
 def _handle_receipt(
@@ -250,14 +275,8 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
                         added += 1
                 if conv is None or conv.state == ConversationState.HUMANO:
                     continue
-                if stored:
-                    follow = (conv.id, stored[-1][0], stored[-1][1])
-                elif conv.state in AGENT_STATES and not receipts:
-                    last = _last_inbound(session, conv)
-                    if last is not None and _unanswered(session, conv, last):
-                        follow = (conv.id, last.body or "", last.wa_message_id or str(last.id))
-                else:
-                    follow = None
+                choice = agent_follow(conv.state, stored, _pending_text(session, conv))
+                follow = (conv.id, *choice) if choice else None
             for inbound, conv_id, debtor_id, raw in receipts:
                 _handle_receipt(tenant_id, instance, inbound, conv_id, debtor_id, raw)
                 added += 1

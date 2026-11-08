@@ -5,10 +5,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from app.channels.inbound_sync import _poll_jids
+from app.channels.delivery import RECEIPT_BODY
+from app.channels.inbound_sync import _poll_jids, agent_follow, unanswered_inbound
 from app.channels.tasks import continue_after_inbound, conversation_for_phone
 from app.channels.whatsapp import _contact_jid, inbound_from_record
-from app.models.enums import ConversationState, Intent
+from app.models.enums import ConversationState, Intent, MessageDirection
 
 
 def test_poll_jids_keeps_lid_and_phone():
@@ -153,6 +154,31 @@ def test_numbered_choice_picks_the_listed_option():
     assert picked.option_id == "op-6"
     assert numbered_choice("quero a 6", options) is None
     assert numbered_choice("9", options).decision == "outro"
+
+
+def test_unanswered_inbound_joins_texts_since_last_reply():
+    rows = [
+        (MessageDirection.IN, "Ola", "WA2"),
+        (MessageDirection.IN, "123", "WA1"),
+        (MessageDirection.OUT, "confirma os dígitos", "OUT1"),
+        (MessageDirection.IN, "mensagem antiga", "WA0"),
+    ]
+    assert unanswered_inbound(rows) == ("123\nOla", "WA2")
+
+
+def test_unanswered_inbound_skips_receipt_placeholder():
+    rows = [
+        (MessageDirection.IN, RECEIPT_BODY, "FILE"),
+        (MessageDirection.OUT, "resposta", "OUT1"),
+    ]
+    assert unanswered_inbound(rows) is None
+
+
+def test_receipt_in_the_same_cycle_does_not_silence_the_agent():
+    pending = ("123\nOla", "WA2")
+    assert agent_follow(ConversationState.AGUARDANDO_IDENTIDADE, [], pending) == pending
+    assert agent_follow(ConversationState.HUMANO, [("Ola", "WA2")], pending) is None
+    assert agent_follow(ConversationState.AGENTE, [], None) is None
 
 
 def test_continue_after_inbound_hands_off_to_agent(monkeypatch):
