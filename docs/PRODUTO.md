@@ -52,8 +52,12 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 | D-3 | Lembrete amigável + PIX copia-e-cola | WhatsApp template |
 | D0 | Vence hoje | WhatsApp template |
 | D+1 | Não identificamos o pagamento + 2ª via | WhatsApp template |
+| D+3 | Convite a quitar, sem anunciar desconto | WhatsApp template |
 | D+5 | Convite a negociar (sem inventar condição) | WhatsApp template |
+| D+7 | Novo convite a conversar, com o PIX | WhatsApp template |
+| D+10 | Lembrete do título em aberto | WhatsApp template |
 | D+15 | Última tentativa automática | WhatsApp + e-mail |
+| D+21 | Aviso de que a equipe assume, sem ameaça | WhatsApp template |
 | D+30 | Sai da régua → fila humana | Painel |
 
 ### Regras duras
@@ -67,6 +71,7 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 - Título sem PIX copia-e-cola e sem linha digitável de boleto **não recebe etapa**. O operador vê essa lista separada antes de ativar a conta. Quando o código chega, entra só a etapa vigente.
 - Disparo proativo usa **template oficial aprovado na Meta**. Texto livre do modelo fica na resposta, nunca na régua.
 - A conta só liga a régua com o **número pareado** (sessão `open` na Evolution) e com template aprovado em cada etapa de WhatsApp. Sem os dois, a ativação recusa.
+- Em produção a conta também não liga sem o parecer do [SETL-15](https://rafadsouz.atlassian.net/browse/SETL-15) registrado em `LEGAL_OPINION_REF`. Os textos dessa versão estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md).
 - Nunca ameaça, nunca menciona terceiros, nunca cobra em grupo.
 
 ---
@@ -174,14 +179,14 @@ Saídas laterais: `renegociado` (acordo), `fila_humana` (D+30), `contestado`, `c
 
 | Risco | Regra |
 | --- | --- |
-| Cobrança vexatória (CDC art. 42) | Templates revisados; sem ameaça; horário por tenant |
+| Cobrança vexatória (CDC art. 42) | Textos versionados; sem ameaça; horário por tenant |
 | Pessoa errada | Identidade antes de valores; nunca cobrar em grupo |
-| LGPD | Base legal por tenant; RLS; `audit_log`; retenção definida no contrato |
+| LGPD | Base legal por tenant; RLS; `audit_log`; retenção na minuta do contrato |
 | Banimento do número | Template oficial + rate limit + opt-out imediato |
 | Agente inventa condição | Tools só devolvem opções da política |
 | Alucinação no comprovante | Validação de E2E, data e valor; baixa confiança → exceção |
 
-Nenhum tenant entra em produção sem política, régua, horário, número WhatsApp e base legal.
+Nenhum tenant entra em produção sem política, régua, horário, número WhatsApp, base legal e o parecer registrado no SETL-15. A minuta está em [CONTRATO.md](./CONTRATO.md).
 
 ## 11. Métricas que o painel mostra
 

@@ -63,6 +63,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-secret-change-me"
     jwt_audience: str = "authenticated"
     webhook_hmac: str = "dev-webhook-secret"
+    # Vazio em produção impede ativar o tenant. O valor aponta o parecer registrado no SETL-15.
+    legal_opinion_ref: str = ""
 
     llm_model: str = "openai:gpt-4o-mini"
     llm_api_key: str = ""

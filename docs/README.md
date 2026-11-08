@@ -8,6 +8,8 @@
 | [SRE.md](./SRE.md) | SLI/SLO, orçamento de erro, plantão, incidente, postmortem e integridade |
 | [WHATSAPP-ENTREGA.md](./WHATSAPP-ENTREGA.md) | Como não perder mensagem e arquivo no WhatsApp: status, recibo, storage e fila no painel |
 | [CADASTRAR-CLIENTE.md](./CADASTRAR-CLIENTE.md) | Passo a passo para colocar os dados de um cliente B2B e a régua disparar |
+| [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) | Textos versionados da régua, à espera do parecer do SETL-15 |
+| [CONTRATO.md](./CONTRATO.md) | Minuta de contrato: base legal, retenção, CDC e LGPD |
 | [TECNICA.md](./TECNICA.md) | O que foi implementado: gateway, cobrança, conciliação, cadastro, painel, OTLP e deploy |
 | [BANCO.md](./BANCO.md) | Criação do Postgres 16: databases, roles, Alembic, RLS e checkpointer |
 | [../FLUXOS.md](../FLUXOS.md) | Passo a passo dos 9 fluxos e qual serviço executa cada um |

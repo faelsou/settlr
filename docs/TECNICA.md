@@ -73,7 +73,7 @@ A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovant
 4. Role `agencia` acessa `/admin/tenants` sem RLS de um tenant só.
 5. Role da aplicação **não** é superuser nem dona das tabelas, para o RLS valer.
 
-Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → `POST /admin/tenants/{id}/activate`. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada.
+Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → `POST /admin/tenants/{id}/activate`. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
@@ -261,5 +261,5 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 
 - Webhooks assinados de Asaas/Inter/Efí em cliente vivo
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
-- Revisão jurídica dos textos da régua e do contrato
+- Parecer jurídico dos textos da régua e do contrato ainda não registrado no SETL-15. A versão `2026-11-08` e a minuta já estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) e [CONTRATO.md](./CONTRATO.md). Produção não ativa o primeiro cliente sem `LEGAL_OPINION_REF`
 - Faixas de preço com custo medido no piloto

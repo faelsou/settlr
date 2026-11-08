@@ -85,6 +85,10 @@ def seed_demo() -> None:
             session.flush()
         elif tenant.whatsapp_instance in (None, "demo"):
             tenant.whatsapp_instance = "Cobranca"
+        from app.dunning.legal import adopt_canonical_texts
+
+        if upgraded := adopt_canonical_texts(tenant.dunning_rules):
+            tenant.dunning_rules = upgraded
         set_tenant(session, tenant.id)
 
         today = date.today()

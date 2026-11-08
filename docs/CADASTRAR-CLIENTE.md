@@ -62,7 +62,7 @@ Se o WhatsApp ou a base legal ainda não estiverem prontos, complete depois com 
 
 `POST /admin/tenants/{id}/activate`
 
-Se ainda faltar política, régua, horário, instância do WhatsApp ou base legal, a ativação recusa e devolve a lista do que falta. Também recusa quando o número não está pareado na Evolution (a sessão precisa estar aberta) ou quando alguma etapa de WhatsApp não tem template oficial aprovado na Meta. O nome de cada template fica em **Configurações**, na seção Régua. Não force. Complete e tente de novo.
+Se ainda faltar política, régua, horário, instância do WhatsApp ou base legal, a ativação recusa e devolve a lista do que falta. Também recusa quando o número não está pareado na Evolution (a sessão precisa estar aberta) ou quando alguma etapa de WhatsApp não tem template oficial aprovado na Meta. Em produção, recusa ainda se o parecer do SETL-15 não estiver em `LEGAL_OPINION_REF`. O nome de cada template fica em **Configurações**, na seção Régua. Os textos dessa versão estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md). Não force. Complete e tente de novo.
 
 Crie também o usuário do operador dessa empresa (o financeiro ou o dono que vai olhar o painel). Ele entra com o e-mail dele e o apelido da conta. É esse login que importa a planilha.
 

@@ -11,8 +11,10 @@ from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
 from app.api.deps import CurrentUser, require_agency
 from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
+from app.core.config import get_settings
 from app.core.db import SessionLocal, set_tenant
 from app.core.senders import fold_primary, listed_senders
+from app.dunning.legal import MISSING_OPINION, production_without_opinion
 from app.dunning.official import commit_activation, read_evolution
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
@@ -42,7 +44,7 @@ class TenantOut(BaseModel):
 
 
 def missing_requirements(tenant: Tenant) -> list[str]:
-    """Nenhum tenant entra em produção sem política, régua, horário, número e base legal."""
+    """Nenhum tenant entra em produção sem política, régua, horário, número, base legal e parecer."""
     checks = {
         "política de negociação": tenant.negotiation_policy,
         "régua": tenant.dunning_rules,
@@ -50,7 +52,11 @@ def missing_requirements(tenant: Tenant) -> list[str]:
         "instância do WhatsApp": tenant.whatsapp_instance,
         "base legal (LGPD)": tenant.legal_basis,
     }
-    return [name for name, value in checks.items() if not value]
+    missing = [name for name, value in checks.items() if not value]
+    settings = get_settings()
+    if production_without_opinion(settings.env, settings.legal_opinion_ref):
+        missing.append(MISSING_OPINION)
+    return missing
 
 
 def _ensure_unique_instances(session, tenant: Tenant) -> None:

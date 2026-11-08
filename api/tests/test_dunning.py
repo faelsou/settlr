@@ -2,11 +2,13 @@
 
 from datetime import date, datetime
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from app.dunning.legal import MISSING_OPINION, adopt_canonical_texts, production_without_opinion
 from app.dunning.official import (
     commit_activation,
     parse_connection_state,
@@ -16,7 +18,9 @@ from app.dunning.official import (
 )
 from app.dunning.payment import has_payment_code
 from app.dunning.rules import (
+    TEXT_VERSION,
     AllowedHours,
+    DEFAULT_DUNNING_RULES,
     Step,
     decide,
     parse_steps,
@@ -235,6 +239,201 @@ def _regua_de_um_passo() -> dict:
 
 def _catalogo_aprovado() -> list[dict]:
     return [{"name": "lembrete_pix", "language": "pt_BR", "status": "approved"}]
+
+
+def test_canonical_texts_match_the_versioned_dossier():
+    dossier = Path(__file__).resolve().parents[2] / "docs" / "TEXTOS-REGUA.md"
+    text = dossier.read_text(encoding="utf-8")
+    assert TEXT_VERSION in text
+    assert DEFAULT_DUNNING_RULES["text_version"] == TEXT_VERSION
+    blob = " ".join(DEFAULT_DUNNING_RULES["templates"].values()).lower()
+    for banned in ("restrição", "negativ", "protesto", "15%", "6 vezes", "3 parcelas"):
+        assert banned not in blob
+    for key, body in DEFAULT_DUNNING_RULES["templates"].items():
+        assert f"## {key}" in text
+        assert body in text
+
+
+def test_old_unversioned_rules_adopt_the_canonical_texts():
+    old = {
+        "steps": [{"key": "D+3", "offset": 3, "channels": ["whatsapp"], "template": "desconto_vista"}],
+        "templates": {"desconto_vista": "15% de desconto", "aviso_restricao": "restrição do nome"},
+        "whatsapp_templates": {"aviso_restricao": {"name": "aviso_meta", "language": "pt_BR", "params": []}},
+        "rate_per_minute": 12,
+    }
+    adopted = adopt_canonical_texts(old)
+    assert adopted is not None
+    assert adopted["text_version"] == TEXT_VERSION
+    assert "desconto_vista" not in adopted["templates"]
+    assert "15%" not in " ".join(adopted["templates"].values())
+    assert adopted["whatsapp_templates"]["aviso_equipe"]["name"] == "aviso_meta"
+    assert adopted["rate_per_minute"] == 12
+    assert adopt_canonical_texts(adopted) is None
+    assert adopt_canonical_texts({"templates": {"lembrete": "texto da clínica"}, "text_version": ""}) is None
+
+
+def test_production_activation_waits_for_the_legal_opinion(monkeypatch):
+    from app.api.routes.admin import missing_requirements
+
+    tenant = SimpleNamespace(
+        negotiation_policy={"max_installments": 6},
+        dunning_rules={"steps": []},
+        allowed_hours={"start": "08:00"},
+        whatsapp_instance="loja",
+        legal_basis="execução de contrato",
+    )
+
+    class Ambiente:
+        def __init__(self, env: str, ref: str) -> None:
+            self.env = env
+            self.legal_opinion_ref = ref
+
+    monkeypatch.setattr("app.api.routes.admin.get_settings", lambda: Ambiente("dev", ""))
+    assert MISSING_OPINION not in missing_requirements(tenant)
+    assert production_without_opinion("dev", "") is False
+
+    monkeypatch.setattr("app.api.routes.admin.get_settings", lambda: Ambiente("prod", ""))
+    assert missing_requirements(tenant) == [MISSING_OPINION]
+
+    monkeypatch.setattr(
+        "app.api.routes.admin.get_settings", lambda: Ambiente("prod", "SETL-15#parecer")
+    )
+    assert missing_requirements(tenant) == []
+
+
+class _Transacao:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, *_args):
+        return False
+
+
+class _SessaoAdmin:
+    def __init__(self, tenant) -> None:
+        self.tenant = tenant
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def begin(self) -> _Transacao:
+        return _Transacao()
+
+    def get(self, _model, key):
+        return self.tenant if key == self.tenant.id else None
+
+
+def _token(role: str, tenant_id) -> str:
+    import jwt
+
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    return jwt.encode(
+        {
+            "sub": "user-1",
+            "email": "agencia@settlr.test",
+            "aud": settings.jwt_audience,
+            "app_metadata": {"role": role, "tenant_id": str(tenant_id) if tenant_id else None},
+        },
+        settings.jwt_secret,
+        algorithm="HS256",
+    )
+
+
+def _conta_pronta():
+    from uuid import uuid4
+
+    from app.models import Tenant
+
+    return Tenant(
+        id=uuid4(),
+        name="Clínica",
+        slug="clinica-parecer",
+        active=False,
+        timezone="America/Sao_Paulo",
+        negotiation_policy={"max_installments": 6},
+        dunning_rules=_regua_de_um_passo(),
+        reconciliation_rules={},
+        allowed_hours={"start": "08:00", "end": "20:00", "weekdays": [0, 1, 2, 3, 4, 5]},
+        whatsapp_instance="loja",
+        whatsapp_number="5511999990000",
+        whatsapp_senders=[],
+        issuer_config={},
+        legal_basis="execução de contrato",
+    )
+
+
+def test_activate_http_refuses_production_until_the_opinion_is_recorded(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from app.services.cadastro import app
+
+    tenant = _conta_pronta()
+    monkeypatch.setattr("app.api.routes.admin.SessionLocal", lambda: _SessaoAdmin(tenant))
+    monkeypatch.setattr("app.api.routes.admin.read_evolution", lambda *_args, **_kwargs: ("close", []))
+    monkeypatch.setattr("app.api.routes.admin.audit", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr("app.api.routes.admin.set_tenant", lambda *_args, **_kwargs: None)
+    client = TestClient(app)
+    headers = {"Authorization": f"Bearer {_token('agencia', None)}"}
+
+    class Ambiente:
+        def __init__(self, env: str, ref: str) -> None:
+            self.env = env
+            self.legal_opinion_ref = ref
+
+    monkeypatch.setattr("app.api.routes.admin.get_settings", lambda: Ambiente("prod", ""))
+    blocked = client.post(f"/admin/tenants/{tenant.id}/activate", headers=headers)
+    assert blocked.status_code == 422
+    assert blocked.json()["detail"] == {"missing": [MISSING_OPINION]}
+    assert tenant.active is False
+
+    monkeypatch.setattr(
+        "app.api.routes.admin.get_settings", lambda: Ambiente("prod", "SETL-15#parecer")
+    )
+    opened = client.post(f"/admin/tenants/{tenant.id}/activate", headers=headers)
+    assert opened.status_code == 422
+    assert opened.json()["detail"]["missing"] == ["número pareado", "template oficial aprovado"]
+    assert tenant.active is False
+
+    monkeypatch.setattr("app.api.routes.admin.get_settings", lambda: Ambiente("dev", ""))
+    dev = client.post(f"/admin/tenants/{tenant.id}/activate", headers=headers)
+    assert dev.status_code == 422
+    assert MISSING_OPINION not in dev.json()["detail"]["missing"]
+
+
+def test_settings_http_returns_the_text_version():
+    from fastapi.testclient import TestClient
+
+    from app.api.deps import get_db
+    from app.dunning.rules import DEFAULT_DUNNING_RULES
+    from app.services.cadastro import app
+
+    tenant = _conta_pronta()
+    tenant.dunning_rules = DEFAULT_DUNNING_RULES
+    session = _SessaoAdmin(tenant)
+
+    def _db():
+        yield session
+
+    app.dependency_overrides[get_db] = _db
+    try:
+        client = TestClient(app)
+        response = client.get(
+            "/settings",
+            headers={"Authorization": f"Bearer {_token('operador', tenant.id)}"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    rules = response.json()["dunning_rules"]
+    assert rules["text_version"] == TEXT_VERSION
+    assert "15%" not in " ".join(rules["templates"].values())
+    assert "aviso_restricao" not in rules["templates"]
 
 
 def test_activation_stays_off_without_a_paired_number():
