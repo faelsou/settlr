@@ -1,4 +1,7 @@
-"""Envio 1:1 ao devedor com registro da mensagem. Todo texto que sai passa por aqui.
+"""Envio 1:1 ao devedor com registro da mensagem.
+
+Texto livre sai por aqui: resposta do agente, do operador e do comprovante.
+A régua não usa este caminho. Disparo proativo vai por template oficial.
 
 A linha nasce `pendente` antes da chamada HTTP. Timeout de transporte não apaga
 o registro: a transação segue e a reconciliação acha a mensagem.

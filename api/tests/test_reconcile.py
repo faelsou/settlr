@@ -107,7 +107,19 @@ def test_dunning_timeout_keeps_the_pending_message(monkeypatch):
     debtor = SimpleNamespace(
         id=uuid4(), name="Maria Souza", phone="5511999999999", phones=[], email=None,
     )
-    tenant = SimpleNamespace(id=tenant_id, whatsapp_instance="cobranca", dunning_rules={})
+    tenant = SimpleNamespace(
+        id=tenant_id,
+        whatsapp_instance="cobranca",
+        dunning_rules={
+            "approved_templates": {
+                "vencimento_hoje": {
+                    "name": "vencimento_hoje",
+                    "language": "pt_BR",
+                    "params": ["{nome}"],
+                },
+            },
+        },
+    )
     conv = SimpleNamespace(
         tenant_id=tenant_id, id=uuid4(), wa_jid="5511999999999@s.whatsapp.net", intent=None,
     )
@@ -119,11 +131,11 @@ def test_dunning_timeout_keeps_the_pending_message(monkeypatch):
     monkeypatch.setattr("app.dunning.service.audit", lambda *_a, **_k: None)
     client = MagicMock()
 
-    def send_text(*_args, **_kwargs):
+    def send_template(*_args, **_kwargs):
         assert added[0].delivery_status == PENDENTE
         raise httpx.TimeoutException("timeout")
 
-    client.send_text.side_effect = send_text
+    client.send_template.side_effect = send_template
     step = Step("D0", 0, ("whatsapp",), "vencimento_hoje")
     _send_step(session, tenant, invoice, debtor, step, ("whatsapp",), client)
     messages = [item for item in added if isinstance(item, Message)]

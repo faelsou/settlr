@@ -152,7 +152,7 @@ A célula em que o tenant mora, por porte, está em [INFRA.md](./INFRA.md). Cada
 | Webhook de banco ou emissor passa de rajada curta | Gateway acima de 4 réplicas. A idempotência por E2E e por token continua a barreira |
 | Dois números de WhatsApp precisam da mesma sessão | Continua uma Evolution por sessão. O tenant já guarda até cinco números de disparo |
 
-Riscos já aceitos no piloto: pareamento real da Evolution, template oficial, webhook assinado de Asaas, Inter e Efí em cliente vivo, Supabase Auth com `app_metadata.tenant_id`, e a revisão jurídica dos textos da régua. O detalhe está na seção 13 de [TECNICA.md](./TECNICA.md).
+Riscos já aceitos no piloto: webhook assinado de Asaas, Inter e Efí em cliente vivo, Supabase Auth com `app_metadata.tenant_id`, e a revisão jurídica dos textos da régua. O detalhe está na seção 13 de [TECNICA.md](./TECNICA.md). A régua só liga com número pareado e template oficial aprovado na Meta.
 
 ## 8. Glossário
 

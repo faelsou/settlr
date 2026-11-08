@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from app.core.config import get_settings
 from app.core.redis import get_redis
+from app.dunning.official import parse_connection_state, parse_template_catalog
 
 GROUP_SUFFIX = "@g.us"
 MEDIA_TYPES = {"imageMessage", "documentMessage", "documentWithCaptionMessage"}
@@ -151,6 +152,18 @@ class EvolutionClient:
         response.raise_for_status()
         messages = response.json().get("messages") or {}
         return messages.get("records") or []
+
+    def connection_state(self, instance: str) -> str | None:
+        """`open` significa número pareado. Qualquer outro estado deixa a régua desligada."""
+        response = self._client.get(f"/instance/connectionState/{instance}")
+        response.raise_for_status()
+        return parse_connection_state(response.json())
+
+    def list_templates(self, instance: str) -> list[dict[str, Any]]:
+        """Templates da conta na Meta. A régua só aceita status `approved`."""
+        response = self._client.get(f"/template/find/{instance}")
+        response.raise_for_status()
+        return parse_template_catalog(response.json())
 
     def send_text(self, instance: str, number: str, text: str) -> str | None:
         response = self._client.post(

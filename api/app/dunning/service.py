@@ -19,6 +19,7 @@ from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
 from app.core.phones import contact_phones
 from app.core.redis import get_redis
+from app.dunning.official import approved_for
 from app.dunning.payment import has_payment_code, payment_code_clause
 from app.dunning.rules import DEFAULT_DUNNING_RULES, Step, decide, parse_steps
 from app.models import Debtor, DunningEvent, Invoice, Promise, Tenant
@@ -73,6 +74,14 @@ class StepOutcome:
     reason: str = ""
 
 
+@dataclass
+class Dispatch:
+    """`sent` grava etapa. `blocked_template` é WhatsApp recusado por falta de template oficial."""
+
+    sent: bool = False
+    blocked_template: bool = False
+
+
 def process_invoice(
     session: Session,
     tenant: Tenant,
@@ -113,7 +122,11 @@ def process_invoice(
     if decision.action == "skip":
         return StepOutcome("skip", decision.reason)
 
-    _send_step(session, tenant, invoice, debtor, decision.step, decision.channels, client)
+    dispatch = _send_step(
+        session, tenant, invoice, debtor, decision.step, decision.channels, client,
+    )
+    if dispatch.blocked_template and not dispatch.sent:
+        return StepOutcome("skip", "sem_template_oficial")
     if invoice.status == InvoiceStatus.ABERTO:
         set_invoice_status(invoice, InvoiceStatus.EM_COBRANCA)
     return StepOutcome("send", decision.step.key)
@@ -127,11 +140,11 @@ def _send_step(
     step: Step,
     channels: tuple[str, ...],
     client: EvolutionClient | None,
-) -> None:
+) -> Dispatch:
     rules = tenant.dunning_rules or DEFAULT_DUNNING_RULES
     templates = {**DEFAULT_DUNNING_RULES["templates"], **rules.get("templates", {})}
-    wa_templates = rules.get("whatsapp_templates", {})
     text = render(templates[step.template], invoice, debtor)
+    dispatch = Dispatch()
 
     for channel in channels:
         message_id = None
@@ -141,9 +154,13 @@ def _send_step(
             if not numbers or not tenant.whatsapp_instance:
                 record_message("saida", "enviada", "regua", "texto", "falha")
                 continue
+            official = approved_for(rules, step.template)
+            if official is None:
+                record_message("saida", "enviada", "regua", "texto", "falha")
+                dispatch.blocked_template = True
+                continue
             per_minute = int(rules.get("rate_per_minute", DEFAULT_RATE_PER_MINUTE))
             client = client or EvolutionClient()
-            official = wa_templates.get(step.template)
             conv = get_or_create_conversation(session, tenant.id, debtor)
             msg = log_message(
                 session, conv, MessageDirection.OUT, f"regua:{step.key}", text,
@@ -156,14 +173,11 @@ def _send_step(
                     record_message("saida", "enviada", "regua", "texto", "falha")
                     raise RateLimited(tenant.whatsapp_instance)
                 try:
-                    if official:
-                        message_ids.append(client.send_template(
-                            tenant.whatsapp_instance, number, official["name"],
-                            official.get("language", "pt_BR"),
-                            [render(p, invoice, debtor) for p in official.get("params", [])],
-                        ))
-                    else:
-                        message_ids.append(client.send_text(tenant.whatsapp_instance, number, text))
+                    message_ids.append(client.send_template(
+                        tenant.whatsapp_instance, number, official["name"],
+                        official["language"],
+                        [render(p, invoice, debtor) for p in official["params"]],
+                    ))
                 except (httpx.TimeoutException, httpx.TransportError):
                     record_message("saida", "enviada", "regua", "texto", "falha")
                     break
@@ -203,3 +217,5 @@ def _send_step(
                 "phones": sent_to,
             },
         )
+        dispatch.sent = True
+    return dispatch

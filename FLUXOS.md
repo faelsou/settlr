@@ -201,9 +201,10 @@ flowchart TD
 - Nunca envia fora do horário permitido do tenant.
 - Não reenvia etapa aceita, entregue ou lida. Falha de entrega libera a mesma etapa no mesmo canal, ainda dentro do horário e do opt-out.
 - Respeita `opt_out` imediatamente.
-- Usa **templates oficiais** para disparo proativo (evita banimento do número).
+- Usa **template oficial aprovado na Meta** para disparo proativo. Sem ele, a etapa de WhatsApp não sai e o texto livre não entra no lugar.
+- A ativação da conta exige número pareado (`open` na Evolution) e template aprovado em cada etapa de WhatsApp. Faltando um dos dois, a régua continua desligada.
 - Promessa ativa **pausa** a régua até `data_prometida + 1`.
-- Disparo proativo é sempre determinístico — o LLM **não** inicia conversas.
+- Disparo proativo é sempre determinístico — o LLM **não** inicia conversas. O texto livre do modelo só responde quem já falou.
 - Título sem PIX copia-e-cola e sem linha digitável não recebe etapa, nem o handoff de D+30. Quando o código chega, sai só a etapa vigente.
 
 ---

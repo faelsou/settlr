@@ -9,9 +9,11 @@ from sqlalchemy import select
 
 from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
 from app.api.deps import CurrentUser, require_agency
+from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
 from app.core.db import SessionLocal, set_tenant
 from app.core.senders import fold_primary, listed_senders
+from app.dunning.official import commit_activation, read_evolution
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
 
@@ -136,7 +138,9 @@ def activate_tenant(tenant_id: UUID, user: CurrentUser = Depends(require_agency)
             raise HTTPException(404, "tenant não encontrado")
         if missing := missing_requirements(tenant):
             raise HTTPException(422, {"missing": missing})
-        tenant.active = True
+        state, catalog = read_evolution(EvolutionClient(), tenant.whatsapp_instance or "")
+        if blockers := commit_activation(tenant, state, catalog):
+            raise HTTPException(422, {"missing": blockers})
         set_tenant(session, tenant.id)
         audit(session, tenant_id=tenant.id, actor=user.actor, action="ativa_tenant",
               entity="tenant", entity_id=tenant.id)
