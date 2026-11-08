@@ -80,11 +80,14 @@ def seed_demo() -> None:
                 reconciliation_rules=DEFAULT_RECONCILIATION_RULES,
                 whatsapp_instance="Cobranca",
                 legal_basis="Execução de contrato (LGPD art. 7º, V)",
+                owner_email="operador@demo.local",
             )
             session.add(tenant)
             session.flush()
         elif tenant.whatsapp_instance in (None, "demo"):
             tenant.whatsapp_instance = "Cobranca"
+        if not tenant.owner_email:
+            tenant.owner_email = "operador@demo.local"
         from app.dunning.legal import adopt_canonical_texts
 
         if upgraded := adopt_canonical_texts(tenant.dunning_rules):

@@ -50,6 +50,8 @@ class Tenant(IdMixin, TimestampMixin, Base):
     issuer_webhook_token: Mapped[str | None] = mapped_column(String(200), unique=True)
     issuer_config: Mapped[Json]
     legal_basis: Mapped[str | None] = mapped_column(Text)
+    owner_email: Mapped[str | None] = mapped_column(String(200))
+    owner_phone: Mapped[str | None] = mapped_column(String(20))
 
 
 class Debtor(IdMixin, TenantMixin, TimestampMixin, Base):

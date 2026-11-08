@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
 from app.api.deps import CurrentUser, get_db, require_tenant_user
 from app.core.audit import audit
+from app.core.phones import normalize_br_phone
 from app.core.senders import apply_senders, listed_senders, normalize_senders
 from app.dunning.official import preserve_approved
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
@@ -131,6 +132,30 @@ class TenantSettings(BaseModel):
     allowed_hours: AllowedHoursIn
     reconciliation_rules: ReconciliationRulesIn
     whatsapp_senders: list[WhatsappSenderOut] = []
+    owner_email: str = ""
+    owner_phone: str = ""
+
+    @field_validator("owner_email")
+    @classmethod
+    def _owner_email(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            return ""
+        domain = value.split("@")[-1] if "@" in value else ""
+        if "@" not in value or "." not in domain:
+            raise ValueError("e-mail do dono inválido")
+        return value
+
+    @field_validator("owner_phone")
+    @classmethod
+    def _owner_phone(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            return ""
+        try:
+            return normalize_br_phone(value) or ""
+        except ValueError as exc:
+            raise ValueError("WhatsApp interno inválido") from exc
 
 
 def current_settings(tenant: Tenant) -> TenantSettings:
@@ -141,6 +166,8 @@ def current_settings(tenant: Tenant) -> TenantSettings:
         allowed_hours=tenant.allowed_hours or DEFAULT_ALLOWED_HOURS,
         reconciliation_rules={**DEFAULT_RECONCILIATION_RULES, **(tenant.reconciliation_rules or {})},
         whatsapp_senders=listed_senders(tenant),
+        owner_email=tenant.owner_email or "",
+        owner_phone=tenant.owner_phone or "",
     )
 
 
@@ -166,6 +193,8 @@ def update_settings(
     tenant.dunning_rules = data["dunning_rules"]
     tenant.allowed_hours = data["allowed_hours"]
     tenant.reconciliation_rules = data["reconciliation_rules"]
+    tenant.owner_email = data["owner_email"] or None
+    tenant.owner_phone = data["owner_phone"] or None
     audit(db, tenant_id=tenant.id, actor=user.actor, action="atualiza_configuracoes",
           entity="tenant", entity_id=tenant.id, before=before, after=data)
     return current_settings(tenant)

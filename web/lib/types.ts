@@ -200,6 +200,8 @@ export type TenantSettings = {
     max_underpay_pct: string;
   };
   whatsapp_senders?: { instance: string; number: string }[];
+  owner_email?: string;
+  owner_phone?: string;
 };
 
 export type Metrics = {

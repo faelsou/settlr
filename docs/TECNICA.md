@@ -178,7 +178,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/conversas` — assumir, devolver e enviar
   - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
-  - `/configuracoes` — política, régua, horário e até cinco WhatsApps de disparo, com escolha de qual envia
+  - `/configuracoes` — política, régua, horário, até cinco WhatsApps de disparo e o e-mail ou WhatsApp interno que recebe o aviso da fila humana
   - `/metricas`
 
 `NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`. Sora e Manrope vêm do pacote npm (`@fontsource`); o `next build` não baixa o CSS do Google Fonts.
