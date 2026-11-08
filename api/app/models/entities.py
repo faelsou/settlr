@@ -102,6 +102,12 @@ class Invoice(IdMixin, TenantMixin, TimestampMixin, Base):
     def amount_open(self) -> Decimal:
         return self.amount - self.amount_paid
 
+    @property
+    def has_payment_code(self) -> bool:
+        from app.dunning.payment import has_payment_code
+
+        return has_payment_code(self.pix_copy_paste, self.digitable_line)
+
 
 class DunningEvent(IdMixin, TenantMixin, Base):
     """Cada disparo da régua. A unicidade vale enquanto a entrega não falhou."""

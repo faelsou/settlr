@@ -64,6 +64,7 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 - Devedor em opt-out **é ingerido**, mas **não entra na régua ativa**.
 - Promessa ativa **pausa** a régua até `data_prometida + 1`.
 - Se o cron atrasar, envia só a **etapa mais recente**, não uma rajada das anteriores.
+- Título sem PIX copia-e-cola e sem linha digitável de boleto **não recebe etapa**. O operador vê essa lista separada antes de ativar a conta. Quando o código chega, entra só a etapa vigente.
 - Disparo proativo usa **template oficial** (não texto livre do LLM).
 - Nunca ameaça, nunca menciona terceiros, nunca cobra em grupo.
 

@@ -105,10 +105,11 @@ export const api = {
     return res.blob();
   },
 
-  invoices: (params: { status?: string; q?: string } = {}) => {
+  invoices: (params: { status?: string; q?: string; semPagamento?: boolean } = {}) => {
     const query = new URLSearchParams({ limit: "100" });
     if (params.status) query.set("status", params.status);
     if (params.q) query.set("q", params.q);
+    if (params.semPagamento) query.set("sem_pagamento", "true");
     return request<Page<Invoice>>(`/invoices?${query}`);
   },
   invoice: (id: string) => request<InvoiceDetail>(`/invoices/${id}`),

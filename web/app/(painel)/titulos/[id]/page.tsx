@@ -146,6 +146,12 @@ export default function TituloDetalhePage() {
         </Card>
       </div>
 
+      {data.has_payment_code ? null : (
+        <Banner tone="ok">
+          Este título não entra na régua até chegar o PIX ou o boleto. Quando o código chegar, sai só a etapa do dia.
+        </Banner>
+      )}
+
       <WhatsAppNumbers debtor={data.debtor} />
 
       <div className="grid gap-6 lg:grid-cols-2">

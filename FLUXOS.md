@@ -167,7 +167,9 @@ flowchart TD
     B --> C{Para cada título}
     C --> D{opt_out do devedor?}
     D -->|sim| SKIP[Pula - não cobra]
-    D -->|não| E{Dentro do horário permitido?}
+    D -->|não| CODE{Tem PIX ou boleto?}
+    CODE -->|não| SEM[Fica fora da régua]
+    CODE -->|sim| E{Dentro do horário permitido?}
     E -->|não| WAIT[Reagenda para a janela]
     E -->|sim| F{Há promessa ativa não vencida?}
     F -->|sim| PAUSE[Régua pausada até data+1]
@@ -202,6 +204,7 @@ flowchart TD
 - Usa **templates oficiais** para disparo proativo (evita banimento do número).
 - Promessa ativa **pausa** a régua até `data_prometida + 1`.
 - Disparo proativo é sempre determinístico — o LLM **não** inicia conversas.
+- Título sem PIX copia-e-cola e sem linha digitável não recebe etapa, nem o handoff de D+30. Quando o código chega, sai só a etapa vigente.
 
 ---
 

@@ -151,7 +151,7 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | --- | --- | --- |
 | `/exceptions` | Listar, confirmar, rejeitar | conciliacao |
 | `/payments` | Listar, comprovante, importar OFX/CSV | conciliacao |
-| `/invoices` | Listar, detalhe, importar CSV | cadastro |
+| `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
 | `/settings` | GET/PUT política, régua, horário, conciliação | cadastro |
@@ -174,7 +174,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/inicio` — filas e métricas
   - `/excecoes` — confirma alocação, corrige comprovante ou resolve contestação
   - `/pagamentos` — status, origem, comprovante, importação de extrato
-  - `/titulos` e `/titulos/[id]` — busca, régua, promessas, matches, mensagens e até cinco celulares do devedor
+  - `/titulos` e `/titulos/[id]` — busca, lista separada sem PIX ou boleto, régua, promessas, matches, mensagens e até cinco celulares do devedor
   - `/conversas` — assumir, devolver e enviar
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
   - `/configuracoes` — política, régua, horário e até cinco WhatsApps de disparo, com escolha de qual envia
@@ -238,7 +238,7 @@ cd api && pytest
 Cobertura atual (determinística):
 
 - `tests/test_matcher.py` — camadas 1–4, parcial, documento mascarado, soma de títulos
-- `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário
+- `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário, título sem PIX ou boleto
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
 - `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
 - `tests/test_money_http.py` — baixa, rejeição, extrato e acordo pelo HTTP, com isolamento entre tenants

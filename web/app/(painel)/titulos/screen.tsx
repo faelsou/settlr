@@ -57,6 +57,12 @@ export function TitulosScreen() {
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
   });
+  const semPagamento = useQuery({
+    queryKey: ["invoices", "sem-pagamento", query],
+    queryFn: () => api.invoices({ semPagamento: true, q: query || undefined }),
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
 
   useEffect(() => {
     setQ(params.get("q") ?? "");
@@ -68,6 +74,7 @@ export function TitulosScreen() {
       const result = await api.importInvoices(file);
       toast(`Importação: ${result.created} criados, ${result.updated} atualizados.`);
       list.refetch();
+      semPagamento.refetch();
     } catch (err) {
       setError(errorText(err));
     }
@@ -93,6 +100,28 @@ export function TitulosScreen() {
       </div>
 
       {error ? <Banner>{error}</Banner> : null}
+
+      {semPagamento.data && semPagamento.data.total > 0 ? (
+        <Card className="overflow-hidden">
+          <div className="border-b border-paper-200 px-6 py-4">
+            <h2 className="font-display text-xl">Sem PIX ou boleto</h2>
+            <p className="mt-1 max-w-2xl text-sm text-ink-700/70">
+              Estes títulos não entram na régua. Quando o código chegar, sai só a etapa do dia, sem as
+              anteriores. Confira esta lista antes de ativar a conta.
+            </p>
+          </div>
+          <DataTable
+            rows={semPagamento.data.items}
+            columns={columns}
+            rowKey={(invoice) => invoice.id}
+            pending={semPagamento.isPending}
+            error={semPagamento.isError ? errorText(semPagamento.error) : null}
+            emptyTitle="Nenhum título sem código"
+            resetKey={`sem:${query}`}
+            total={semPagamento.data.total}
+          />
+        </Card>
+      ) : null}
 
       <Card className="overflow-hidden">
         <DataTable
