@@ -128,7 +128,7 @@ Ao aceitar um acordo: o emissor do tenant gera PIX ou boleto para cada parcela; 
 
 ## 7. Regras de conciliação
 
-Todo dinheiro que entra vira um `payment`. O matcher tenta casar com título em aberto e **para no primeiro critério que fecha**.
+Todo dinheiro que entra vira um `payment`. No caminho feliz isso acontece sem arquivo: o Open Finance da conta ou o extrato do emissor. A importação de OFX ou CSV continua no painel, só como exceção. O matcher tenta casar com título em aberto e **para no primeiro critério que fecha**.
 
 | Camada | Critério | Resultado |
 | --- | --- | --- |
@@ -139,7 +139,7 @@ Todo dinheiro que entra vira um `payment`. O matcher tenta casar com título em 
 
 ### Proteções de caixa
 
-- **Deduplicação:** o mesmo `e2e_id` ou `file_hash` não baixa duas vezes.
+- **Deduplicação:** o mesmo `e2e_id` ou `file_hash` não baixa duas vezes. O extrato automático também ignora o lançamento que já entrou (`source_id` ou `txid` do emissor).
 - **Comprovante falso:** origem `comprovante` fica `aguardando_banco`. Só vira baixa definitiva com extrato ou webhook.
 - **Diferença de valor:** juros/desconto dentro da regra do tenant aplica; parcial deixa o título `parcialmente_pago`; fora da regra vira exceção.
 - Um pagamento pode quitar vários títulos; vários pagamentos podem quitar um título (`matches` N:N).

@@ -278,6 +278,7 @@ class BankPaymentIn:
     paid_at: datetime
     e2e_id: str | None = None
     txid: str | None = None
+    source_id: str | None = None
     payer_doc: str | None = None
     payer_name: str | None = None
     payer_bank: str | None = None
@@ -304,6 +305,27 @@ def _find_receipt_twin(session: Session, tenant_id: UUID, data: BankPaymentIn) -
     return candidates[0] if len(candidates) == 1 else None
 
 
+def _by_key(session: Session, tenant_id: UUID, column, value: str | None) -> Payment | None:
+    if not value:
+        return None
+    return session.scalars(
+        select(Payment).where(Payment.tenant_id == tenant_id, column == value)
+    ).first()
+
+
+def _find_bank_payment(session: Session, tenant_id: UUID, data: BankPaymentIn) -> Payment | None:
+    """Mesmo lançamento, mesmo PIX ou mesmo txid do emissor. O comprovante gêmeo fecha o resto."""
+    for column, value in (
+        (Payment.source_id, data.source_id),
+        (Payment.e2e_id, data.e2e_id),
+        (Payment.txid, data.txid),
+    ):
+        found = _by_key(session, tenant_id, column, value)
+        if found is not None:
+            return found
+    return _find_receipt_twin(session, tenant_id, data)
+
+
 def register_bank_payment(
     session: Session, tenant_id: UUID, data: BankPaymentIn, origin: PaymentOrigin
 ) -> Payment | None:
@@ -311,24 +333,21 @@ def register_bank_payment(
     pagamento, confirma o comprovante em vez de criar outro registro. Devolve None
     quando é reenvio de algo já registrado pelo banco."""
     now = datetime.now(UTC)
-    lock_key = f"bank:{tenant_id}:{data.e2e_id or data.txid or f'{data.amount}:{data.paid_at:%Y%m%d%H%M}'}"
+    stamp = f"{data.amount}:{data.paid_at:%Y%m%d%H%M}"
+    identity = data.source_id or data.e2e_id or data.txid or stamp
+    lock_key = f"bank:{tenant_id}:{identity}"
 
     with redis_lock(lock_key):
-        existing = None
-        if data.e2e_id:
-            existing = session.scalars(
-                select(Payment).where(Payment.tenant_id == tenant_id, Payment.e2e_id == data.e2e_id)
-            ).first()
-        if existing is None:
-            existing = _find_receipt_twin(session, tenant_id, data)
+        existing = _find_bank_payment(session, tenant_id, data)
 
         if existing is not None:
+            existing.source_id = existing.source_id or data.source_id
+            existing.e2e_id = existing.e2e_id or data.e2e_id
+            existing.txid = existing.txid or data.txid
             if existing.bank_confirmed_at is not None:
                 return None
             set_payment_status(existing, PaymentStatus.CONFIRMADO)
             existing.bank_confirmed_at = now
-            existing.e2e_id = existing.e2e_id or data.e2e_id
-            existing.txid = existing.txid or data.txid
             existing.raw = {**existing.raw, "bank": data.raw or {}}
             audit(session, tenant_id=tenant_id, actor="sistema", action="confirma_comprovante",
                   entity="payment", entity_id=existing.id, after={"origin": origin})
@@ -342,6 +361,7 @@ def register_bank_payment(
             paid_at=data.paid_at,
             e2e_id=data.e2e_id,
             txid=data.txid,
+            source_id=data.source_id,
             payer_doc=data.payer_doc,
             payer_name=data.payer_name,
             payer_bank=data.payer_bank,

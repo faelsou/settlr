@@ -57,7 +57,7 @@ export default function PagamentosPage() {
     setError(null);
     try {
       const result = await api.importStatement(file);
-      toast(`Extrato importado: ${result.created} novos, ${result.duplicates} já existentes.`);
+      toast(`Planilha importada: ${result.created} novos, ${result.duplicates} já existentes.`);
       list.refetch();
     } catch (err) {
       setError(errorText(err));
@@ -128,9 +128,18 @@ export default function PagamentosPage() {
       <PageHeader
         eyebrow="Conciliação"
         title="Pagamentos"
-        hint="Comprovante sozinho nunca baixa. A baixa confirmada volta ao emissor, e o arquivo do período sai para o contador."
-        actions={<FileButton label="Importar OFX/CSV" accept=".ofx,.csv,.txt" onFile={onImport} />}
+        hint="O pagamento entra sem arquivo, pelo Open Finance ou pelo extrato do emissor. Comprovante sozinho nunca baixa."
       />
+
+      <Card className="flex flex-wrap items-center justify-between gap-4 p-6">
+        <div>
+          <h2 className="font-semibold">Planilha, só como exceção</h2>
+          <p className="mt-1 max-w-xl text-sm text-ink-700/70">
+            OFX ou CSV quando não há Open Finance nem extrato do emissor. O mesmo E2E não baixa de novo.
+          </p>
+        </div>
+        <FileButton label="Importar planilha" accept=".ofx,.csv,.txt" onFile={onImport} />
+      </Card>
 
       <div className="flex flex-wrap items-end gap-3">
         <Segmented label="Status do pagamento" value={status} onChange={setStatus} options={STATUSES} />
@@ -168,7 +177,7 @@ export default function PagamentosPage() {
           pending={list.isPending}
           error={list.isError ? errorText(list.error) : null}
           emptyTitle="Nenhum pagamento"
-          emptyHint="Importe um extrato ou aguarde o webhook do banco."
+          emptyHint="Nada entrou ainda. O extrato automático busca o banco e o emissor."
           resetKey={`${status}:${origin}`}
           total={list.data?.total}
           renderExtra={(payment) =>

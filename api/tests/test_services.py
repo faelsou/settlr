@@ -15,6 +15,8 @@ TASKS = {
     "app.agent.tasks.run_agent_turn": "cobranca-llm",
     "app.agent.tasks.resume_agent": "cobranca-llm",
     "app.reconciliation.tasks.reconcile": "conciliacao",
+    "app.reconciliation.tasks.pull_statements": "conciliacao",
+    "app.reconciliation.tasks.pull_statements_tenant": "conciliacao",
     "app.receipts.tasks.process_whatsapp_receipt": "conciliacao-llm",
     "app.ingest.tasks.import_invoices": "cadastro",
     "app.ingest.tasks.handle_issuer_event": "cadastro",

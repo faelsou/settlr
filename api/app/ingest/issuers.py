@@ -5,7 +5,7 @@ a cobrança da parcela quando o devedor aceita um acordo."""
 import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import httpx
@@ -18,7 +18,11 @@ log = get_logger(__name__)
 
 ASAAS_INVOICE_EVENTS = {"PAYMENT_CREATED", "PAYMENT_UPDATED"}
 ASAAS_PAYMENT_EVENTS = {"PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"}
+ASAAS_SETTLED = {"RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"}
 CENT = Decimal("0.01")
+_E2E = re.compile(r"^E[A-Za-z0-9]{31}$")
+_PAGE = 100
+_MAX_ROWS = 2000
 
 
 @dataclass(frozen=True)
@@ -59,6 +63,18 @@ class AsaasAdapter:
     def _customer(self, customer_id: str) -> dict[str, Any]:
         return self._request("GET", f"/customers/{customer_id}")
 
+    def _pages(self, path: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        offset = 0
+        while offset < _MAX_ROWS:
+            page = self._request("GET", path, params={**params, "limit": _PAGE, "offset": offset})
+            data = page.get("data") or []
+            rows.extend(data)
+            if not page.get("hasMore") or not data:
+                break
+            offset += len(data)
+        return rows
+
     def parse(self, body: dict[str, Any]) -> InvoiceIn | BankPaymentIn | None:
         event = body.get("event")
         payment = body.get("payment") or {}
@@ -80,15 +96,26 @@ class AsaasAdapter:
             )
 
         if event in ASAAS_PAYMENT_EVENTS:
-            paid = payment.get("clientPaymentDate") or payment.get("paymentDate")
-            paid_at = datetime.combine(datetime.fromisoformat(paid).date(), time(12), tzinfo=UTC)
-            return BankPaymentIn(
-                amount=Decimal(str(payment["value"])),
-                paid_at=paid_at,
-                txid=payment["id"],
-                raw={"provider": "asaas", "event": event, "payment": payment},
+            return _asaas_payment(
+                payment, raw={"provider": "asaas", "event": event, "payment": payment},
             )
         return None
+
+    def statement(self, since: date) -> list[BankPaymentIn]:
+        """Cobranças já recebidas. É o extrato do emissor, sem arquivo e sem webhook."""
+        rows: list[BankPaymentIn] = []
+        for status_name in sorted(ASAAS_SETTLED):
+            params = {"status": status_name, "paymentDate[ge]": since.isoformat()}
+            for payment in self._pages("/payments", params):
+                if payment.get("status") not in ASAAS_SETTLED:
+                    continue
+                row = _asaas_payment(
+                    payment,
+                    raw={"source": "extrato_emissor", "provider": "asaas", "payment": payment},
+                )
+                if row is not None:
+                    rows.append(row)
+        return rows
 
     def issue(
         self,
@@ -189,6 +216,60 @@ class AsaasAdapter:
         if not pix and not line and not answered and errors:
             raise errors[-1]
         return pix, line
+
+
+def _fit(value: str | None, size: int) -> str | None:
+    if not value:
+        return None
+    value = value.strip()
+    if not value or len(value) > size:
+        return None
+    return value
+
+
+def _e2e_value(value: object) -> str | None:
+    if isinstance(value, str) and _E2E.match(value.strip()):
+        return value.strip()
+    return None
+
+
+def _asaas_e2e(payment: dict[str, Any]) -> str | None:
+    for key in ("endToEndIdentifier", "endToEndId"):
+        found = _e2e_value(payment.get(key))
+        if found:
+            return found
+    pix = payment.get("pixTransaction")
+    found = _e2e_value(pix)
+    if found:
+        return found
+    if isinstance(pix, dict):
+        for key in ("endToEndIdentifier", "endToEndId"):
+            found = _e2e_value(pix.get(key))
+            if found:
+                return found
+    return None
+
+
+def _asaas_payment(payment: dict[str, Any], *, raw: dict[str, Any]) -> BankPaymentIn | None:
+    paid = payment.get("clientPaymentDate") or payment.get("paymentDate")
+    payment_id = str(payment.get("id") or "")
+    if not paid or not payment_id:
+        return None
+    try:
+        amount = Decimal(str(payment["value"]))
+    except (InvalidOperation, KeyError):
+        return None
+    if amount <= 0:
+        return None
+    paid_on = datetime.fromisoformat(str(paid)[:10]).date()
+    return BankPaymentIn(
+        amount=amount,
+        paid_at=datetime.combine(paid_on, time(12), tzinfo=UTC),
+        e2e_id=_fit(_asaas_e2e(payment), 64),
+        txid=_fit(payment_id, 64),
+        source_id=_fit(f"asaas:{payment_id}", 120),
+        raw=raw,
+    )
 
 
 def _already_received(response: httpx.Response) -> bool:

@@ -79,6 +79,8 @@ class Settings(BaseSettings):
 
     inbound_debounce_seconds: int = 8
     dunning_interval_minutes: int = 15
+    statement_interval_minutes: int = 30
+    statement_lookback_days: int = 7
     receipt_min_confidence: float = 0.8
     identity_max_attempts: int = 3
 

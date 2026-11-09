@@ -1,4 +1,4 @@
-"""Importação de extrato (OFX ou CSV) quando o banco não tem webhook."""
+"""Importação de OFX ou CSV. É a exceção: o caminho feliz não usa arquivo."""
 
 import csv
 import io

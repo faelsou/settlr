@@ -56,7 +56,7 @@ O banco continua um só. O serviço não chama o outro por HTTP para dar baixa o
 | `worker-cobranca` | `celery … worker -Q cobranca,cobranca-llm` | Régua, inbound, agente |
 | `worker-conciliacao` | `celery … worker -Q conciliacao,conciliacao-llm` | Matching e comprovante |
 | `worker-cadastro` | `celery … worker -Q cadastro` | Importação e evento do emissor |
-| `relo-disp` | `celery -A app.workers.celery_app beat` | Agenda `run_dunning` e `check-promises` (07:00) |
+| `relo-disp` | `celery -A app.workers.celery_app beat` | Agenda `run_dunning`, `check-promises` (07:00) e `pull-statements` (30 min) |
 | `frontend-web` | Next.js standalone :3000 | Painel do operador |
 
 A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovante é `conciliacao-llm`. Não existe mais a fila `default`/`llm`: task sem rota cai em `sem-dono` e ninguém consome.
@@ -81,7 +81,7 @@ A criação da instância, das roles e do segundo database está em [`BANCO.md`]
 
 | Tabela | Papel |
 | --- | --- |
-| `tenants` | Política, régua, horário, WhatsApp, emissor, base legal |
+| `tenants` | Política, régua, horário, WhatsApp, emissor, `bank_feed`, base legal |
 | `debtors` | Quem deve; `opt_out` |
 | `invoices` | Título; `parent_id` / `agreement_id` nas parcelas |
 | `dunning_events` | Cada disparo da régua (único por título+etapa+canal) |
@@ -150,7 +150,7 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | Prefixo | Ações | Serviço |
 | --- | --- | --- |
 | `/exceptions` | Listar, confirmar, rejeitar | conciliacao |
-| `/payments` | Listar, comprovante, importar OFX/CSV, exportar CSV do período | conciliacao |
+| `/payments` | Listar, comprovante, importar OFX/CSV como exceção, exportar CSV do período | conciliacao |
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
@@ -176,7 +176,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 - Telas em `web/app/(painel)/`:
   - `/inicio` — filas e métricas
   - `/excecoes` — confirma alocação, corrige comprovante ou resolve contestação
-  - `/pagamentos` — status, origem, comprovante, importação de extrato
+  - `/pagamentos` — status, origem, comprovante; a planilha fica como exceção
   - `/titulos` e `/titulos/[id]` — busca, lista separada sem PIX ou boleto, régua, promessas, matches, mensagens e até cinco celulares do devedor
   - `/conversas` — assumir, devolver e enviar
   - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
