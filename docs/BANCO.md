@@ -114,7 +114,7 @@ Chave primária é `uuid`, gerado na aplicação (`uuid4`). A coluna não tem `D
 
 | Tabela | RLS | Papel |
 | --- | --- | --- |
-| `tenants` | não | Cliente, política, régua, horário, WhatsApp, emissor, base legal |
+| `tenants` | não | Cliente, política, régua, horário, WhatsApp, emissor, `bank_feed`, base legal |
 | `debtors` | sim | Devedor. Único `(tenant_id, document)`. Até cinco celulares em `phones` |
 | `invoices` | sim | Título. Único `(tenant_id, external_id)`. `parent_id` e `agreement_id` nas parcelas |
 | `dunning_events` | sim | Disparo da régua. Único `(invoice_id, step, channel)` |
@@ -123,12 +123,12 @@ Chave primária é `uuid`, gerado na aplicação (`uuid4`). A coluna não tem `D
 | `promises` | sim | Promessa de pagamento |
 | `agreements` | sim | Acordo. Parcelas são linhas de `invoices` |
 | `approvals` | sim | Pedido pausado no checkpointer, aguardando o operador |
-| `payments` | sim | Entrada de dinheiro. Único `(tenant_id, e2e_id)` e `(tenant_id, file_hash)` |
+| `payments` | sim | Entrada de dinheiro. Único `(tenant_id, e2e_id)`, `(tenant_id, file_hash)` e `(tenant_id, source_id)` |
 | `matches` | sim | N:N pagamento e título. `provisional = true` ainda não tem confirmação do banco |
 | `exceptions` | sim | Fila humana |
 | `audit_log` | sim | Append-only para a role da aplicação |
 
-No Postgres, `UNIQUE` admite vários `NULL`. Pagamento sem `e2e_id` ou sem `file_hash` não colide com outro na mesma condição. Os dois índices existem para deduplicar PIX e comprovante quando o identificador veio preenchido.
+No Postgres, `UNIQUE` admite vários `NULL`. Pagamento sem `e2e_id`, sem `file_hash` ou sem `source_id` não colide com outro na mesma condição. Os índices deduplicam PIX, comprovante e o lançamento do extrato automático quando o identificador veio preenchido.
 
 Status gravados como texto, validados na aplicação (`app/models/states.py` e `app/models/enums.py`):
 

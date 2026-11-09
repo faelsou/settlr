@@ -57,7 +57,7 @@ flowchart LR
     subgraph Entradas
       CRON[Cron / Beat]
       WA[WhatsApp Inbound]
-      BANK[Banco / Webhook / OFX]
+      BANK[Open Finance / extrato do emissor]
       ISSUER[Emissor de cobrança]
     end
 
@@ -408,6 +408,10 @@ flowchart TD
 pagamento tem origem (ou confirmação cruzada) de `extrato`/`webhook`. Comprovante
 isolado fica `aguardando banco`.
 
+**Sem arquivo:** o Beat puxa, a cada 30 minutos, as cobranças recebidas no emissor
+e os créditos do Open Finance (`bank_feed.open_finance`). Os dois gravam `payment`
+com origem `extrato`. OFX e CSV seguem em `POST /payments/import`, só como exceção.
+
 **Diferença de valor:**
 
 - Juros/multa ou desconto dentro da política → aplica regra do tenant.
@@ -416,8 +420,8 @@ isolado fica `aguardando banco`.
 
 **Proteções:**
 
-- Unicidade de `e2e_id` e `file_hash` no banco + **locks no Redis** evitam baixa
-  duplicada em concorrência.
+- Unicidade de `e2e_id`, `file_hash` e `source_id` no banco + **locks no Redis** evitam baixa
+  duplicada em concorrência. O `txid` do emissor também reencontra o pagamento que o webhook já gravou.
 - `matches` é N:N (um pagamento pode quitar vários títulos; vários pagamentos podem
   quitar um título).
 - Título que fica `pago` marca a cobrança `pay_` como recebida no Asaas, sem avisar

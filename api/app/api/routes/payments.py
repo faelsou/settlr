@@ -100,7 +100,7 @@ async def import_statement(
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_tenant_user),
 ) -> ImportResultOut:
-    """Importa extrato OFX/CSV quando o banco não tem webhook."""
+    """Exceção: OFX ou CSV quando não há Open Finance nem extrato do emissor."""
     try:
         transactions = parse_statement(file.filename or "", await file.read())
     except ValueError as exc:

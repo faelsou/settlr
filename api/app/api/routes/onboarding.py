@@ -101,6 +101,7 @@ def create_company(body: OnboardingIn) -> OnboardingOut:
             whatsapp_instance=body.whatsapp_instance,
             whatsapp_number=number,
             issuer_config={},
+            bank_feed={},
             legal_basis=body.legal_basis,
             owner_email=body.owner_email,
         )

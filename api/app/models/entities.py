@@ -49,6 +49,7 @@ class Tenant(IdMixin, TimestampMixin, Base):
     issuer_provider: Mapped[str | None] = mapped_column(String(40))
     issuer_webhook_token: Mapped[str | None] = mapped_column(String(200), unique=True)
     issuer_config: Mapped[Json]
+    bank_feed: Mapped[Json]
     legal_basis: Mapped[str | None] = mapped_column(Text)
     owner_email: Mapped[str | None] = mapped_column(String(200))
     owner_phone: Mapped[str | None] = mapped_column(String(20))
@@ -222,6 +223,7 @@ class Payment(IdMixin, TenantMixin, TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("tenant_id", "e2e_id", name="uq_payments_tenant_e2e"),
         UniqueConstraint("tenant_id", "file_hash", name="uq_payments_tenant_file_hash"),
+        UniqueConstraint("tenant_id", "source_id", name="uq_payments_tenant_source"),
         Index("ix_payments_tenant_status", "tenant_id", "status"),
     )
 
@@ -231,6 +233,7 @@ class Payment(IdMixin, TenantMixin, TimestampMixin, Base):
     paid_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     e2e_id: Mapped[str | None] = mapped_column(String(64))
     txid: Mapped[str | None] = mapped_column(String(64))
+    source_id: Mapped[str | None] = mapped_column(String(120))
     payer_doc: Mapped[str | None] = mapped_column(String(20))
     payer_name: Mapped[str | None] = mapped_column(String(200))
     payer_bank: Mapped[str | None] = mapped_column(String(120))

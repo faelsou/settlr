@@ -58,7 +58,7 @@ Todo dinheiro que entra vira um registro de pagamento, e cada pagamento tenta ca
 **Entradas**
 
 - Comprovante (imagem ou PDF) enviado no WhatsApp pelo devedor ou num grupo do cliente → OCR + extração estruturada por LLM (valor, data/hora, pagador, CPF/CNPJ parcial, ID E2E do PIX, banco).
-- Extrato bancário: webhook do banco/gateway quando existir, senão importação de OFX/CSV.
+- Extrato bancário: Open Finance ou extrato do emissor, sem arquivo. OFX/CSV fica só como exceção. Webhook do banco quando o PIX é empurrado.
 - Webhook do emissor de cobrança (Asaas, Inter, Efí etc.) quando o título nasce com PIX ou boleto registrado.
 
 **Matching em camadas (para no primeiro que casa)**

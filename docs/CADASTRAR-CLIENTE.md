@@ -203,6 +203,10 @@ Se a empresa emite cobrança no Asaas, dá para não depender da planilha no dia
 
 Quando o Asaas avisa que um pagamento foi criado ou atualizado, o sistema busca o cliente lá (nome, CNPJ, celular, e-mail) e grava ou atualiza o título com valor, vencimento, linha digitável e link. O id do pagamento no Asaas vira a referência. Pagamento confirmado entra na conciliação, não como cobrança nova.
 
+O webhook não é o único caminho. A cada 30 minutos o sistema puxa as cobranças recebidas no Asaas e registra o que ainda não entrou. Sem o webhook, o extrato do emissor ainda fecha o caixa.
+
+Open Finance entra no mesmo ciclo quando a conta tem `bank_feed.open_finance` com `base_url`, `token` e `account_id` (a raiz da API de contas). A planilha de extrato fica para quem não tem nenhum dos dois.
+
 Quando o devedor aceita um acordo, o sistema cria a cobrança dessa parcela no Asaas e grava o PIX ou o boleto antes de confirmar. Sem essa cobrança, o acordo não fica registrado. `issuer_config.billing_type` escolhe `PIX` (padrão) ou `BOLETO`.
 
 Outros emissores ainda não têm esse encaixe. Para eles, o caminho é a planilha.

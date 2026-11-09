@@ -29,6 +29,7 @@ class TenantCreate(BaseModel):
     whatsapp_number: str | None = None
     issuer_provider: str | None = None
     issuer_config: dict = {}
+    bank_feed: dict = {}
     legal_basis: str | None = None
 
 
@@ -76,6 +77,31 @@ def activate_record(tenant: Tenant) -> list[str]:
     return commit_activation(tenant, state, catalog)
 
 
+def _clean_feed(feed: dict | None) -> dict:
+    """Open Finance é opcional. Se vier, precisa dos três campos, e o token não entra no audit."""
+    if not feed or not feed.get("open_finance"):
+        return {}
+    of = feed["open_finance"] or {}
+    base = str(of.get("base_url") or "").strip().rstrip("/")
+    token = str(of.get("token") or "").strip()
+    account = str(of.get("account_id") or "").strip()
+    if not base.startswith(("https://", "http://")) or not token or not account:
+        raise HTTPException(422, "open finance precisa de base_url, token e account_id")
+    if len(token) > 2000 or len(account) > 100 or len(base) > 300:
+        raise HTTPException(422, "open finance inválido")
+    return {"open_finance": {"base_url": base, "token": token, "account_id": account}}
+
+
+def _audit_changes(changes: dict) -> dict:
+    hidden = {"issuer_config", "bank_feed"}
+    public = {key: value for key, value in changes.items() if key not in hidden}
+    if "bank_feed" in changes:
+        feed = changes["bank_feed"] if isinstance(changes["bank_feed"], dict) else {}
+        of = feed.get("open_finance") or {}
+        public["bank_feed"] = {"open_finance": {**of, "token": "***"}} if of else {}
+    return public
+
+
 def _out(t: Tenant) -> TenantOut:
     return TenantOut(
         id=t.id, name=t.name, slug=t.slug, active=t.active, whatsapp_instance=t.whatsapp_instance,
@@ -93,8 +119,10 @@ def list_tenants(_: CurrentUser = Depends(require_agency)) -> list[TenantOut]:
 @router.post("", response_model=TenantOut, status_code=201)
 def create_tenant(body: TenantCreate, user: CurrentUser = Depends(require_agency)) -> TenantOut:
     with SessionLocal() as session, session.begin():
+        data = body.model_dump()
+        data["bank_feed"] = _clean_feed(data.get("bank_feed"))
         tenant = Tenant(
-            **body.model_dump(),
+            **data,
             active=False,
             negotiation_policy=DEFAULT_NEGOTIATION_POLICY,
             dunning_rules=DEFAULT_DUNNING_RULES,
@@ -108,7 +136,7 @@ def create_tenant(body: TenantCreate, user: CurrentUser = Depends(require_agency
         session.flush()
         set_tenant(session, tenant.id)
         audit(session, tenant_id=tenant.id, actor=user.actor, action="cria_tenant",
-              entity="tenant", entity_id=tenant.id, after=body.model_dump(exclude={"issuer_config"}))
+              entity="tenant", entity_id=tenant.id, after=_audit_changes(data))
         return _out(tenant)
 
 
@@ -118,6 +146,7 @@ class TenantUpdate(BaseModel):
     whatsapp_number: str | None = None
     issuer_provider: str | None = None
     issuer_config: dict | None = None
+    bank_feed: dict | None = None
     legal_basis: str | None = None
 
 
@@ -130,6 +159,8 @@ def update_tenant(
         if tenant is None:
             raise HTTPException(404, "tenant não encontrado")
         changes = body.model_dump(exclude_unset=True)
+        if "bank_feed" in changes:
+            changes["bank_feed"] = _clean_feed(changes["bank_feed"])
         for key, value in changes.items():
             setattr(tenant, key, value)
         if "whatsapp_instance" in changes or "whatsapp_number" in changes:
@@ -139,8 +170,7 @@ def update_tenant(
             tenant.issuer_webhook_token = secrets.token_urlsafe(32)
         set_tenant(session, tenant.id)
         audit(session, tenant_id=tenant.id, actor=user.actor, action="atualiza_tenant",
-              entity="tenant", entity_id=tenant.id,
-              after={k: v for k, v in changes.items() if k != "issuer_config"})
+              entity="tenant", entity_id=tenant.id, after=_audit_changes(changes))
         return _out(tenant)
 
 

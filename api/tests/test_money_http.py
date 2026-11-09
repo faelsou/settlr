@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
+import httpx
 import jwt
 import pytest
 from alembic import command
@@ -24,6 +25,7 @@ from alembic.config import Config
 from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.deps import CurrentUser, get_db, require_tenant_user
@@ -31,6 +33,7 @@ from app.core.config import get_settings
 from app.core.db import set_tenant
 from app.models import Agreement, AuditLog, Debtor, Invoice, Match, Payment, ReviewException, Tenant
 from app.models.enums import ExceptionType, InvoiceStatus, PaymentOrigin, PaymentStatus
+from app.reconciliation.feeds import pull_tenant
 from app.services.cadastro import app as cadastro_app
 from app.services.conciliacao import app as conciliacao_app
 
@@ -496,6 +499,149 @@ def test_importar_extrato_registra_pagamento_do_banco(banco: Banco) -> None:
         assert pagamento.tenant_id == caso.tenant_id
         assert pagamento.bank_confirmed_at is not None
         assert session.get(Tenant, outro.tenant_id) is not None
+
+
+E2E_EMISSOR = "E18236120202610121230ABCDEFGHIJK"
+E2E_BANCO = "E18236120202610121230ABCDEFGHIJL"
+
+
+def _cliente(payload) -> httpx.Client:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if callable(payload):
+            return payload(request)
+        return httpx.Response(200, json=payload)
+
+    return httpx.Client(transport=httpx.MockTransport(handler), base_url="https://feed.test")
+
+
+def test_extrato_automatico_entra_sem_arquivo_e_nao_duplica(banco: Banco) -> None:
+    caso = _semear_tenant(banco, slug="clinica", email="operador@clinica.test", nome="Clínica")
+    with banco.admin() as session, session.begin():
+        tenant = session.get(Tenant, caso.tenant_id)
+        assert tenant is not None
+        tenant.issuer_provider = "asaas"
+        tenant.issuer_config = {"api_key": "k"}
+        tenant.bank_feed = {
+            "open_finance": {
+                "base_url": "https://banco.test/v2",
+                "token": "segredo",
+                "account_id": "acc-1",
+            }
+        }
+
+    def asaas(request: httpx.Request) -> httpx.Response:
+        status = request.url.params.get("status")
+        if status == "RECEIVED":
+            data = [{
+                "id": "pay_auto",
+                "value": 80,
+                "status": "RECEIVED",
+                "paymentDate": "2026-11-07",
+                "endToEndIdentifier": E2E_EMISSOR,
+            }]
+        elif status == "CONFIRMED":
+            data = [{
+                "id": "pay_auto",
+                "value": 80,
+                "status": "CONFIRMED",
+                "paymentDate": "2026-11-07",
+                "endToEndIdentifier": E2E_EMISSOR,
+            }]
+        else:
+            data = []
+        return httpx.Response(200, json={"hasMore": False, "data": data})
+
+    def banco_aberto(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("page") != "1":
+            return httpx.Response(200, json={"data": [], "meta": {"totalPages": 1}})
+        return httpx.Response(200, json={
+            "meta": {"totalPages": 1},
+            "data": [{
+                "transactionId": E2E_BANCO,
+                "completedAuthorisedPaymentType": "TRANSACAO_EFETIVADA",
+                "creditDebitType": "CREDITO",
+                "type": "PIX",
+                "transactionAmount": {"amount": "40.00", "currency": "BRL"},
+                "transactionDateTime": "2026-11-07T15:00:00Z",
+                "partieCnpjCpf": "12345678901",
+            }],
+        })
+
+    def puxar():
+        with banco.como_app(caso.tenant_id) as session:
+            tenant = session.get(Tenant, caso.tenant_id)
+            return pull_tenant(
+                session,
+                tenant,
+                since=date(2026, 11, 1),
+                today=date(2026, 11, 8),
+                issuer_client=_cliente(asaas),
+                open_finance_client=_cliente(banco_aberto),
+            )
+
+    primeiro = puxar()
+    assert len(primeiro.created) == 2
+    assert primeiro.duplicates == 1
+    assert primeiro.sources == ["emissor", "open_finance"]
+    de_novo = puxar()
+    assert de_novo.created == []
+    assert de_novo.duplicates == 3
+
+    repetido = (
+        "data,valor,e2e_id,documento,nome\n"
+        f"07/11/2026 10:00,40.00,{E2E_BANCO},12345678901,Maria\n"
+    )
+    resposta = banco.conc.post(
+        "/payments/import",
+        headers=_auth(caso),
+        files={"file": ("extrato.csv", repetido, "text/csv")},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert resposta.json()["created"] == 0
+    assert resposta.json()["duplicates"] == 1
+
+    novo = (
+        "data,valor,e2e_id\n"
+        "07/11/2026 11:00,15.00,E2EPLANILHAEXCECAO000000000001\n"
+    )
+    planilha = banco.conc.post(
+        "/payments/import",
+        headers=_auth(caso),
+        files={"file": ("excecao.csv", novo, "text/csv")},
+    )
+    assert planilha.status_code == 200, planilha.text
+    assert planilha.json()["created"] == 1
+
+    with banco.admin() as session:
+        consulta = select(Payment).where(Payment.tenant_id == caso.tenant_id)
+        pagamentos = session.scalars(consulta).all()
+    assert len(pagamentos) == 3
+    automaticos = [
+        p for p in pagamentos
+        if p.file_key is None and p.origin == "extrato" and p.source_id
+    ]
+    assert {p.source_id for p in automaticos} == {"asaas:pay_auto", f"of:{E2E_BANCO}"}
+    assert all(p.bank_confirmed_at is not None for p in automaticos)
+    assert "segredo" not in str([p.raw for p in automaticos])
+
+
+def test_file_hash_continua_unico(banco: Banco) -> None:
+    caso = _semear_tenant(banco, slug="clinica", email="operador@clinica.test", nome="Clínica")
+
+    def pagamento() -> Payment:
+        return Payment(
+            tenant_id=caso.tenant_id,
+            origin=PaymentOrigin.COMPROVANTE,
+            status=PaymentStatus.AGUARDANDO_BANCO,
+            amount=Decimal("10.00"),
+            paid_at=PAGO_EM,
+            file_hash="a" * 64,
+            raw={},
+        )
+
+    with pytest.raises(IntegrityError), banco.admin() as session, session.begin():
+        session.add(pagamento())
+        session.add(pagamento())
 
 
 def test_tenant_nao_le_nem_altera_dinheiro_do_outro(banco: Banco) -> None:

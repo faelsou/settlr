@@ -44,6 +44,10 @@ celery_app.conf.update(
             "task": "app.dunning.tasks.check_promises",
             "schedule": crontab(minute=0, hour=7),
         },
+        "pull-statements": {
+            "task": "app.reconciliation.tasks.pull_statements",
+            "schedule": settings.statement_interval_minutes * 60,
+        },
     },
 )
 
