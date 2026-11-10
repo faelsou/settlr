@@ -53,6 +53,7 @@ class Tenant(IdMixin, TimestampMixin, Base):
     legal_basis: Mapped[str | None] = mapped_column(Text)
     owner_email: Mapped[str | None] = mapped_column(String(200))
     owner_phone: Mapped[str | None] = mapped_column(String(20))
+    baseline_avg_days_late: Mapped[float | None] = mapped_column(Float)
 
 
 class TenantMember(IdMixin, TenantMixin, TimestampMixin, Base):

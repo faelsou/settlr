@@ -158,10 +158,11 @@ Riscos já aceitos no piloto: webhook assinado de Asaas, Inter e Efí em cliente
 
 | Termo | Neste sistema |
 | --- | --- |
-| Tenant | Cliente da agência. Toda linha de negócio carrega `tenant_id` |
+| Tenant | Empresa cliente do Settlr, controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id` |
+| Agência | Equipe do Settlr que opera várias contas pela role `agencia` (`/admin/tenants`). Não é um intermediário |
 | Título | `invoices`. Centro da régua, da conversa e da baixa |
 | Baixa | Match confirmado pelo banco que muda o status do título |
 | Provisório | Match de comprovante ainda sem extrato ou webhook |
-| Etapa | Um degrau da régua (D-3, D0, D+1, D+5, D+15, D+30) |
+| Etapa | Um degrau da régua (D-3, D0, D+1, D+3, D+5, D+7, D+10, D+15, D+21, D+30) |
 | Exceção | Fila humana: match incerto, valor fora da regra, leitura fraca, contestação, D+30 |
 | Gateway | `webhook-api`. Única porta HTTP do painel e dos webhooks |

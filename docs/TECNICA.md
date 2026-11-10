@@ -73,7 +73,7 @@ A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovant
 4. Role `agencia` acessa `/admin/tenants` sem RLS de um tenant só.
 5. Role da aplicação **não** é superuser nem dona das tabelas, para o RLS valer.
 
-Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → `POST /admin/tenants/{id}/activate`. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
+Onboarding: criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → ativar. A empresa cria pela tela (`POST /onboarding`, entra como `dono`) e ativa em `POST /settings/activate`. A agência, equipe do Settlr com role `agencia`, cria em `POST /admin/tenants` e ativa em `POST /admin/tenants/{id}/activate`. As duas ativações usam a mesma checagem. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
@@ -154,13 +154,13 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
-| `/onboarding` | A empresa cria a conta (política, régua, horário, WhatsApp, base legal) | cadastro |
+| `/onboarding` | A empresa cria a conta (política, régua, horário, WhatsApp, base legal, atraso médio anterior) | cadastro |
 | `/members` | Lista e convite por e-mail; aceite do link | cadastro |
 | `/settings` | GET para a equipe; PUT da política só o dono | cadastro |
 | `/settings/activate` | Liga a conta; 422 com o que falta | cadastro |
 | `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco); só o dono | cadastro |
 | `/debtors/{id}/whatsapp` | PATCH dos celulares do devedor (até cinco) | cadastro |
-| `/metrics` | Recuperação, DSO, promessas, baixa automática | cadastro |
+| `/metrics` | Recuperação, DSO do período, linha de base da implantação, promessas, baixa automática | cadastro |
 | `/admin/tenants` | CRUD e ativação (role `agencia`) | cadastro |
 
 Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo atende. No gateway aparecem auth e health. Conversas, pagamentos e títulos aparecem no `/docs` de cobrança, conciliação e cadastro.
@@ -181,10 +181,10 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/conversas` — assumir, devolver e enviar
   - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
-  - `/comecar` — a empresa cria tenant, política, régua, horário, WhatsApp e base legal
+  - `/comecar` — a empresa cria tenant, política, régua, horário, WhatsApp, base legal e a linha de base do atraso
   - `/convite/[token]` — a pessoa aceita o convite do e-mail e entra sem senha compartilhada
   - `/configuracoes` — política (só o dono), régua, horário, até cinco WhatsApps de disparo, base legal, ativação, convite da equipe e o aviso da fila humana
-  - `/metricas`
+  - `/metricas` — recuperação, atraso do período contra a linha de base, promessas e baixa automática
 
 `NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`. Sora e Manrope vêm do pacote npm (`@fontsource`); o `next build` não baixa o CSS do Google Fonts.
 

@@ -20,7 +20,14 @@ O cliente da primeira onda é PME com recorrência ou parcelamento (clínicas, e
 
 O devedor nunca vê o painel. Quem opera nunca escreve no banco direto: cada ação passa pela API e deixa rastro no `audit_log`.
 
-A empresa cria a própria conta pela tela: política, régua, horário, WhatsApp e base legal. Sem um desses, a ativação recusa.
+A conta abre por um de dois caminhos, e nos dois nasce desligada:
+
+| Caminho | Quem faz | Onde | Quem liga a conta |
+| --- | --- | --- | --- |
+| Pela tela | A própria empresa, que entra como dono | `/comecar` | O dono, em Configurações |
+| Pela API | A agência: a equipe do Settlr que opera várias contas (role `agencia`) | `POST /admin/tenants` | A agência, em `POST /admin/tenants/{id}/activate` |
+
+A conta precisa de política, régua, horário, WhatsApp e base legal. Sem um deles, a ativação recusa. A agência é o próprio Settlr, operador dos dados no contrato, e não um intermediário entre o Settlr e a empresa.
 
 | Papel | O que faz |
 | --- | --- |
@@ -37,7 +44,7 @@ O convite sai por e-mail, com um link só da pessoa. Não há senha nesse e-mail
 | 1 | Login, Exceções, Pagamentos | Conferir dinheiro que entrou e baixar o que o matcher não fechou |
 | 2 | Títulos | Ver o título, a régua que já rodou e as baixas |
 | 3 | Conversas, Entregas, Aprovações | Assumir o WhatsApp, ver se a mensagem chegou e decidir pedido fora da política |
-| 4 | Configurações, Métricas | Política, horário, templates; recuperação, DSO, baixa automática |
+| 4 | Configurações, Métricas | Política, horário, templates; recuperação, DSO contra a linha de base da implantação, baixa automática |
 
 A conciliação vem primeiro: não fala com o devedor e gera prova de valor para vender a régua.
 
@@ -47,7 +54,7 @@ A conciliação vem primeiro: não fala com o devedor e gera prova de valor para
 2. **O banco é a fonte da verdade da baixa.** Comprovante sozinho nunca quita o título.
 3. **A política do tenant é o teto.** O agente só oferece opções que o código já gerou.
 4. **Humano é a última instância.** Match incerto, contestação, leitura fraca e pedido fora da política vão para a fila.
-5. **Tudo é por tenant.** Nenhum fluxo cruza dados entre clientes da agência.
+5. **Tudo é por tenant.** Nenhum fluxo cruza dados entre empresas clientes.
 
 ---
 
@@ -205,7 +212,7 @@ Nenhum tenant entra em produção sem política, régua, horário, número Whats
 ## 11. Métricas que o painel mostra
 
 - Taxa de recuperação: valor recebido após o vencimento ÷ valor vencido
-- Dias médios de atraso (DSO)
+- Dias médios de atraso (DSO) do período, comparados com a linha de base gravada no onboarding
 - Promessas cumpridas ÷ feitas
 - % de baixa automática (sem humano)
 - Exceções abertas e tempo médio de resolução

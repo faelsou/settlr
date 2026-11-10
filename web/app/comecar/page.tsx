@@ -16,6 +16,7 @@ type Draft = {
   name: string;
   slug: string;
   owner_email: string;
+  baseline_avg_days_late: string;
   whatsapp_instance: string;
   whatsapp_number: string;
   legal_basis: string;
@@ -57,6 +58,7 @@ export default function ComecarPage() {
       name: "",
       slug: "",
       owner_email: "",
+      baseline_avg_days_late: "",
       whatsapp_instance: "",
       whatsapp_number: "",
       legal_basis: "",
@@ -78,6 +80,7 @@ export default function ComecarPage() {
         legal_basis: draft.legal_basis.trim() || null,
         whatsapp_instance: draft.whatsapp_instance.trim(),
         whatsapp_number: draft.whatsapp_number.trim(),
+        baseline_avg_days_late: Number(draft.baseline_avg_days_late),
       });
       setToken(result.access_token);
       setCreated({ missing: result.missing });
@@ -120,7 +123,8 @@ export default function ComecarPage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Onboarding</p>
           <h1 className="mt-2 font-display text-4xl text-ink-900">Criar a conta da empresa</h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-700/70">
-            Política, régua, horário, WhatsApp e base legal nascem aqui. Sem base legal, a ativação recusa a conta.
+            Política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação nascem aqui.
+            Sem base legal, a ativação recusa a conta.
           </p>
         </div>
 
@@ -161,7 +165,21 @@ export default function ComecarPage() {
                     onChange={(event) => setDraft({ ...draft, owner_email: event.target.value })}
                   />
                 </Field>
+                <Field label="Atraso médio antes da implantação (dias)">
+                  <Input
+                    required
+                    type="number"
+                    min={0}
+                    max={3650}
+                    step="0.1"
+                    value={draft.baseline_avg_days_late}
+                    onChange={(event) => setDraft({ ...draft, baseline_avg_days_late: event.target.value })}
+                  />
+                </Field>
               </div>
+              <p className="text-sm text-ink-700/70">
+                Esta linha de base fica gravada na conta. O painel compara o atraso do período com ela.
+              </p>
             </section>
 
             <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">

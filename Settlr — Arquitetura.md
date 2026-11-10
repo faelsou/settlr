@@ -80,7 +80,7 @@ Um schema único, multi-tenant por `tenant_id` com Row Level Security. O título
 
 | Tabela | Campos principais | Papel |
 | --- | --- | --- |
-| `tenants` | id, nome, política de negociação (jsonb), régua (jsonb), número WhatsApp, horário permitido | Configuração por cliente da agência |
+| `tenants` | id, nome, política de negociação (jsonb), régua (jsonb), número WhatsApp, horário permitido | Configuração por empresa cliente |
 | `debtors` | id, tenant\_id, nome, documento, telefone, opt\_out, tags | Quem deve |
 | `invoices` | id, tenant\_id, debtor\_id, valor, vencimento, status, txid, linha\_digitavel, parent\_id | Títulos; `parent_id` liga parcelas de um acordo |
 | `dunning_events` | id, invoice\_id, etapa, enviado\_em, message\_id, status\_entrega | Cada disparo da régua |
@@ -195,7 +195,7 @@ Onboarding de cliente novo deve ser configuração, não projeto: cadastrar tena
 **Métricas que o painel mostra ao cliente**
 
 - Taxa de recuperação: valor recebido após o vencimento ÷ valor vencido.
-- Dias médios de atraso (DSO) antes e depois da implantação.
+- Dias médios de atraso (DSO) do período, comparados com a linha de base gravada no onboarding.
 - Promessas cumpridas ÷ promessas feitas.
 - Baixa automática: % de pagamentos conciliados sem humano.
 - Exceções abertas e tempo médio de resolução.

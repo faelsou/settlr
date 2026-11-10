@@ -238,6 +238,7 @@ class Metrics(BaseModel):
     overdue_amount: Decimal
     recovered_amount: Decimal
     avg_days_late: float | None
+    baseline_avg_days_late: float | None
     promises_made: int
     promises_kept: int
     promise_kept_rate: float | None

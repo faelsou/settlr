@@ -30,7 +30,7 @@ Marque isso com a empresa antes de importar a planilha. Se faltar um item, o tí
 2. **WhatsApp da empresa conectado.** É o número que envia. A empresa pode ter até cinco. O primeiro da lista dispara; os outros ficam de reserva. Sem a instância, o sistema pula o WhatsApp.
 3. **Base legal combinada.** Contrato ou outro fundamento da LGPD. Sem isso a conta não ativa.
 4. **Horário de envio.** O padrão é das 8h às 20h, de segunda a sábado. Domingo e madrugada ficam quietos.
-5. **Régua.** O padrão avisa 3 dias antes do vencimento, no dia, e depois em D+1, D+5 e D+15. Em D+30 o título sai da régua automática e cai na fila humana do painel.
+5. **Régua.** O padrão avisa 3 dias antes do vencimento, no dia, e depois em D+1, D+3, D+5, D+7, D+10, D+15 e D+21. Em D+30 o título sai da régua automática e cai na fila humana do painel.
 6. **Celulares de quem paga**, com DDD, até cinco por devedor. Sem telefone, aquele título não recebe WhatsApp. O e-mail só entra na etapa D+15.
 7. **PIX copia e cola ou linha digitável do boleto.** Sem um dos dois, o título entra na base e aparece na lista **Sem PIX ou boleto**, mas não recebe etapa da régua. O link sozinho não libera o disparo. Quando o código chega, o título entra só na etapa do dia, sem rajada das anteriores.
 
@@ -40,7 +40,10 @@ Política de negociação, régua e horário já nascem com um padrão sensato n
 
 ## Passo 1. Abrir a conta da empresa
 
-Quem faz isso é a agência, pela API de cadastro, com um usuário de agência. A empresa ainda não vê o painel.
+Há dois caminhos. Nos dois a conta nasce desligada.
+
+- **A empresa cria sozinha**, em `/comecar` (link **Criar a conta** no login). Ela preenche nome, apelido, e-mail do dono, política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação. O dono entra na hora e liga a conta em **Configurações**, quando estiver tudo pronto.
+- **A agência cria pela API**, com um usuário de role `agencia`. A agência é a equipe do Settlr que opera as contas, não um intermediário. Use esse caminho quando a empresa preferir que a gente monte a conta antes de entregar o painel. O resto deste passo descreve esse caminho.
 
 Crie a conta com nome, um apelido curto (só letras minúsculas, números e hífen, por exemplo `software-house`) e, se já tiver, o WhatsApp e a base legal.
 
@@ -61,6 +64,8 @@ A conta nasce **desligada**. Isso é de propósito: dá tempo de importar a base
 Se o WhatsApp ou a base legal ainda não estiverem prontos, complete depois com um ajuste na mesma conta. Para ligar de verdade:
 
 `POST /admin/tenants/{id}/activate`
+
+Na conta que a empresa criou pela tela, quem liga é o dono, em **Configurações** (`POST /settings/activate`). As recusas são as mesmas.
 
 Se ainda faltar política, régua, horário, instância do WhatsApp ou base legal, a ativação recusa e devolve a lista do que falta. Também recusa quando o número não está pareado na Evolution (a sessão precisa estar aberta) ou quando alguma etapa de WhatsApp não tem template oficial aprovado na Meta. Em produção, recusa ainda se o parecer do SETL-15 não estiver em `LEGAL_OPINION_REF`. O nome de cada template fica em **Configurações**, na seção Régua. Os textos dessa versão estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md). Não force. Complete e tente de novo.
 
@@ -161,14 +166,18 @@ Para cada título em aberto ele olha a diferença entre hoje e o vencimento:
 | 3 dias antes | Lembrete com valor, vencimento e PIX |
 | No dia | Aviso de que vence hoje, com o PIX |
 | 1 dia depois | “Ainda não identificamos o pagamento” e o link ou a linha digitável |
+| 3 dias depois | Convite a quitar, sem anunciar desconto |
 | 5 dias depois | Convite para responder e combinar, sem inventar desconto |
-| 15 dias depois | Última mensagem automática, no WhatsApp e, se houver e-mail, por e-mail |
+| 7 dias depois | Novo convite a conversar, com o PIX |
+| 10 dias depois | Lembrete de que o título segue em aberto |
+| 15 dias depois | Última tentativa automática, no WhatsApp e, se houver e-mail, por e-mail |
+| 21 dias depois | Aviso de que a equipe assume o atendimento, sem ameaça |
 | 30 dias depois | Para de mandar mensagem e o título aparece na fila humana do painel |
 
 Detalhes que evitam susto:
 
 - **Antes de D-3, não sai nada.** Um vencimento daqui a 20 dias fica quieto até faltarem 3 dias. Isso é o comportamento certo.
-- **Se o vencimento já passou**, não sai uma rajada com todas as mensagens atrasadas. Sai só a etapa em que o título está hoje. Uma fatura com 6 dias de atraso recebe o texto de D+5, não o de D-3, D0 e D+1 juntos.
+- **Se o vencimento já passou**, não sai uma rajada com todas as mensagens atrasadas. Sai só a etapa em que o título está hoje. Uma fatura com 6 dias de atraso recebe o texto de D+5, não o de D-3, D0, D+1 e D+3 juntos.
 - **A mesma etapa não repete.** Reimportar a planilha não faz a mensagem ir de novo.
 - **Fora do horário, espera.** Se a importação terminou às 21h, o primeiro envio fica para a manhã seguinte, dentro da janela.
 - **Quem pediu para parar não é cobrado de novo.** O título continua no sistema, a mensagem não.

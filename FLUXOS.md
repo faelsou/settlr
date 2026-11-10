@@ -80,7 +80,7 @@ flowchart LR
 
 | # | Fluxo | Gatilho | Serviço | LLM? |
 | --- | --- | --- | --- | --- |
-| 0 | Onboarding | Humano (agência) | cadastro | não |
+| 0 | Onboarding | Humano (empresa pela tela ou agência pela API) | cadastro | não |
 | 1 | Ingestão de títulos | Upload / webhook emissor | cadastro + worker-cadastro | não |
 | 2 | Régua de cobrança | Cron (Beat) | beat + worker-cobranca | não |
 | 3 | Inbound WhatsApp | Webhook Evolution | gateway → cobranca + worker-cobranca | 🟦 intenção |
@@ -99,7 +99,7 @@ Onboarding deve ser **configuração, não projeto**.
 
 ```mermaid
 flowchart TD
-    A[Agência cadastra tenant] --> B[Define política de negociação jsonb]
+    A[Empresa em /comecar ou agência em /admin/tenants] --> B[Define política de negociação jsonb]
     B --> C[Define régua jsonb: etapas e canais]
     C --> D[Cadastra número WhatsApp + horário permitido]
     D --> E[Configura integração do emissor Asaas/Inter/Efí]
@@ -121,8 +121,13 @@ flowchart TD
 legal (LGPD) registrados. A ativação devolve 422 com a lista do que falta.
 
 **Pela tela.** A empresa cria a conta em `/comecar`: nome, política, régua padrão,
-horário, WhatsApp e base legal. O dono entra na hora. A agência continua podendo
-cadastrar pelo `POST /admin/tenants`.
+horário, WhatsApp, base legal e o atraso médio de antes da implantação. Esse
+número fica gravado na conta. O painel compara o atraso do período com ele.
+O dono entra na hora e liga a conta em `POST /settings/activate`.
+
+**Pela API.** A agência, equipe do Settlr com a role `agencia`, cadastra pelo
+`POST /admin/tenants` e liga em `POST /admin/tenants/{id}/activate`. Os dois
+caminhos criam a conta desligada e aplicam a mesma checagem na ativação.
 
 **Papéis.** Dono configura a política. Financeiro confirma a baixa. Atendente não
 confirma baixa. O convite sai por e-mail com um link só da pessoa, sem senha e

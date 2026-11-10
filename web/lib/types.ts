@@ -222,6 +222,7 @@ export type Metrics = {
   overdue_amount: string;
   recovered_amount: string;
   avg_days_late: number | null;
+  baseline_avg_days_late: number | null;
   promises_made: number;
   promises_kept: number;
   promise_kept_rate: number | null;
