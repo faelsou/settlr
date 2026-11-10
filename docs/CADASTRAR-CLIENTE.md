@@ -209,7 +209,17 @@ Open Finance entra no mesmo ciclo quando a conta tem `bank_feed.open_finance` co
 
 Quando o devedor aceita um acordo, o sistema cria a cobrança dessa parcela no Asaas e grava o PIX ou o boleto antes de confirmar. Sem essa cobrança, o acordo não fica registrado. `issuer_config.billing_type` escolhe `PIX` (padrão) ou `BOLETO`.
 
-Outros emissores ainda não têm esse encaixe. Para eles, o caminho é a planilha.
+### Ligar o emissor (Inter)
+
+Escola, academia e clínica costumam emitir no Banco Inter, não no Asaas. O provedor é `inter`.
+
+1. Na conta, informe `inter`, o token OAuth (`access_token` ou `client_id` e `client_secret`), a conta (`conta_corrente`) e o endereço do pagador (`endereco`, `cidade`, `uf`, `cep`). O certificado mTLS, quando houver, vai em `cert_file` e `key_file`.
+2. O sistema devolve um token de webhook. Guarde esse token.
+3. No Inter, cadastre o webhook de cobrança em `POST /webhooks/emissor?token=<token>`. O Inter não envia header de autenticação.
+
+O callback do Inter é uma lista. Cada item traz `codigoSolicitacao` e `situacao`. `A_RECEBER` busca o pagador na cobrança e grava o título. `RECEBIDO` e `MARCADO_RECEBIDO` entram na conciliação. A cada 30 minutos o sistema também puxa a coleção filtrada por `PAGAMENTO`.
+
+Emissor que não seja `asaas` nem `inter` falha na hora, com `emissor sem adaptador`. Não é lido como Asaas. Efí e o restante continuam na planilha.
 
 ---
 

@@ -424,8 +424,9 @@ com origem `extrato`. OFX e CSV seguem em `POST /payments/import`, só como exce
   duplicada em concorrência. O `txid` do emissor também reencontra o pagamento que o webhook já gravou.
 - `matches` é N:N (um pagamento pode quitar vários títulos; vários pagamentos podem
   quitar um título).
-- Título que fica `pago` marca a cobrança `pay_` como recebida no Asaas, sem avisar
-  o devedor de novo. O webhook do próprio emissor não dispara essa chamada.
+- Título que fica `pago` marca a cobrança como recebida no emissor, sem avisar
+  o devedor de novo: `pay_` no Asaas, `codigoSolicitacao` no Inter. O webhook do
+  próprio emissor não dispara essa chamada.
 - `GET /payments/export` entrega ao contador o período com título, valor, data e
   identificador bancário. Match provisório não entra.
 
