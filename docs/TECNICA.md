@@ -118,7 +118,7 @@ Transições de status ficam em `app/models/states.py`. Mudar status fora dali �
 
 ### 6.2 Matcher
 
-`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro, que chama `receiveInCash` no Asaas. `GET /payments/export` devolve o CSV do período.
+`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro. No Asaas isso chama `receiveInCash`. No Inter chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar` (sandbox). Emissor fora de `asaas` e `inter` levanta `NotImplementedError` e não cai no Asaas. `GET /payments/export` devolve o CSV do período.
 
 Locks Redis em `payment:{id}` evitam baixa duplicada em concorrência.
 
