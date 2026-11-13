@@ -113,7 +113,12 @@ kubectl -n observability create secret generic aiops-secrets \
   --from-literal=SLACK_APP_TOKEN=xapp-... \
   --from-literal=AIOPS_WEBHOOK_TOKEN="$(openssl rand -hex 24)" \
   --from-literal=LLM_API_KEY=sk-...
+
+kubectl -n observability create secret generic critical-page \
+  --from-literal=SLACK_CRITICAL_WEBHOOK=https://hooks.slack.com/services/...
 ```
+
+O segundo Secret é o webhook de entrada do Slack no `#incidente`. Ele não passa pelo processo `aiops`. O dono é Rafael de Souza. Sem ele, o Alertmanager sobe e o receiver `critical` não entrega; o receiver `aiops` continua.
 
 Aplicar, nesta ordem:
 
@@ -182,6 +187,6 @@ No Slack:
 ## Limites conhecidos
 
 - O estado dos incidentes fica em memória, com uma réplica. Num restart, o próximo `repeat_interval` (4 h) reabre como incidente novo o que ainda estiver disparando.
-- Ninguém vigia o vigia: se o `aiops` cair, o Alertmanager não tem outro receiver. Para produção, acrescente um segundo receiver (Slack webhook direto ou e-mail) só para `severity="critical"`.
+- O receiver `critical` do Alertmanager posta `severity=critical` direto no `#incidente`, pelo webhook `SLACK_CRITICAL_WEBHOOK`, sem chamar este processo. O dono é Rafael de Souza. O mesmo alerta segue para o `aiops`. Sem o secret, essa segunda entrega não sai; a primeira continua.
 - O LLM recebe métricas, eventos e até 25 linhas de log. Os logs da aplicação não devem conter dado pessoal do devedor. Revise antes de apontar para um modelo externo.
 - No Compose e no Swarm não há Alertmanager. O AIOps está ligado só no Minikube.

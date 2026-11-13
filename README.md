@@ -139,9 +139,9 @@ A stack Swarm de referência é `docker/stack.yml`, alinhada à seção 9 de `AR
 
 CI em pull request (`.github/workflows/ci.yml`): pytest, ruff nos módulos de observabilidade e tipos do painel. Na `main`, `.github/workflows/release.yml` publica `cobranca-api` e `cobranca-web` no GHCR com o SHA do commit e roda `docker/release.sh` no manager. Se a tag nova não ficar saudável, o script republica a anterior. Para voltar uma tag já publicada: Actions → Release → `rollback_to` = SHA. Sem `DEPLOY_HOST`, a pipeline só publica as imagens.
 
-- Painel: `app.<domínio>`
-- API: `api.<domínio>` (`/health`, `/webhooks/evolution`, `/webhooks/emissor`, `/webhooks/banco`)
-- WhatsApp: `wa.<domínio>`
+- Painel: `app.settlr.com.br`
+- API: `api.settlr.com.br` (`/health`, `/webhooks/evolution`, `/webhooks/emissor`, `/webhooks/banco`)
+- WhatsApp: `wa.settlr.com.br`
 - Auth do painel: Supabase Auth. O JWT precisa de `app_metadata.tenant_id`.
 - Migração: job one-off `alembic upgrade head` **antes** de atualizar os serviços da API. Nenhum deles migra no entrypoint.
 

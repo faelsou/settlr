@@ -102,7 +102,7 @@ flowchart TD
     A[Empresa em /comecar ou agência em /admin/tenants] --> B[Define política de negociação jsonb]
     B --> C[Define régua jsonb: etapas e canais]
     C --> D[Cadastra número WhatsApp + horário permitido]
-    D --> E[Configura integração do emissor Asaas/Inter/Efí]
+    D --> E[Configura o emissor Asaas]
     E --> F[Importa base de devedores e títulos]
     F --> G[Tenant ativo]
 ```
@@ -115,7 +115,7 @@ flowchart TD
   templates.
 - **Horário permitido**: janela de envio por tenant (compliance CDC).
 - **Número WhatsApp** e credenciais da Evolution.
-- **Integração do emissor** para webhooks de PIX/boleto.
+- **Integração do emissor** para webhooks de PIX/boleto. Em `main` o adaptador é o Asaas. Inter, Efí, iugu e Sicoob ficam no roadmap; até lá esses títulos entram por planilha.
 
 **Regra:** nenhum tenant entra em produção sem política, régua, horário e base
 legal (LGPD) registrados. A ativação devolve 422 com a lista do que falta.
@@ -198,20 +198,7 @@ flowchart TD
     L -->|não| N[Aguarda próximo ciclo]
 ```
 
-**Régua padrão (configurável):**
-
-| Momento | Ação | Canal |
-| --- | --- | --- |
-| D-3 | Lembrete amigável + PIX copia-e-cola | WhatsApp template |
-| D0 | Aviso de vencimento hoje | WhatsApp template |
-| D+1 | "Não identificamos o pagamento" + 2ª via | WhatsApp template |
-| D+3 | Convite a quitar, sem anunciar desconto | WhatsApp template |
-| D+5 | Oferta de negociação dentro da política | WhatsApp template |
-| D+7 | Novo convite a conversar, com o PIX | WhatsApp template |
-| D+10 | Lembrete do título em aberto | WhatsApp template |
-| D+15 | Última tentativa automática + aviso de encaminhamento | WhatsApp + e-mail |
-| D+21 | Aviso de que a equipe assume, sem ameaça | WhatsApp template |
-| D+30 | Sai da régua → fila humana | Painel |
+**Régua padrão (configurável):** momento, ação e canal estão na tabela de [docs/PRODUTO.md](docs/PRODUTO.md) (§5). Este fluxo usa essas etapas.
 
 **Regras duras:**
 
@@ -234,9 +221,11 @@ Módulo `channels/whatsapp.py` no serviço **cobranca**. O webhook chega no gate
 flowchart TD
     A[Webhook Evolution: mensagem recebida] --> B[Valida payload Pydantic]
     B --> C[Debounce no Redis: agrupa mensagens em rajada]
-    C --> D{Tem anexo imagem/PDF?}
-    D -->|sim| R[-> Fluxo 6: comprovante]
-    D -->|não| E[Resolve devedor + título pelo telefone/tenant]
+    C --> D{Tipo da mensagem}
+    D -->|imagem ou PDF| R[-> Fluxo 6: comprovante]
+    D -->|nota de voz ou áudio| V[Transcreve e segue como texto]
+    D -->|texto| E[Resolve devedor + título pelo telefone/tenant]
+    V --> E
     E --> F[🟦 LLM classifica intenção]
     F --> G{Intenção}
     G -->|já paguei| P1[Pede comprovante]
@@ -261,7 +250,10 @@ flowchart TD
 
 - Debounce evita responder a cada mensagem de uma rajada; agrupa e responde uma vez.
 - Antes de mostrar qualquer valor: **confirmar identidade** (ex.: 3 dígitos do CPF).
-- Nunca responde valores em grupo — só em conversa 1:1.
+- Nunca responde valores em grupo — só em conversa 1:1. Áudio de grupo não vira resposta em voz.
+- Nota de voz e áudio de um devedor conhecido viram transcrição e seguem a mesma classificação. A transcrição fica na conversa, ligada ao título citado. Imagem e documento continuam no comprovante.
+- A resposta pode sair como nota de voz, dentro do horário do tenant. O texto dessa resposta fica gravado. A régua proativa continua em template.
+- Sem transcrição utilizável, o turno não inventa o que foi dito e abre `transcricao_indisponivel` para o operador.
 - Toda mensagem (entrada e saída) é registrada e vinculada ao título.
 
 ---
@@ -414,8 +406,10 @@ pagamento tem origem (ou confirmação cruzada) de `extrato`/`webhook`. Comprova
 isolado fica `aguardando banco`.
 
 **Sem arquivo:** o Beat puxa, a cada 30 minutos, as cobranças recebidas no emissor
-e os créditos do Open Finance (`bank_feed.open_finance`). Os dois gravam `payment`
-com origem `extrato`. OFX e CSV seguem em `POST /payments/import`, só como exceção.
+e os créditos do Open Finance (`bank_feed.open_finance`). O Open Finance é cliente
+genérico da API de contas: `base_url`, `token` e `account_id`, sem banco nomeado
+no código. Os dois gravam `payment` com origem `extrato`. OFX e CSV seguem em
+`POST /payments/import`, só como exceção.
 
 **Diferença de valor:**
 

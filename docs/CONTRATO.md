@@ -51,6 +51,12 @@ A contratada usa, para executar o objeto, o provedor do WhatsApp (Evolution e Me
 
 O primeiro cliente em produção não é ativado sem o parecer registrado no SETL-15. A ativação recusa com `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio. O valor dessa variável é o identificador do registro no ticket, não um substituto do parecer.
 
-## 9. Fora desta minuta
+## 9. Dados entre empresas
 
-Preço, faixa e variável sobre valor recuperado ficam para outra decisão. Esta minuta não vale como contrato assinado.
+Nenhum fluxo cruza dados de devedores entre contratantes. Score de pagamento, antecipação de recebíveis e régua que aprende horário ou canal a partir de várias empresas ficam fechados no MVP.
+
+Reabrir esse uso exige, antes de qualquer tratamento, base legal e anonimização de dados agregados escritas neste contrato. A decisão desta versão é manter fechado.
+
+## 10. Fora desta minuta
+
+A fase 1 é mensalidade fixa só pela conciliação. A variável sobre valor recuperado só entra com grupo de controle. O valor da mensalidade e a faixa ficam para as conversas descritas em [CONSELHO.md](./CONSELHO.md). Esta minuta não vale como contrato assinado.

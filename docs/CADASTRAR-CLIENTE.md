@@ -1,6 +1,6 @@
 # Como colocar os dados do cliente para o agente disparar
 
-Este guia é para quem vai ligar uma empresa B2B no app. A ideia é simples: a empresa entra como cliente nosso, os clientes dela entram como quem vai receber a cobrança, e cada cobrança vira uma linha da planilha. Sem essa linha, o agente não tem o que falar nem para quem falar.
+Este guia é para quem vai ligar uma empresa B2B no app. A jornada comercial, da qualificação até a carteira, está em [JORNADA-VENDA-B2B.md](./JORNADA-VENDA-B2B.md). Aqui a conta já existe e a planilha vai entrar: a empresa é cliente nosso, os clientes dela são quem vai receber a cobrança, e cada cobrança vira uma linha. Sem essa linha, o agente não tem o que falar nem para quem falar.
 
 O agente não inventa cobrança. Ele só dispara o que já está cadastrado, no horário combinado, para o celular da pessoa certa.
 
@@ -30,7 +30,7 @@ Marque isso com a empresa antes de importar a planilha. Se faltar um item, o tí
 2. **WhatsApp da empresa conectado.** É o número que envia. A empresa pode ter até cinco. O primeiro da lista dispara; os outros ficam de reserva. Sem a instância, o sistema pula o WhatsApp.
 3. **Base legal combinada.** Contrato ou outro fundamento da LGPD. Sem isso a conta não ativa.
 4. **Horário de envio.** O padrão é das 8h às 20h, de segunda a sábado. Domingo e madrugada ficam quietos.
-5. **Régua.** O padrão avisa 3 dias antes do vencimento, no dia, e depois em D+1, D+3, D+5, D+7, D+10, D+15 e D+21. Em D+30 o título sai da régua automática e cai na fila humana do painel.
+5. **Régua.** Etapas, ação e canal estão na tabela **Régua padrão** de [PRODUTO.md](./PRODUTO.md) (§5). A última etapa tira o título da régua automática e o coloca na fila humana do painel.
 6. **Celulares de quem paga**, com DDD, até cinco por devedor. Sem telefone, aquele título não recebe WhatsApp. O e-mail só entra na etapa D+15.
 7. **PIX copia e cola ou linha digitável do boleto.** Sem um dos dois, o título entra na base e aparece na lista **Sem PIX ou boleto**, mas não recebe etapa da régua. O link sozinho não libera o disparo. Quando o código chega, o título entra só na etapa do dia, sem rajada das anteriores.
 
@@ -218,7 +218,7 @@ Open Finance entra no mesmo ciclo quando a conta tem `bank_feed.open_finance` co
 
 Quando o devedor aceita um acordo, o sistema cria a cobrança dessa parcela no Asaas e grava o PIX ou o boleto antes de confirmar. Sem essa cobrança, o acordo não fica registrado. `issuer_config.billing_type` escolhe `PIX` (padrão) ou `BOLETO`.
 
-Outros emissores ainda não têm esse encaixe. Para eles, o caminho é a planilha.
+Inter, Efí, iugu e Sicoob ainda não têm esse encaixe e ficam no roadmap. Para eles, o caminho é a planilha.
 
 ---
 

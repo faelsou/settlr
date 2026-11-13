@@ -37,7 +37,7 @@ O banco continua um só. O serviço não chama o outro por HTTP para dar baixa o
 | Decisão | Escolha | Por quê |
 | --- | --- | --- |
 | Sem n8n | Módulos Python versionados | Teste, review e rollback por Git |
-| LLM só em 3 pontos | Intenção, comprovante, conversa | Custo proporcional à conversa, não ao volume de títulos |
+| LLM só na conversa | Intenção, comprovante, transcrição de áudio, conversa | Custo proporcional a quem responde, não ao volume de títulos |
 | Matcher sem LLM | `reconciliation/matcher.py` | Dinheiro não pode alucinar |
 | Painel sem SQL | Next.js → FastAPI | Regras e `audit_log` num só lugar |
 | Multi-tenant | `tenant_id` + RLS | Segunda barreira depois do JWT |
@@ -128,6 +128,8 @@ LLM preenche `ReceiptExtraction` (Pydantic). `receipts/validation.py` exige valo
 
 ### 6.4 Agente
 
+Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição usa a API de áudio da OpenAI, com a mesma chave do chat, e só quando `LLM_MODEL` começa com `openai:`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário, sem chave, ou com outro provedor, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
+
 Grafo: identificar → identidade → títulos → classificar → política → opções → aceite → acordo, ou `request_human`.
 
 Tools tipadas: `get_debtor_invoices`, `get_negotiation_policy`, `build_payment_options` (determinístico), `register_promise`, `create_agreement`, `request_human`. Checkpointer no Postgres.
@@ -142,7 +144,7 @@ Rotas públicas (assinatura/token, sem sessão de usuário). O gateway encaminha
 | GET | `/me` | Painel | gateway |
 | POST | `/auth/dev-login` | Só `ENV!=prod` | gateway |
 | POST | `/webhooks/evolution` | Evolution | cobranca |
-| POST | `/webhooks/emissor` | Asaas / Inter / Efí | cadastro |
+| POST | `/webhooks/emissor` | Asaas | cadastro |
 | POST | `/webhooks/banco` | Extrato / PIX | conciliacao |
 
 Rotas do painel (JWT + tenant), também atrás do gateway:
@@ -245,6 +247,7 @@ Cobertura atual (determinística):
 
 - `tests/test_matcher.py` — camadas 1–4, parcial, documento mascarado, soma de títulos
 - `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário, título sem PIX ou boleto, template oficial e número pareado
+- `tests/test_regua_produto.py` — chave, offset e canais de `DEFAULT_DUNNING_RULES` batem com a tabela da régua em `PRODUTO.md`
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
 - `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
 - `tests/test_money_http.py` — baixa, rejeição, extrato e acordo pelo HTTP, com isolamento entre tenants
@@ -265,7 +268,7 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 
 ## 13. O que ainda não é o piloto completo
 
-- Webhooks assinados de Asaas/Inter/Efí em cliente vivo
+- Webhook assinado do Asaas em cliente vivo. Inter, Efí, iugu e Sicoob ficam no roadmap
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
 - Parecer jurídico dos textos da régua e do contrato ainda não registrado no SETL-15. A versão `2026-11-08` e a minuta já estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) e [CONTRATO.md](./CONTRATO.md). Produção não ativa o primeiro cliente sem `LEGAL_OPINION_REF`
 - Faixas de preço com custo medido no piloto

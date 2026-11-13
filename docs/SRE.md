@@ -78,7 +78,7 @@ Disponibilidade de 99,9% em 30 dias deixa **43 minutos** de orçamento. 99,5% de
 
 Enquanto a queima dos últimos 30 dias estiver dentro do SLO, mudança de produto segue. Quando a queima passar do orçamento, ou quando a projeção do mês estourar antes do dia 30, o time para feature na jornada afetada e gasta o ciclo em confiabilidade: bug, capacidade, alerta, teste. O livro é explícito nisso para o orçamento não virar slide.
 
-Dono de cada SLO: uma pessoa nomeada antes do piloto, mesmo que ela também escreva código. Sem dono, o número não muda quando a realidade mudar.
+Dono de cada SLO: Rafael de Souza. Ele decide quando a queima da jornada para feature, mesmo nos dias em que também escreve código. Sem esse nome, o número não muda quando a realidade mudar.
 
 Os alertas de hoje são limiar (`5xx`, p95, fila, `up`). Eles pegam saturação e queda. Ainda não medem queima de orçamento. A regra prática, até existir recording rule de SLI: página imediata no caminho do dinheiro e em Postgres/Redis; ticket no restante. A seção 5 lista o corte.
 
@@ -115,13 +115,23 @@ Página é interrupção. O livro pede que cada página seja acionável, urgente
 
 `severity: critical` hoje mistura página de verdade (`PostgresFora`) com CrashLoop, que às vezes é o rolling update se resolvendo. No piloto, critical só pagina se o runbook manda agir em minutos. O resto desce para ticket. O AIOps já agrupa 5xx, latência e restart do mesmo deployment num incidente só.
 
-Ninguém vigia o vigia no Compose e no Swarm: o AIOps está ligado no Minikube. Em produção, `severity=critical` precisa de um segundo receiver (webhook do Slack ou e-mail) que não dependa do processo `aiops`. Esse limite está em [AIOPS.md](./AIOPS.md).
+Ninguém vigia o vigia no Compose e no Swarm: o AIOps está ligado no Minikube. Em produção, `severity=critical` tem um segundo receiver, `critical`, no Alertmanager. Ele posta direto no Slack `#incidente` pelo webhook `SLACK_CRITICAL_WEBHOOK` e não chama o processo `aiops`. O alerta continua também no receiver `aiops`. O dono desse receiver é Rafael de Souza. O desenho está em [AIOPS.md](./AIOPS.md) e em `k8s/observability/files/alertmanager.yml`.
 
 ---
 
 ## 5. Plantão
 
-Time pequeno não elimina o plantão. Elimina a fantasia de que “alguém vai ver o Grafana”. Uma pessoa está nomeada. O handoff é um parágrafo: incidentes abertos, mudança nas últimas 24 h, fila que já vinha crescendo.
+Time pequeno não elimina o plantão. Elimina a fantasia de que “alguém vai ver o Grafana”. Uma pessoa está nomeada. O handoff é um parágrafo no `#incidente`: incidentes abertos, mudança nas últimas 24 h, fila que já vinha crescendo.
+
+### Primeira semana do piloto
+
+A semana começa no dia em que a conta `clinica-piloto` ativa. A data de calendário espera essa ativação.
+
+| Dia | Plantão | Canal |
+| --- | --- | --- |
+| 1 a 7 | Rafael de Souza | Slack `#incidente`. Alerta `critical` também chega pelo receiver `critical` do Alertmanager, sem o processo `aiops` |
+
+No fim do dia 7, o plantonista escreve o handoff no mesmo canal. Quem assume a semana seguinte entra nesse parágrafo.
 
 | Horário | O que pode acordar |
 | --- | --- |
@@ -236,8 +246,8 @@ Checklist de um tenant em produção (o passo a passo de dados está em [CADASTR
 - webhook de banco com HMAC e `X-Tenant-Id` de teste, repetindo o mesmo E2E e vendo uma linha só
 - template oficial no disparo; opt-out testado
 - painel do operador abre a fila desse tenant e não a de outro
-- alerta critical com receiver que não é só o `aiops`
-- nome do dono do SLO e de quem está de plantão na semana
+- alerta critical com o receiver `critical`, dono Rafael de Souza, além do `aiops`
+- dono do SLO: Rafael de Souza. Plantão da primeira semana: Rafael de Souza, canal `#incidente`
 
 Carga de leitura do painel: [`scripts/loadtest.py`](../scripts/loadtest.py) (`perf` e `stress`) no gateway, sem confirmar exceção e sem webhook. Não substitui teste do caminho de dinheiro.
 
@@ -312,14 +322,15 @@ Caos no cluster de produção não faz parte do piloto. O equivalente barato é 
 
 ## 13. O que fechar antes de chamar de produção
 
+Já fechado para o piloto: Rafael de Souza é o dono do SLO e o plantão dos dias 1 a 7, no `#incidente`. O receiver `critical` está no Alertmanager, com o mesmo dono, e não chama o processo `aiops`.
+
 Itens em aberto, em ordem. Cada um muda o risco; nenhum pede reescrever a arquitetura.
 
-1. Nomear dono de SLO e plantão da primeira semana.
-2. Medir os cinco SLIs da seção 2 no Thanos (o Prometheus local guarda 6 h; mês pede o histórico longo).
-3. Segundo receiver para `critical`, independente do `aiops`.
-4. Um restore completo registrado, com tempo gasto.
-5. Drill dos alertas `PostgresFora`, `RedisFora` e `AplicacaoIndisponivel`.
-6. Trocar limiar solto por queima de orçamento só depois que o SLI existir. Até lá, a tabela da seção 4 é a política.
-7. Anotar, no primeiro mês, volume de tenants, mensagens por dia, tamanho do bucket e chamadas de LLM por título. Esses quatro números são a seção de carga de [DESENHO.md](./DESENHO.md).
+1. Medir os cinco SLIs da seção 2 no Thanos (o Prometheus local guarda 6 h; mês pede o histórico longo).
+2. Gravar `SLACK_CRITICAL_WEBHOOK` no Secret `critical-page` antes de ativar o primeiro tenant. Sem esse arquivo, o receiver `critical` não entrega; o `aiops` continua recebendo o mesmo alerta.
+3. Um restore completo registrado, com tempo gasto.
+4. Drill dos alertas `PostgresFora`, `RedisFora` e `AplicacaoIndisponivel`.
+5. Trocar limiar solto por queima de orçamento só depois que o SLI existir. Até lá, a tabela da seção 4 é a política.
+6. Anotar, no primeiro mês, volume de tenants, mensagens por dia, tamanho do bucket e chamadas de LLM por título. Esses quatro números são a seção de carga de [DESENHO.md](./DESENHO.md).
 
 Enquanto isso, o desenho que vale é o que já está escrito: um banco para o dinheiro, fila por dono, Beat único, modelo fora da baixa, humano na exceção.
