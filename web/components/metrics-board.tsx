@@ -42,6 +42,17 @@ function weekLabel(value: string): string {
   return `${day}/${month}`;
 }
 
+function lateHint(current: number | null, baseline: number | null): string {
+  if (baseline == null) return "Depois do vencimento";
+  const base = baseline.toFixed(1).replace(".", ",");
+  if (current == null) return `Linha de base da implantação: ${base} dias`;
+  const diff = current - baseline;
+  const gap = Math.abs(diff).toFixed(1).replace(".", ",");
+  if (diff < -0.05) return `${gap} dias abaixo da linha de base (${base})`;
+  if (diff > 0.05) return `${gap} dias acima da linha de base (${base})`;
+  return `Na linha de base (${base})`;
+}
+
 function deltaText(current: number | null | undefined, previous: number | null | undefined): string | null {
   if (current == null || previous == null) return null;
   const points = Math.abs((current - previous) * 100).toFixed(1).replace(".", ",");
@@ -108,7 +119,12 @@ export function MetricsBoard({ periodControl = false }: { periodControl?: boolea
             delta={deltaText(points?.at(-1)?.auto_reconciliation_rate, points?.at(-2)?.auto_reconciliation_rate)}
             seriesPending={series.isPending}
           />
-          <Stat title="Dias médios de atraso" value={data.avg_days_late} format={(value) => value.toFixed(1)} hint="Depois do vencimento" />
+          <Stat
+            title="Dias médios de atraso"
+            value={data.avg_days_late}
+            format={(value) => value.toFixed(1)}
+            hint={lateHint(data.avg_days_late, data.baseline_avg_days_late)}
+          />
           <Stat
             title="Promessas cumpridas"
             value={data.promise_kept_rate}

@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import Date, case, cast, func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import CurrentUser, get_db, require_tenant_user
 from app.api.schemas import Metrics
-from app.models import Invoice, Match, Payment, Promise, ReviewException
+from app.models import Invoice, Match, Payment, Promise, ReviewException, Tenant
 from app.models.enums import ExceptionStatus, InvoiceStatus, PaymentStatus
 
 router = APIRouter(prefix="/metrics", tags=["metricas"])
@@ -21,7 +21,10 @@ def _ratio(a: float | Decimal, b: float | Decimal) -> float | None:
 
 @router.get("", response_model=Metrics)
 def get_metrics(
-    start: date | None = None, end: date | None = None, db: Session = Depends(get_db)
+    start: date | None = None,
+    end: date | None = None,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_tenant_user),
 ) -> Metrics:
     end = end or datetime.now(UTC).date()
     start = start or end - timedelta(days=30)
@@ -73,6 +76,10 @@ def get_metrics(
         .where(ReviewException.resolved_at.between(start_dt, end_dt))
     )
 
+    tenant = db.get(Tenant, user.tenant_id)
+    raw_baseline = None if tenant is None else tenant.baseline_avg_days_late
+    baseline = None if raw_baseline is None else float(raw_baseline)
+
     return Metrics(
         period_start=start,
         period_end=end,
@@ -80,6 +87,7 @@ def get_metrics(
         overdue_amount=overdue,
         recovered_amount=recovered,
         avg_days_late=float(avg_days_late) if avg_days_late is not None else None,
+        baseline_avg_days_late=baseline,
         promises_made=promises[0],
         promises_kept=promises[1],
         promise_kept_rate=_ratio(promises[1], promises[0]),

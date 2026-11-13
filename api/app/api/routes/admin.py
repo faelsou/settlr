@@ -4,7 +4,7 @@ import secrets
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 from app.agent.policy import DEFAULT_NEGOTIATION_POLICY
@@ -18,6 +18,8 @@ from app.dunning.legal import MISSING_OPINION, production_without_opinion
 from app.dunning.official import commit_activation, read_evolution
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
+from app.onboarding.members import normalize_email
+from app.onboarding.welcome import deliver_welcome
 
 router = APIRouter(prefix="/admin/tenants", tags=["agencia"])
 
@@ -25,12 +27,20 @@ router = APIRouter(prefix="/admin/tenants", tags=["agencia"])
 class TenantCreate(BaseModel):
     name: str = Field(min_length=2, max_length=200)
     slug: str = Field(pattern=r"^[a-z0-9-]{2,80}$")
+    owner_email: str | None = None
     whatsapp_instance: str | None = None
     whatsapp_number: str | None = None
     issuer_provider: str | None = None
     issuer_config: dict = {}
     bank_feed: dict = {}
     legal_basis: str | None = None
+
+    @field_validator("owner_email")
+    @classmethod
+    def _owner(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        return normalize_email(value)
 
 
 class TenantOut(BaseModel):
@@ -137,7 +147,12 @@ def create_tenant(body: TenantCreate, user: CurrentUser = Depends(require_agency
         set_tenant(session, tenant.id)
         audit(session, tenant_id=tenant.id, actor=user.actor, action="cria_tenant",
               entity="tenant", entity_id=tenant.id, after=_audit_changes(data))
-        return _out(tenant)
+        created = _out(tenant)
+        company = tenant.name
+        owner = tenant.owner_email or ""
+    if owner:
+        deliver_welcome(company, owner)
+    return created
 
 
 class TenantUpdate(BaseModel):

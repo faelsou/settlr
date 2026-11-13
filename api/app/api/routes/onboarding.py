@@ -1,4 +1,4 @@
-"""A empresa cria a conta pela tela: política, régua, horário, WhatsApp e base legal."""
+"""A empresa cria a conta pela tela, com o atraso médio anterior à implantação."""
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
@@ -15,6 +15,7 @@ from app.core.senders import fold_primary
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
 from app.onboarding.members import ensure_active_member, normalize_email
+from app.onboarding.welcome import deliver_welcome
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
@@ -37,6 +38,12 @@ class OnboardingIn(BaseModel):
     dunning_rules: DunningRulesIn
     allowed_hours: AllowedHoursIn
     timezone: str = "America/Sao_Paulo"
+    baseline_avg_days_late: float = Field(ge=0, le=3650)
+
+    @field_validator("baseline_avg_days_late")
+    @classmethod
+    def _baseline(cls, value: float) -> float:
+        return round(float(value), 1)
 
     @field_validator("owner_email")
     @classmethod
@@ -104,6 +111,7 @@ def create_company(body: OnboardingIn) -> OnboardingOut:
             bank_feed={},
             legal_basis=body.legal_basis,
             owner_email=body.owner_email,
+            baseline_avg_days_late=body.baseline_avg_days_late,
         )
         fold_primary(tenant)
         _ensure_unique_instances(session, tenant)
@@ -114,11 +122,19 @@ def create_company(body: OnboardingIn) -> OnboardingOut:
         audit(
             session, tenant_id=tenant.id, actor=f"humano:{body.owner_email}",
             action="cria_tenant", entity="tenant", entity_id=tenant.id,
-            after={"slug": body.slug, "name": tenant.name},
+            after={
+                "slug": body.slug,
+                "name": tenant.name,
+                "baseline_avg_days_late": body.baseline_avg_days_late,
+            },
         )
         token = issue_access_token(email=body.owner_email, tenant=tenant, role="dono")
-        return OnboardingOut(
+        created = OnboardingOut(
             **token.model_dump(),
             active=tenant.active,
             missing=missing_requirements(tenant),
         )
+        company = tenant.name
+        owner = tenant.owner_email or ""
+    deliver_welcome(company, owner)
+    return created

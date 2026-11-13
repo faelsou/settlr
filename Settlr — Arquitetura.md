@@ -14,6 +14,8 @@ Um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que c
 - Volume de 100 a 5.000 cobranças por mês, recebendo majoritariamente por PIX e boleto.
 - Já usam WhatsApp com o cliente e têm alguém (geralmente o dono) fazendo a cobrança na mão.
 
+**Mercado.** Além da PME do piloto, o produto atende BPO e banco. O BPO opera várias contas, uma por empresa, sem cruzar dado entre elas. O banco entra como conta da própria carteira, com a mesma régua e a mesma baixa. Isso abrange o mercado de cobrança e conciliação. O banco comprador não é um emissor novo: em `main` o adaptador de emissor continua o Asaas.
+
 **Oferta**
 
 - *Cobrança:* régua automática antes e depois do vencimento, segunda via, negociação de parcelamento dentro de limites do cliente, confirmação de pagamento.
@@ -30,16 +32,7 @@ Eventos entram pelo gateway: WhatsApp segue para cobrança, emissor para cadastr
 
 A cobrança é uma régua determinística disparada por cron, com o agente de IA entrando só quando o devedor responde. Assim o custo de LLM fica proporcional às conversas, não ao volume de títulos.
 
-**Régua padrão (configurável por cliente)**
-
-| Momento | Ação | Canal |
-| --- | --- | --- |
-| D-3 | Lembrete amigável com link/PIX copia-e-cola | WhatsApp template |
-| D0 | Aviso de vencimento hoje | WhatsApp template |
-| D+1 | "Não identificamos o pagamento" + segunda via | WhatsApp template |
-| D+5 | Oferta de negociação dentro da política | WhatsApp template |
-| D+15 | Última tentativa automática, aviso de encaminhamento | WhatsApp + e-mail |
-| D+30 | Sai da régua e vai para fila humana | Painel |
+**Régua padrão (configurável por cliente).** Momento, ação e canal estão na tabela de [docs/PRODUTO.md](docs/PRODUTO.md) (§5).
 
 **Quando o devedor responde, o agente classifica a intenção e age:**
 
@@ -58,8 +51,8 @@ Todo dinheiro que entra vira um registro de pagamento, e cada pagamento tenta ca
 **Entradas**
 
 - Comprovante (imagem ou PDF) enviado no WhatsApp pelo devedor ou num grupo do cliente → OCR + extração estruturada por LLM (valor, data/hora, pagador, CPF/CNPJ parcial, ID E2E do PIX, banco).
-- Extrato bancário: Open Finance ou extrato do emissor, sem arquivo. OFX/CSV fica só como exceção. Webhook do banco quando o PIX é empurrado.
-- Webhook do emissor de cobrança (Asaas, Inter, Efí etc.) quando o título nasce com PIX ou boleto registrado.
+- Extrato bancário: Open Finance ou extrato do emissor, sem arquivo. O Open Finance é cliente genérico da API de contas (`base_url`, `token`, `account_id`), sem banco nomeado no código. OFX/CSV fica só como exceção. Webhook do banco quando o PIX é empurrado.
+- Webhook do emissor de cobrança (Asaas) quando o título nasce com PIX ou boleto registrado. Inter, Efí, iugu e Sicoob ficam no roadmap.
 
 **Matching em camadas (para no primeiro que casa)**
 
@@ -80,7 +73,7 @@ Um schema único, multi-tenant por `tenant_id` com Row Level Security. O título
 
 | Tabela | Campos principais | Papel |
 | --- | --- | --- |
-| `tenants` | id, nome, política de negociação (jsonb), régua (jsonb), número WhatsApp, horário permitido | Configuração por cliente da agência |
+| `tenants` | id, nome, política de negociação (jsonb), régua (jsonb), número WhatsApp, horário permitido | Configuração por empresa cliente |
 | `debtors` | id, tenant\_id, nome, documento, telefone, opt\_out, tags | Quem deve |
 | `invoices` | id, tenant\_id, debtor\_id, valor, vencimento, status, txid, linha\_digitavel, parent\_id | Títulos; `parent_id` liga parcelas de um acordo |
 | `dunning_events` | id, invoice\_id, etapa, enviado\_em, message\_id, status\_entrega | Cada disparo da régua |
@@ -148,7 +141,7 @@ cobranca/                # monorepo
 
 ## Painel web (Next.js)
 
-O painel do MVP é um app Next.js no mesmo repositório, falando só com o gateway (`api.<domínio>`). O devedor nunca o vê; ele existe para o cliente resolver o que o agente não resolve sozinho.
+O painel do MVP é um app Next.js no mesmo repositório, falando só com o gateway (`api.settlr.com.br`). O devedor nunca o vê; ele existe para o cliente resolver o que o agente não resolve sozinho.
 
 | Tela | O que faz | Fase |
 | --- | --- | --- |
@@ -195,7 +188,7 @@ Onboarding de cliente novo deve ser configuração, não projeto: cadastrar tena
 **Métricas que o painel mostra ao cliente**
 
 - Taxa de recuperação: valor recebido após o vencimento ÷ valor vencido.
-- Dias médios de atraso (DSO) antes e depois da implantação.
+- Dias médios de atraso (DSO) do período, comparados com a linha de base gravada no onboarding.
 - Promessas cumpridas ÷ promessas feitas.
 - Baixa automática: % de pagamentos conciliados sem humano.
 - Exceções abertas e tempo médio de resolução.

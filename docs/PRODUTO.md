@@ -8,19 +8,34 @@ Documento do **Settlr** como produto: o que entrega, para quem, e as regras que 
 
 Cobrar, negociar e confirmar pagamentos pelo WhatsApp, e conferir cada entrada contra o que foi vendido — **sem a equipe precisar cobrar na mão ou bater planilha**.
 
-O cliente da primeira onda é PME com recorrência ou parcelamento (clínicas, escolas, academias, condomínios, assinaturas, B2B), 100 a 5.000 cobranças/mês, recebendo principalmente PIX e boleto.
+O cliente da primeira onda, e o do piloto, é PME com recorrência ou parcelamento (clínicas, escolas, academias, condomínios, assinaturas, B2B), 100 a 5.000 cobranças/mês, recebendo principalmente PIX e boleto.
+
+O produto também atende BPO e banco. Com esses três compradores ele abrange o mercado de quem cobra e de quem confere o que entrou, e não fica preso à PME do piloto. A regra não muda: uma conta por empresa, comprovante que não quita sozinho, política como teto. Dado de uma conta não entra na outra.
+
+| Comprador | Carteira | No produto |
+| --- | --- | --- |
+| PME | A própria | Primeira onda e piloto. A equipe do Settlr opera a conta |
+| BPO | Várias empresas | Cada empresa é uma conta. O BPO opera a cobrança; o dado de um cliente dele não cruza com o do outro |
+| Banco | A carteira do banco | A mesma régua e a mesma baixa. O banco é a conta, não um emissor a mais. O adaptador de emissor em `main` continua o Asaas |
 
 ## 2. Três peças do produto
 
 | Peça | Para quem | O que faz |
 | --- | --- | --- |
 | Régua de cobrança | Devedor | Lembra antes e depois do vencimento, com template oficial |
-| Agente de WhatsApp | Devedor | Responde quando a pessoa fala: comprovante, promessa, parcelamento, contestação, opt-out |
+| Agente de WhatsApp | Devedor | Responde quando a pessoa fala ou manda áudio: comprovante, promessa, parcelamento, contestação, opt-out |
 | Painel | Operador do tenant | Resolve o que o sistema não baixa sozinho e configura a política |
 
 O devedor nunca vê o painel. Quem opera nunca escreve no banco direto: cada ação passa pela API e deixa rastro no `audit_log`.
 
-A empresa cria a própria conta pela tela: política, régua, horário, WhatsApp e base legal. Sem um desses, a ativação recusa.
+A jornada comercial, etapa por etapa, está em [JORNADA-VENDA-B2B.md](./JORNADA-VENDA-B2B.md). A conta abre por um de dois caminhos, e nos dois nasce desligada:
+
+| Caminho | Quem faz | Onde | Quem liga a conta |
+| --- | --- | --- | --- |
+| Pela tela | A própria empresa, que entra como dono | `/comecar` | O dono, em Configurações |
+| Pela API | A agência: a equipe do Settlr que opera várias contas (role `agencia`) | `POST /admin/tenants` | A agência, em `POST /admin/tenants/{id}/activate` |
+
+A conta precisa de política, régua, horário, WhatsApp e base legal. Sem um deles, a ativação recusa. A agência é o próprio Settlr, operador dos dados no contrato, e não um intermediário entre o Settlr e a empresa. O piloto é operado por essa equipe. A tese de escala é o contador, e quem a valida é o primeiro contador que pedir o arquivo do período (`GET /payments/export`).
 
 | Papel | O que faz |
 | --- | --- |
@@ -37,17 +52,17 @@ O convite sai por e-mail, com um link só da pessoa. Não há senha nesse e-mail
 | 1 | Login, Exceções, Pagamentos | Conferir dinheiro que entrou e baixar o que o matcher não fechou |
 | 2 | Títulos | Ver o título, a régua que já rodou e as baixas |
 | 3 | Conversas, Entregas, Aprovações | Assumir o WhatsApp, ver se a mensagem chegou e decidir pedido fora da política |
-| 4 | Configurações, Métricas | Política, horário, templates; recuperação, DSO, baixa automática |
+| 4 | Configurações, Métricas | Política, horário, templates; recuperação, DSO contra a linha de base da implantação, baixa automática |
 
 A conciliação vem primeiro: não fala com o devedor e gera prova de valor para vender a régua.
 
 ## 4. Regras de ouro
 
-1. **O LLM não decide dinheiro.** Ele lê comprovante, classifica intenção e conversa. Régua, matching e baixa são código.
+1. **O LLM não decide dinheiro.** Ele lê comprovante, transcreve áudio, classifica intenção e conversa. Régua, matching e baixa são código. A régua continua em template de texto.
 2. **O banco é a fonte da verdade da baixa.** Comprovante sozinho nunca quita o título.
 3. **A política do tenant é o teto.** O agente só oferece opções que o código já gerou.
-4. **Humano é a última instância.** Match incerto, contestação, leitura fraca e pedido fora da política vão para a fila.
-5. **Tudo é por tenant.** Nenhum fluxo cruza dados entre clientes da agência.
+4. **Humano é a última instância.** Match incerto, contestação, leitura fraca, áudio sem transcrição e pedido fora da política vão para a fila.
+5. **Tudo é por tenant.** Nenhum fluxo cruza dados entre empresas clientes. Score, antecipação e régua que aprende entre empresas ficam fechados no MVP. Reabrir exige base legal e anonimização de dados agregados escritas no contrato. A decisão desta versão é manter fechado ([CONTRATO.md](./CONTRATO.md)).
 
 ---
 
@@ -70,6 +85,16 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 | D+21 | Aviso de que a equipe assume, sem ameaça | WhatsApp template |
 | D+30 | Sai da régua → fila humana | Painel |
 
+### Pix Automático
+
+Decisão: Settlr com Pix Automático ligado. Quando o débito automático quita, D-3 e D0 saem da régua do título. A régua ganha duas etapas: convite à adesão (no primeiro título ou no D+1 de quem não aderiu) e débito falhou (no dia em que o débito é recusado). O que vendemos para quem já tem Pix Automático é, nesta ordem: (1) conciliação de todo dinheiro que entra, em qualquer banco ou emissor, com o arquivo do contador; (2) a falha de débito tratada por conversa e acordo dentro da política. Dinheiro fora do Asaas é parte de (1).
+
+O pagador do Pix Automático é pessoa física. O recebedor é pessoa jurídica com CNPJ ativo há pelo menos seis meses (Resolução BCB nº 482). Empresa com menos tempo de atividade fica de fora no início. Título cujo pagador é pessoa jurídica, a fatia B2B, permanece na régua de PIX copia-e-cola e boleto. Condomínios também permanecem nessa régua. Convite de adesão que o pagador não confirmou não se repete em menos de 30 dias: o Banco Central trata o reenvio idêntico nesse prazo como excesso.
+
+As duas etapas novas não dependem de PIX copia-e-cola. A trava de “título sem código de pagamento não recebe etapa” continua valendo para a régua de copia-e-cola e boleto.
+
+No piloto, a mesma carteira compara a régua de dez etapas com quatro (D0, D+1, D+5, D+15) e mede a recuperação marginal de cada etapa. O custo que pesa é o template da Meta por disparo.
+
 ### Regras duras
 
 - Nunca envia fora do **horário permitido** do tenant (padrão: 08:00–20:00, seg–sáb).
@@ -80,7 +105,7 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 - Se o cron atrasar, envia só a **etapa mais recente**, não uma rajada das anteriores.
 - Título sem PIX copia-e-cola e sem linha digitável de boleto **não recebe etapa**. O operador vê essa lista separada antes de ativar a conta. Quando o código chega, entra só a etapa vigente.
 - Disparo proativo usa **template oficial aprovado na Meta**. Texto livre do modelo fica na resposta, nunca na régua.
-- A conta só liga a régua com o **número pareado** (sessão `open` na Evolution) e com template aprovado em cada etapa de WhatsApp. Sem os dois, a ativação recusa.
+- A conta só liga a régua com o **número pareado** (sessão `open` na Evolution) e com template aprovado em cada etapa de WhatsApp. Sem os dois, a ativação recusa. Instância `WHATSAPP-BAILEYS` não tem template na Meta, então essa trava não passa nela. Afrouxar a trava não é o caminho: a régua em produção espera a integração `WHATSAPP-BUSINESS`. O estado da instância está em [CONSELHO.md](./CONSELHO.md).
 - Em produção a conta também não liga sem o parecer do [SETL-15](https://rafadsouz.atlassian.net/browse/SETL-15) registrado em `LEGAL_OPINION_REF`. Os textos dessa versão estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md).
 - Nunca ameaça, nunca menciona terceiros, nunca cobra em grupo.
 
@@ -98,6 +123,10 @@ Antes de mostrar valor: **confirmar identidade** (ex.: 3 dígitos do CPF). Falha
 | Contestação / valor errado | **Não negocia.** Abre exceção e chama humano | não |
 | Parar / hostil / sensível | Opt-out ou escalonamento imediato | não |
 | Dúvida simples | Responde com dados dos títulos | sim |
+
+Nota de voz e áudio de um devedor conhecido viram transcrição e seguem a mesma tabela. A transcrição fica na conversa, com o título citado quando a pessoa responde em cima de um envio. Imagem e documento continuam comprovante: áudio não entra no OCR.
+
+A resposta do agente pode sair como nota de voz, dentro do horário do tenant. O texto dessa resposta fica gravado. Fora do horário, a mesma frase sai escrita. Grupo não recebe resposta de cobrança em voz. Sem transcrição utilizável, o turno não inventa o que foi dito e abre a exceção `transcricao_indisponivel`.
 
 ### Promessa
 
@@ -144,6 +173,8 @@ Todo dinheiro que entra vira um `payment`. No caminho feliz isso acontece sem ar
 - **Diferença de valor:** juros/desconto dentro da regra do tenant aplica; parcial deixa o título `parcialmente_pago`; fora da regra vira exceção.
 - Um pagamento pode quitar vários títulos; vários pagamentos podem quitar um título (`matches` N:N).
 - Título que fica `pago` marca a cobrança como recebida no emissor do piloto (Asaas, id `pay_`). O devedor não recebe aviso novo do emissor. Cobrança que o próprio webhook do emissor já quitou não é marcada de novo. Referência de planilha não vai para o emissor.
+- O único adaptador de emissor em `main` é o Asaas. Inter, Efí, iugu e Sicoob ficam no roadmap; até lá a planilha cobre esses títulos.
+- O Open Finance é cliente genérico da API de contas. A conta informa `base_url`, `token` e `account_id` em `bank_feed.open_finance`. O código não nomeia um banco.
 - Em Pagamentos, o arquivo do período traz título, valor, data e identificador bancário (o E2E; se o banco não mandou, o txid). Só entra baixa definitiva. Comprovante ainda sem banco fica de fora.
 
 ### Janela de data (padrão)
@@ -205,15 +236,13 @@ Nenhum tenant entra em produção sem política, régua, horário, número Whats
 ## 11. Métricas que o painel mostra
 
 - Taxa de recuperação: valor recebido após o vencimento ÷ valor vencido
-- Dias médios de atraso (DSO)
+- Dias médios de atraso (DSO) do período, comparados com a linha de base gravada no onboarding
 - Promessas cumpridas ÷ feitas
 - % de baixa automática (sem humano)
 - Exceções abertas e tempo médio de resolução
 
-## 12. Precificação proposta (ainda em aberto)
+## 12. Precificação
 
-- Setup único (emissor + importação + régua)
-- Mensalidade por faixa de títulos ativos
-- Variável sobre valor recuperado de títulos vencidos
-
-Valores de faixa ficam para o piloto, depois de medir custo real por título.
+- **Fase 1:** mensalidade fixa só pela conciliação, com o arquivo do contador. O valor sai de conversas com clínica, escola e academia. O roteiro e a faixa de teste (R$ 300 a R$ 1.500) estão em [CONSELHO.md](./CONSELHO.md). A métrica é quantas pessoas fecham, não a média do que disseram que pagariam.
+- **Recuperação:** a variável sobre valor recuperado só entra quando houver grupo de controle (10% dos títulos fora da régua).
+- Setup único (emissor + importação + régua) continua previsto. A faixa numérica da mensalidade espera as conversas.

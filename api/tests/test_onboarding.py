@@ -108,6 +108,7 @@ def _empresa(client: TestClient, *, legal: str | None = None) -> dict:
         "whatsapp_instance": "norte",
         "whatsapp_number": "11988887777",
         "legal_basis": legal,
+        "baseline_avg_days_late": 18.54,
     }
     created = client.post("/onboarding", json=body)
     assert created.status_code == 201, created.text
@@ -129,7 +130,15 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
         sent["subject"] = subject
         sent["body"] = body
 
+    welcomed: list[str] = []
+
+    def _welcome(company: str, to: str) -> bool:
+        welcomed.append(f"{company}|{to}")
+        return True
+
     monkeypatch.setattr("app.onboarding.members.send_email", _grava_email)
+    monkeypatch.setattr("app.api.routes.onboarding.deliver_welcome", _welcome)
+    monkeypatch.setattr("app.api.routes.settings.deliver_welcome", _welcome)
 
     def _db():
         yield memoria
@@ -138,11 +147,13 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
     client = TestClient(cadastro_app)
     try:
         conta = _empresa(client)
+        assert welcomed == ["Clínica Norte|dona@clinica.test"]
         assert conta["role"] == "dono"
         assert conta["email"] == "dona@clinica.test"
         assert "base legal (LGPD)" in conta["missing"]
         assert any(step["key"] == "D+5" for step in memoria.tenants[0].dunning_rules["steps"])
         assert memoria.tenants[0].negotiation_policy["max_installments"] == 6
+        assert memoria.tenants[0].baseline_avg_days_late == 18.5
 
         headers = {"Authorization": f"Bearer {conta['access_token']}"}
         bloqueada = client.post("/settings/activate", headers=headers)
@@ -157,6 +168,14 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
         corpo["negotiation_policy"]["max_installments"] = 4
         gravada = client.put("/settings", headers=headers, json=corpo)
         assert gravada.status_code == 200, gravada.text
+        assert welcomed == ["Clínica Norte|dona@clinica.test"]
+        corpo["owner_email"] = "nova-dona@clinica.test"
+        trocada = client.put("/settings", headers=headers, json=corpo)
+        assert trocada.status_code == 200, trocada.text
+        assert welcomed == [
+            "Clínica Norte|dona@clinica.test",
+            "Clínica Norte|nova-dona@clinica.test",
+        ]
         assert gravada.json()["negotiation_policy"]["max_installments"] == 4
         assert "base legal (LGPD)" not in gravada.json()["missing"]
 
@@ -189,6 +208,22 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
         assert "access_token" in aceite.json()
     finally:
         cadastro_app.dependency_overrides.pop(get_db, None)
+
+
+def test_onboarding_exige_atraso_anterior_nao_negativo():
+    client = TestClient(cadastro_app)
+    defaults = client.get("/onboarding/defaults")
+    assert defaults.status_code == 200, defaults.text
+    base = {
+        **defaults.json(),
+        "name": "Clínica Norte",
+        "slug": "clinica-norte",
+        "owner_email": "dona@clinica.test",
+    }
+    sem_linha = client.post("/onboarding", json=base)
+    assert sem_linha.status_code == 422
+    negativa = client.post("/onboarding", json={**base, "baseline_avg_days_late": -1})
+    assert negativa.status_code == 422
 
 
 def test_atendente_nao_confirma_baixa_e_financeiro_confirma(monkeypatch):

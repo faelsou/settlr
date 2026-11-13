@@ -32,13 +32,13 @@ Envelope do produto, ainda sem medição de produção. O cliente da primeira on
 | Webhooks | Evolution, emissor e banco entram pelo gateway e voltam 202 | `webhook-api` |
 | Réplicas HTTP | No Minikube o gateway escala de 1 a 4 por CPU a 70% | `k8s/hpa.yaml` |
 
-O que ainda não tem número: quantidade de tenants no piloto, mensagens por dia, tamanho do bucket e chamadas de LLM por título. Esses quatro fecham a seção de carga quando o primeiro cliente estiver no ar.
+O piloto é um tenant, a conta `clinica-piloto`: clínica da primeira onda, 100 títulos por mês, régua ligada primeiro em 10 títulos de quem topou receber. O teto de disparo é 100 mensagens de template por dia, uma etapa vigente por título. O provedor é a AWS em `sa-east-1` e os hosts são `app.settlr.com.br`, `api.settlr.com.br` e `wa.settlr.com.br`. O registro está em [INFRA.md](./INFRA.md). Tamanho do bucket e chamadas de LLM por título continuam sem medição até o cliente estar no ar.
 
 ## 2. Restrições
 
 - Um schema Postgres (`cobranca`), multi-tenant por `tenant_id` e RLS. A role da aplicação não é superuser.
 - Baixa, status e `audit_log` na mesma transação. Serviço não chama serviço por HTTP para escrever dinheiro.
-- LLM só em intenção, comprovante e conversa. Régua, matcher e baixa são código.
+- LLM só em intenção, comprovante, transcrição de áudio e conversa. Régua, matcher e baixa são código. A resposta em nota de voz só existe dentro do horário; a régua continua em template.
 - Comprovante sem extrato ou webhook fica provisório. Confirmar pagamento sem banco devolve 409.
 - Secrets fora da imagem e do Git. Migração Alembic em job único, antes de atualizar a API.
 - Disparo proativo em template e dentro do horário do tenant. Opt-out interrompe a régua na hora.
@@ -152,16 +152,17 @@ A célula em que o tenant mora, por porte, está em [INFRA.md](./INFRA.md). Cada
 | Webhook de banco ou emissor passa de rajada curta | Gateway acima de 4 réplicas. A idempotência por E2E e por token continua a barreira |
 | Dois números de WhatsApp precisam da mesma sessão | Continua uma Evolution por sessão. O tenant já guarda até cinco números de disparo |
 
-Riscos já aceitos no piloto: webhook assinado de Asaas, Inter e Efí em cliente vivo, Supabase Auth com `app_metadata.tenant_id`, e a revisão jurídica dos textos da régua. O detalhe está na seção 13 de [TECNICA.md](./TECNICA.md). A régua só liga com número pareado e template oficial aprovado na Meta.
+Riscos já aceitos no piloto: webhook assinado do Asaas em cliente vivo. Inter, Efí, iugu e Sicoob ficam no roadmap. Também ficam em aberto o Supabase Auth com `app_metadata.tenant_id` e a revisão jurídica dos textos da régua. O detalhe está na seção 13 de [TECNICA.md](./TECNICA.md). A régua só liga com número pareado e template oficial aprovado na Meta.
 
 ## 8. Glossário
 
 | Termo | Neste sistema |
 | --- | --- |
-| Tenant | Cliente da agência. Toda linha de negócio carrega `tenant_id` |
+| Tenant | Empresa cliente do Settlr, controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id` |
+| Agência | Equipe do Settlr que opera várias contas pela role `agencia` (`/admin/tenants`). Não é um intermediário |
 | Título | `invoices`. Centro da régua, da conversa e da baixa |
 | Baixa | Match confirmado pelo banco que muda o status do título |
 | Provisório | Match de comprovante ainda sem extrato ou webhook |
-| Etapa | Um degrau da régua (D-3, D0, D+1, D+5, D+15, D+30) |
+| Etapa | Um degrau da régua padrão. Chave, momento e canal estão em [PRODUTO.md](./PRODUTO.md) §5 |
 | Exceção | Fila humana: match incerto, valor fora da regra, leitura fraca, contestação, D+30 |
 | Gateway | `webhook-api`. Única porta HTTP do painel e dos webhooks |

@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str | None = None
     smtp_password: str = ""
-    smtp_from: str = "cobranca@example.com"
+    smtp_from: str = "settlr.ss@gmail.com"
 
     jwt_secret: str = "dev-secret-change-me"
     jwt_audience: str = "authenticated"
@@ -68,6 +68,9 @@ class Settings(BaseSettings):
 
     llm_model: str = "openai:gpt-4o-mini"
     llm_api_key: str = ""
+    stt_model: str = "gpt-4o-mini-transcribe"
+    tts_model: str = "gpt-4o-mini-tts"
+    tts_voice: str = "alloy"
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     panel_base_url: str = "http://localhost:3000"

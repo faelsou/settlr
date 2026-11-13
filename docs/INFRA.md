@@ -2,7 +2,20 @@
 
 Como o Settlr atende cliente B2B pequeno, médio e grande. O runtime de uma célula está em [`ARQUITETURA-DEPLOY.md`](../ARQUITETURA-DEPLOY.md). O gatilho medido para mudar uma peça está em [`DESENHO.md`](./DESENHO.md). O SLO está em [`SRE.md`](./SRE.md).
 
-A primeira onda do produto tem 100 a 5.000 cobranças por mês. As faixas desta página são planejamento de capacidade. Tenants, mensagens por dia, tamanho do bucket e chamadas de LLM por título ainda não foram medidos.
+A primeira onda do produto tem 100 a 5.000 cobranças por mês. As faixas desta página são planejamento de capacidade. O piloto está decidido abaixo. Tamanho do bucket e chamadas de LLM por título continuam sem medição.
+
+## Decisão do piloto
+
+| Decisão | Valor |
+| --- | --- |
+| Primeiro cliente | Conta `clinica-piloto`. Clínica da primeira onda, pagador pessoa física, PIX e boleto. A razão social entra com o contrato |
+| Títulos por mês | 100, o piso da primeira onda. No primeiro ciclo a régua liga em 10 títulos de quem topou receber |
+| Tenants | 1 |
+| Teto de mensagens por dia | 100 templates, uma etapa vigente por título. No primeiro ciclo o teto efetivo é 10 |
+| Provedor | AWS, `sa-east-1`, RDS PostgreSQL Multi-AZ. A célula é a da seção 5, R$ 14.800 por mês nesta página |
+| Domínio | `settlr.com.br`. Produção: `app.settlr.com.br`, `api.settlr.com.br`, `wa.settlr.com.br`. Homologação: `app-hml.settlr.com.br`, `api-hml.settlr.com.br`, `wa-hml.settlr.com.br` |
+
+A premissa desta página é residência em São Paulo e failover do Postgres fora do plantão. O RDS Multi-AZ cumpre as duas, e o `DOMAIN` do deploy é `settlr.com.br`. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle deixa o failover com a gente. A Hetzner continua laboratório: o dado mora na Alemanha.
 
 ---
 
@@ -59,7 +72,7 @@ Três papéis, os mesmos do deploy de produção, com a observabilidade fora do 
 
 Escala o worker pela fila do serviço e o gateway pela CPU. O Beat permanece em uma réplica. Postgres, Redis e MinIO permanecem sem porta publicada. O firewall do nó libera 22, 80 e 443.
 
-Alerta `critical` tem um receiver independente do processo `aiops`.
+Alerta `critical` tem o receiver `critical` no Alertmanager, independente do processo `aiops`. O dono é Rafael de Souza e o canal é o Slack `#incidente`.
 
 A partida acima é um nó de cada papel. A célula que cobra cliente pagante é a da seção 5: duas zonas, banco com failover e a aplicação em dois nós.
 
@@ -107,7 +120,7 @@ De onde sai cada lista:
 
 Reserva de um ano, sem pagamento adiantado, costuma tirar cerca de um terço do compute e do banco gerenciado. A lista acima é o teto, não o contrato.
 
-A célula que atende a premissa de São Paulo e tira o failover do Postgres das nossas mãos fica na AWS ou no GCP, perto de R$ 15 mil por mês. A Azure repete o desenho e sai mais cara no Brasil Sul. A Oracle cabe em São Paulo e fica perto de R$ 4 mil, com um domínio só e o par de Postgres sob os nossos cuidados. A Hetzner é o piso, perto de R$ 2,7 mil, e o dado mora na Alemanha: serve de comparação e de laboratório, não de célula de cliente pagante enquanto o contrato pedir residência no Brasil.
+A célula do piloto é a AWS em `sa-east-1`, com RDS PostgreSQL Multi-AZ, no orçamento de R$ 14.800 por mês desta tabela. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle cabe em São Paulo e fica perto de R$ 4 mil, com um domínio só e o par de Postgres sob os nossos cuidados. A Hetzner é o piso, perto de R$ 2,7 mil, e o dado mora na Alemanha: serve de comparação e de laboratório, não de célula de cliente pagante.
 
 ## 6. Recuperação
 

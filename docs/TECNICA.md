@@ -37,7 +37,7 @@ O banco continua um só. O serviço não chama o outro por HTTP para dar baixa o
 | Decisão | Escolha | Por quê |
 | --- | --- | --- |
 | Sem n8n | Módulos Python versionados | Teste, review e rollback por Git |
-| LLM só em 3 pontos | Intenção, comprovante, conversa | Custo proporcional à conversa, não ao volume de títulos |
+| LLM só na conversa | Intenção, comprovante, transcrição de áudio, conversa | Custo proporcional a quem responde, não ao volume de títulos |
 | Matcher sem LLM | `reconciliation/matcher.py` | Dinheiro não pode alucinar |
 | Painel sem SQL | Next.js → FastAPI | Regras e `audit_log` num só lugar |
 | Multi-tenant | `tenant_id` + RLS | Segunda barreira depois do JWT |
@@ -73,7 +73,7 @@ A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovant
 4. Role `agencia` acessa `/admin/tenants` sem RLS de um tenant só.
 5. Role da aplicação **não** é superuser nem dona das tabelas, para o RLS valer.
 
-Onboarding (agência): criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → `POST /admin/tenants/{id}/activate`. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
+Onboarding: criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → ativar. A empresa cria pela tela (`POST /onboarding`, entra como `dono`) e ativa em `POST /settings/activate`. A agência, equipe do Settlr com role `agencia`, cria em `POST /admin/tenants` e ativa em `POST /admin/tenants/{id}/activate`. As duas ativações usam a mesma checagem. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
@@ -128,6 +128,8 @@ LLM preenche `ReceiptExtraction` (Pydantic). `receipts/validation.py` exige valo
 
 ### 6.4 Agente
 
+Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição usa a API de áudio da OpenAI, com a mesma chave do chat, e só quando `LLM_MODEL` começa com `openai:`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário, sem chave, ou com outro provedor, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
+
 Grafo: identificar → identidade → títulos → classificar → política → opções → aceite → acordo, ou `request_human`.
 
 Tools tipadas: `get_debtor_invoices`, `get_negotiation_policy`, `build_payment_options` (determinístico), `register_promise`, `create_agreement`, `request_human`. Checkpointer no Postgres.
@@ -142,7 +144,7 @@ Rotas públicas (assinatura/token, sem sessão de usuário). O gateway encaminha
 | GET | `/me` | Painel | gateway |
 | POST | `/auth/dev-login` | Só `ENV!=prod` | gateway |
 | POST | `/webhooks/evolution` | Evolution | cobranca |
-| POST | `/webhooks/emissor` | Asaas / Inter / Efí | cadastro |
+| POST | `/webhooks/emissor` | Asaas | cadastro |
 | POST | `/webhooks/banco` | Extrato / PIX | conciliacao |
 
 Rotas do painel (JWT + tenant), também atrás do gateway:
@@ -154,13 +156,13 @@ Rotas do painel (JWT + tenant), também atrás do gateway:
 | `/invoices` | Listar, detalhe, importar CSV, lista `sem_pagamento` | cadastro |
 | `/conversations` | Listar, mensagens, fila de entrega, assumir, devolver, enviar | cobranca |
 | `/approvals` | Listar, decidir (retoma o grafo no worker-cobranca) | cobranca |
-| `/onboarding` | A empresa cria a conta (política, régua, horário, WhatsApp, base legal) | cadastro |
+| `/onboarding` | A empresa cria a conta (política, régua, horário, WhatsApp, base legal, atraso médio anterior) | cadastro |
 | `/members` | Lista e convite por e-mail; aceite do link | cadastro |
 | `/settings` | GET para a equipe; PUT da política só o dono | cadastro |
 | `/settings/activate` | Liga a conta; 422 com o que falta | cadastro |
 | `/settings/whatsapp` | PUT dos números de disparo da empresa (até cinco); só o dono | cadastro |
 | `/debtors/{id}/whatsapp` | PATCH dos celulares do devedor (até cinco) | cadastro |
-| `/metrics` | Recuperação, DSO, promessas, baixa automática | cadastro |
+| `/metrics` | Recuperação, DSO do período, linha de base da implantação, promessas, baixa automática | cadastro |
 | `/admin/tenants` | CRUD e ativação (role `agencia`) | cadastro |
 
 Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo atende. No gateway aparecem auth e health. Conversas, pagamentos e títulos aparecem no `/docs` de cobrança, conciliação e cadastro.
@@ -181,10 +183,10 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
   - `/conversas` — assumir, devolver e enviar
   - `/entregas` — enviada, entregue, falha e arquivo recebido ou não, lido do banco, com filtro do que falhou
   - `/aprovacoes` — retoma o grafo com mensagem ao devedor
-  - `/comecar` — a empresa cria tenant, política, régua, horário, WhatsApp e base legal
+  - `/comecar` — a empresa cria tenant, política, régua, horário, WhatsApp, base legal e a linha de base do atraso
   - `/convite/[token]` — a pessoa aceita o convite do e-mail e entra sem senha compartilhada
   - `/configuracoes` — política (só o dono), régua, horário, até cinco WhatsApps de disparo, base legal, ativação, convite da equipe e o aviso da fila humana
-  - `/metricas`
+  - `/metricas` — recuperação, atraso do período contra a linha de base, promessas e baixa automática
 
 `NEXT_PUBLIC_API_BASE_URL` entra no **build**. Trocar de domínio exige rebuild da imagem `cobranca-web`. Sora e Manrope vêm do pacote npm (`@fontsource`); o `next build` não baixa o CSS do Google Fonts.
 
@@ -245,6 +247,7 @@ Cobertura atual (determinística):
 
 - `tests/test_matcher.py` — camadas 1–4, parcial, documento mascarado, soma de títulos
 - `tests/test_dunning.py` — opt-out, promessa, etapa única, D+30, horário, título sem PIX ou boleto, template oficial e número pareado
+- `tests/test_regua_produto.py` — chave, offset e canais de `DEFAULT_DUNNING_RULES` batem com a tabela da régua em `PRODUTO.md`
 - `tests/test_policy.py` — desconto, teto de parcelas, data da promessa
 - `tests/test_agreement.py` — parcela do acordo nasce com PIX ou boleto; fora da política não vira condição
 - `tests/test_money_http.py` — baixa, rejeição, extrato e acordo pelo HTTP, com isolamento entre tenants
@@ -265,7 +268,7 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 
 ## 13. O que ainda não é o piloto completo
 
-- Webhooks assinados de Asaas/Inter/Efí em cliente vivo
+- Webhook assinado do Asaas em cliente vivo. Inter, Efí, iugu e Sicoob ficam no roadmap
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
 - Parecer jurídico dos textos da régua e do contrato ainda não registrado no SETL-15. A versão `2026-11-08` e a minuta já estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) e [CONTRATO.md](./CONTRATO.md). Produção não ativa o primeiro cliente sem `LEGAL_OPINION_REF`
 - Faixas de preço com custo medido no piloto

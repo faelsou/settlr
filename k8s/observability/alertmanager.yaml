@@ -1,5 +1,7 @@
-# O token do webhook vem do Secret aiops-secrets (ver docs/AIOPS.md). Sem o Secret,
-# o pod sobe e o envio ao AIOps volta 401 até o Secret existir.
+# O token do webhook do AIOps vem do Secret aiops-secrets (ver docs/AIOPS.md).
+# Sem esse Secret, o pod sobe e o envio ao AIOps volta 401 até ele existir.
+# O receiver critical lê o Secret critical-page. Sem ele, o pod sobe e essa
+# segunda entrega não sai.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,10 +19,7 @@ spec:
         - name: alertmanager
           image: prom/alertmanager:v0.28.1
           imagePullPolicy: IfNotPresent
-          args:
-            - --config.file=/etc/alertmanager/alertmanager.yml
-            - --storage.path=/alertmanager
-            - --web.external-url=http://127.0.0.1:9093
+          command: ["sh", "/etc/alertmanager/alertmanager-entry.sh"]
           ports:
             - name: http
               containerPort: 9093
@@ -35,8 +34,17 @@ spec:
             - name: config
               mountPath: /etc/alertmanager/alertmanager.yml
               subPath: alertmanager.yml
+            - name: config
+              mountPath: /etc/alertmanager/alertmanager-entry.sh
+              subPath: alertmanager-entry.sh
+            - name: config
+              mountPath: /etc/alertmanager/critical-default/SLACK_CRITICAL_WEBHOOK
+              subPath: SLACK_CRITICAL_WEBHOOK
             - name: secrets
               mountPath: /etc/alertmanager/secrets
+              readOnly: true
+            - name: critical
+              mountPath: /etc/alertmanager/critical-secret
               readOnly: true
             - name: data
               mountPath: /alertmanager
@@ -51,6 +59,13 @@ spec:
             items:
               - key: AIOPS_WEBHOOK_TOKEN
                 path: AIOPS_WEBHOOK_TOKEN
+        - name: critical
+          secret:
+            secretName: critical-page
+            optional: true
+            items:
+              - key: SLACK_CRITICAL_WEBHOOK
+                path: SLACK_CRITICAL_WEBHOOK
         - name: data
           emptyDir: {}
 ---

@@ -34,6 +34,41 @@ def test_contact_jid_prefers_phone_over_lid():
     }) == "5511988887777@s.whatsapp.net"
 
 
+def test_voice_note_is_not_a_receipt():
+    msg = inbound_from_record("Cobranca", {
+        "key": {"id": "PTT1", "fromMe": False, "remoteJid": "5511988887777@s.whatsapp.net"},
+        "message": {
+            "audioMessage": {
+                "mimetype": "audio/ogg; codecs=opus",
+                "ptt": True,
+                "contextInfo": {"stanzaId": "OUT1"},
+            }
+        },
+        "messageTimestamp": 1_700_000_000,
+    })
+    assert msg is not None
+    assert msg.is_audio
+    assert not msg.is_receipt
+    assert not msg.has_media
+    assert msg.mimetype == "audio/ogg; codecs=opus"
+    assert msg.quoted_id == "OUT1"
+    restored = msg.from_json(msg.to_json())
+    assert restored.is_audio
+    assert restored.quoted_id == "OUT1"
+
+
+def test_audio_file_follows_the_voice_path():
+    msg = inbound_from_record("Cobranca", {
+        "key": {"id": "AUD1", "fromMe": False, "remoteJid": "5511988887777@s.whatsapp.net"},
+        "message": {"pttMessage": {"mimetype": "audio/mpeg", "caption": "segue o áudio"}},
+        "messageTimestamp": 1_700_000_000,
+    })
+    assert msg is not None
+    assert msg.is_audio
+    assert not msg.is_receipt
+    assert msg.text == "segue o áudio"
+
+
 def test_inbound_from_document_receipt():
     msg = inbound_from_record("Cobranca", {
         "key": {
@@ -188,7 +223,7 @@ def test_continue_after_inbound_hands_off_to_agent(monkeypatch):
         "app.channels.tasks.classify_intent",
         lambda text, today: SimpleNamespace(intent=Intent.PARCELAR_DESCONTO, promised_date=None),
     )
-    monkeypatch.setattr("app.channels.tasks._route_deterministic", lambda *a: None)
+    monkeypatch.setattr("app.channels.tasks._route_deterministic", lambda *a, **k: None)
 
     tenant = SimpleNamespace(timezone="America/Sao_Paulo")
     outcome, turn = continue_after_inbound(MagicMock(), tenant, MagicMock(), conv, "qual o valor?")

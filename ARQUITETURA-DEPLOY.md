@@ -57,7 +57,7 @@ flowchart TB
     subgraph Internet
       DEV[Devedor no WhatsApp]
       OPS[Operador no painel]
-      BANK[Banco / emissor<br/>Asaas · Inter · Efí]
+      BANK[Banco / emissor<br/>Asaas]
       LLM[Provedor de LLM]
     end
 
@@ -434,7 +434,7 @@ URLs internas, resolvidas pelo DNS do Swarm:
 | `COBRANCA_URL` | `http://cobranca:8000` (só o gateway encaminha) |
 | `CONCILIACAO_URL` | `http://conci-pgto:8000` |
 | `CADASTRO_URL` | `http://cadastro:8000` |
-| `WEB_API_BASE_URL` | `https://api.<domínio>` (o browser do operador chama o gateway pela borda) |
+| `WEB_API_BASE_URL` | `https://api.settlr.com.br` (o browser do operador chama o gateway pela borda) |
 
 O `frontend-web` recebe `WEB_API_BASE_URL` em **build** (Next.js standalone). Trocar de
 domínio exige rebuild da imagem `cobranca-web`.
@@ -453,13 +453,15 @@ domínio exige rebuild da imagem `cobranca-web`.
 
 Um certificado por host, HTTP-01 no Traefik.
 
+O `DOMAIN` de produção é `settlr.com.br`.
+
 | Host | Serviço | Quem acessa |
 | --- | --- | --- |
-| `app.<domínio>` | `frontend-web:3000` | operador do tenant |
-| `api.<domínio>` | `webhook-api:8000` (gateway) | painel, banco, emissor, Evolution |
-| `wa.<domínio>` | `evolution:8080` | webhook de volta do WhatsApp e pareamento do número |
+| `app.settlr.com.br` | `frontend-web:3000` | operador do tenant |
+| `api.settlr.com.br` | `webhook-api:8000` (gateway) | painel, banco, emissor, Evolution |
+| `wa.settlr.com.br` | `evolution:8080` | webhook de volta do WhatsApp e pareamento do número |
 
-O manager da Evolution (`wa.<domínio>`) fica com basic auth no Traefik ou
+O manager da Evolution (`wa.settlr.com.br`) fica com basic auth no Traefik ou
 middleware de IP allowlist. A API key da Evolution continua obrigatória em
 toda rota.
 
@@ -469,7 +471,7 @@ verificação de assinatura no código:
 | Rota pública | Origem | Serviço que executa |
 | --- | --- | --- |
 | `POST /webhooks/evolution` | Evolution | `cobranca` |
-| `POST /webhooks/emissor` | Asaas, Inter, Efí | `cadastro` |
+| `POST /webhooks/emissor` | Asaas | `cadastro` |
 | `POST /webhooks/banco` | extrato / PIX | `conci-pgto` |
 | `GET /health` | Traefik | `webhook-api` (gateway) |
 
@@ -584,7 +586,7 @@ Notas ao lado de `docker/stack.yml`:
 7. One-off: `alembic upgrade head`.
 8. Criar o bucket `comprovantes` no MinIO.
 9. Parear o número na Evolution (QR) e gravar o webhook global para
-   `https://api.<domínio>/webhooks/evolution`.
+   `https://api.settlr.com.br/webhooks/evolution`.
 10. Cadastrar o tenant piloto: política, régua, horário, número e emissor.
 
 ### Atualização de release
@@ -662,7 +664,7 @@ A rede `edge` pode ser compartilhada; o host do Traefik separa o tráfego.
 
 | | `cobranca` (produção) | `cobranca-hml` (homologação) |
 | --- | --- | --- |
-| Hosts | `app.`, `api.`, `wa.` | `app-hml.`, `api-hml.`, `wa-hml.` |
+| Hosts | `app.settlr.com.br`, `api.settlr.com.br`, `wa.settlr.com.br` | `app-hml.settlr.com.br`, `api-hml.settlr.com.br`, `wa-hml.settlr.com.br` |
 | Postgres | volume próprio | volume próprio, dump anonimizado |
 | Evolution | número oficial do tenant | número de teste |
 | Réplicas | as da tabela da seção 5 | 1 para cada serviço |

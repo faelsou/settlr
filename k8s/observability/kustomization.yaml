@@ -64,6 +64,8 @@ configMapGenerator:
   - name: alertmanager-config
     files:
       - alertmanager.yml=files/alertmanager.yml
+      - alertmanager-entry.sh=files/alertmanager-entry.sh
+      - SLACK_CRITICAL_WEBHOOK=files/critical-webhook-fallback
   - name: tempo-config
     files:
       - tempo.yml=tempo.yml

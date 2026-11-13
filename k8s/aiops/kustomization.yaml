@@ -6,6 +6,8 @@
 #     --from-literal=SLACK_APP_TOKEN=xapp-... \
 #     --from-literal=AIOPS_WEBHOOK_TOKEN="$(openssl rand -hex 24)" \
 #     --from-literal=LLM_API_KEY=sk-...
+#   kubectl -n observability create secret generic critical-page \
+#     --from-literal=SLACK_CRITICAL_WEBHOOK=https://hooks.slack.com/services/...
 #   kubectl apply -k k8s/aiops
 #
 # Sem namespace aqui de propósito: o Role e o RoleBinding vivem em cobranca,

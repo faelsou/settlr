@@ -213,7 +213,9 @@ def test_arrival_caches_media_in_minio(monkeypatch):
         "app.channels.tasks.stage_receipt_bytes",
         lambda tenant_id, data, content_type: f"{tenant_id}/hash.pdf",
     )
-    msg = SimpleNamespace(has_media=True, instance="cobranca", key={"id": "M1"}, message_id="M1")
+    msg = SimpleNamespace(
+        has_media=True, is_receipt=True, instance="cobranca", key={"id": "M1"}, message_id="M1",
+    )
     assert cache_inbound_media("tenant", msg) == "tenant/hash.pdf"
 
 

@@ -15,7 +15,9 @@ from app.agent.tasks import run_agent_turn
 from app.channels.delivery import RECEIPT_BODY
 from app.channels.metrics import record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message
+from app.channels.speech import hear
 from app.channels.tasks import (
+    _record_audio,
     continue_after_inbound,
     conversation_for_phone,
     find_debtor,
@@ -77,11 +79,11 @@ def _conversation_for(session, tenant: Tenant, inbound) -> Conversation | None:
 
 def _store(
     session, tenant: Tenant, instance: str, raw: dict[str, Any],
-) -> tuple[str, Conversation, str] | None:
+) -> tuple[str, Conversation, str, bool] | None:
     inbound = inbound_from_record(instance, raw)
-    if inbound is None or inbound.from_me or inbound.is_group:
+    if inbound is None or inbound.from_me or inbound.is_group or inbound.is_receipt:
         return None
-    if not inbound.text or not inbound.message_id:
+    if not inbound.message_id or (not inbound.text and not inbound.is_audio):
         return None
     if session.scalar(select(Message.id).where(Message.wa_message_id == inbound.message_id)):
         return None
@@ -91,9 +93,35 @@ def _store(
         return None
 
     quoted = quoted_outbound(session, tenant.id, inbound.quoted_id)
+    invoice_id = quoted.invoice_id if quoted else None
+    if inbound.is_audio:
+        heard = hear(str(tenant.id), instance, inbound.key, raw)
+        spoken = (heard[0] or "").strip()
+        caption = (inbound.text or "").strip()
+        stored_msg = _record_audio(
+            session, tenant, conv, inbound, heard, invoice_id,
+            reply=not spoken and not caption,
+        )
+        if inbound.timestamp and stored_msg is not None:
+            stored_msg.created_at = datetime.fromtimestamp(int(inbound.timestamp), UTC)
+            conv.updated_at = stored_msg.created_at
+        if not spoken and not caption:
+            record_message("entrada", "aceita", "sync", "audio", "falha")
+            record_message("entrada", "roteada", "transcricao", "audio", "falha")
+            return None
+        body = spoken if not caption or caption == spoken else (
+            f"{spoken}\n{caption}".strip() if spoken else caption
+        )
+        if spoken:
+            # _record_audio já gravou a transcrição. A voz pede resposta falada.
+            record_message("entrada", "aceita", "sync", "audio", "ok")
+            return body, conv, inbound.message_id, True
+        record_message("entrada", "aceita", "sync", "audio", "ok")
+        return body, conv, inbound.message_id, False
+
     msg = log_message(
         session, conv, MessageDirection.IN, "devedor", inbound.text,
-        invoice_id=quoted.invoice_id if quoted else None,
+        invoice_id=invoice_id,
         wa_message_id=inbound.message_id,
     )
     if inbound.timestamp:
@@ -103,7 +131,7 @@ def _store(
     record_message("entrada", "aceita", "sync", "texto", "ok")
     if conv.state == ConversationState.HUMANO:
         record_message("entrada", "roteada", "humano", "texto", "ok")
-    return inbound.text, conv, inbound.message_id
+    return inbound.text, conv, inbound.message_id, False
 
 
 def unanswered_inbound(rows: list[tuple[str, str | None, str | None]]) -> tuple[str, str] | None:
@@ -180,7 +208,9 @@ def _handle_receipt(
         log.exception("inbound.receipt_failed", message_id=inbound.message_id)
 
 
-def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) -> None:
+def _follow_up(
+    tenant_id: UUID, conversation_id: UUID, text: str, token: str, *, reply_voice: bool = False,
+) -> None:
     if not get_settings().llm_api_key:
         log.warning("inbound.agent_skipped_no_llm", conversation_id=str(conversation_id))
         return
@@ -191,7 +221,9 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
             tenant = session.get(Tenant, tenant_id)
             conv = session.get(Conversation, conversation_id)
             debtor = session.get(Debtor, conv.debtor_id)
-            outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
+            outcome, turn = continue_after_inbound(
+                session, tenant, debtor, conv, text, reply_voice=reply_voice,
+            )
             context = route_context(outcome, conv.intent)
     except Exception:
         record_message("entrada", "roteada", "roteamento", "texto", "falha")
@@ -203,7 +235,7 @@ def _follow_up(tenant_id: UUID, conversation_id: UUID, text: str, token: str) ->
         log.info("inbound.routed", conversation_id=str(conversation_id), outcome=outcome)
         return
     try:
-        run_agent_turn(str(tenant_id), *turn, token)
+        run_agent_turn(str(tenant_id), *turn, token, reply_voice)
     except Exception:
         release_turn(conversation_id, token)
         log.exception("inbound.agent_failed", conversation_id=str(conversation_id))
@@ -259,9 +291,10 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
                     select(Conversation).where(Conversation.tenant_id == tenant_id, Conversation.wa_jid == jid)
                 ).first()
                 stored: list[tuple[str, str]] = []
+                reply_voice = False
                 for raw in records:
                     inbound = inbound_from_record(instance, raw)
-                    if inbound and inbound.has_media and not inbound.from_me:
+                    if inbound and inbound.is_receipt and not inbound.from_me:
                         owner = _conversation_for(session, tenant, inbound)
                         if owner is not None and not session.scalar(
                             select(Message.id).where(Message.wa_message_id == inbound.message_id)
@@ -270,16 +303,18 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
                             conv = owner
                     result = _store(session, tenant, instance, raw)
                     if result:
-                        text, conv, message_id = result
+                        text, conv, message_id, was_voice = result
                         stored.append((text, message_id))
+                        reply_voice = was_voice
                         added += 1
                 if conv is None or conv.state == ConversationState.HUMANO:
                     continue
                 choice = agent_follow(conv.state, stored, _pending_text(session, conv))
-                follow = (conv.id, *choice) if choice else None
+                follow = (conv.id, *choice, reply_voice) if choice else None
             for inbound, conv_id, debtor_id, raw in receipts:
                 _handle_receipt(tenant_id, instance, inbound, conv_id, debtor_id, raw)
                 added += 1
             if follow:
-                _follow_up(tenant_id, *follow)
+                conversation_id, text, token, was_voice = follow
+                _follow_up(tenant_id, conversation_id, text, token, reply_voice=was_voice)
     return added

@@ -64,6 +64,7 @@ class ExceptionType(StrEnum):
     SUGESTAO_MATCH = "sugestao_match"
     CONTESTACAO = "contestacao"
     LEITURA_BAIXA_CONFIANCA = "leitura_baixa_confianca"
+    TRANSCRICAO_INDISPONIVEL = "transcricao_indisponivel"
     DIFERENCA_VALOR = "diferenca_valor"
     FILA_HUMANA = "fila_humana"
     SESSAO_CANAL = "sessao_canal"

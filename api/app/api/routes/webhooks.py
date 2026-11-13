@@ -52,7 +52,12 @@ def evolution_webhook(
     if msg is None or msg.from_me:
         return {"status": "ignorado"}
 
-    kind = "arquivo" if msg.has_media else "texto"
+    if msg.is_audio:
+        kind = "audio"
+    elif msg.is_receipt:
+        kind = "arquivo"
+    else:
+        kind = "texto"
     with system_session() as session:
         tenant_id = _tenant_for_instance(session, msg.instance)
     if tenant_id is None:

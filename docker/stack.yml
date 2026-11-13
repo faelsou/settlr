@@ -7,6 +7,7 @@
 # Opcionais (vazias = desligado; Sentry e Langfuse não são serviço desta stack):
 # SENTRY_DSN, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST.
 # LEGAL_OPINION_REF vazio bloqueia a ativação do tenant até o parecer do SETL-15.
+# SMTP_HOST vazio desliga o e-mail. A senha da conta settlr.ss@gmail.com fica no secret smtp_password.
 # OTEL_EXPORTER_OTLP_ENDPOINT vazio desliga o OTLP. O padrão aponta para o coletor.
 # Métricas, logs e painel: stack à parte em observability/ (coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana).
 #
@@ -44,6 +45,11 @@ x-app-env: &app-env
   LANGFUSE_HOST: ${LANGFUSE_HOST:-}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
   LEGAL_OPINION_REF: ${LEGAL_OPINION_REF:-}
+  SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-settlr.ss@gmail.com}
+  SMTP_FROM: ${SMTP_FROM:-settlr.ss@gmail.com}
+  PANEL_BASE_URL: https://app.${DOMAIN}
 
 services:
   traefik:
@@ -144,6 +150,7 @@ services:
       - jwt_secret
       - llm_api_key
       - webhook_hmac
+      - smtp_password
     environment:
       <<: *app-env
       SERVICE_NAME: cobranca
@@ -169,6 +176,7 @@ services:
       - llm_api_key
       - minio_root_password
       - webhook_hmac
+      - smtp_password
     environment:
       <<: *app-env
       SERVICE_NAME: conci-pgto
@@ -190,6 +198,7 @@ services:
       - postgres_app_password
       - redis_password
       - jwt_secret
+      - smtp_password
     environment:
       <<: *app-env
       SERVICE_NAME: cadastro
@@ -212,6 +221,7 @@ services:
       - redis_password
       - evolution_api_key
       - llm_api_key
+      - smtp_password
     environment:
       <<: *app-env
       SERVICE_NAME: worker-cobranca
@@ -240,6 +250,7 @@ services:
       - evolution_api_key
       - llm_api_key
       - minio_root_password
+      - smtp_password
     environment:
       <<: *app-env
       SERVICE_NAME: worker-conciliacao
@@ -460,3 +471,4 @@ secrets:
   llm_api_key: { external: true }
   minio_root_password: { external: true }
   webhook_hmac: { external: true }
+  smtp_password: { external: true }

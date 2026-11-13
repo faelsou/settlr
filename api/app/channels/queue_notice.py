@@ -25,6 +25,7 @@ QUEUE_LABELS = {
     "sugestao_match": "exceção",
     "diferenca_valor": "exceção",
     "leitura_baixa_confianca": "exceção",
+    "transcricao_indisponivel": "áudio sem transcrição",
     "contestacao": "contestação",
     "fila_humana": "título em D+30",
     "sessao_canal": "sessão do canal",

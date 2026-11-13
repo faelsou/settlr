@@ -81,7 +81,7 @@ A janela de `sem_recibo` fica na política do tenant (ponto de partida: 6 horas 
 
 O WhatsApp transporta. O arquivo mora no MinIO.
 
-- **Entrada** (comprovante, imagem, PDF): baixar o base64 no momento em que a mensagem chega e gravar com hash antes do OCR.
+- **Entrada** (comprovante, imagem, PDF): baixar o base64 no momento em que a mensagem chega e gravar com hash antes do OCR. Nota de voz e áudio vão para `…/voz/` e viram transcrição; não entram no OCR.
 - **Saída** (2ª via, boleto, qualquer anexo): o blob nasce no storage; o envio manda uma cópia. `ausente` ou `falhou` reenvia a partir dessa cópia.
 
 O hash segue a mesma ideia de deduplicação de `payments.file_hash`: o mesmo arquivo não baixa o título duas vezes e não se perde se o celular apagar a conversa.

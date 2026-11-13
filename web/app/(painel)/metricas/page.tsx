@@ -9,7 +9,7 @@ export default function MetricasPage() {
       <PageHeader
         eyebrow="Período"
         title="Métricas"
-        hint="Recuperação, atraso, promessas e o percentual de baixa automática. A linha mostra as últimas seis semanas."
+        hint="Recuperação, atraso contra a linha de base da implantação, promessas e o percentual de baixa automática. A linha mostra as últimas seis semanas."
       />
       <MetricsBoard periodControl />
     </div>

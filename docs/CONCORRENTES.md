@@ -4,7 +4,7 @@ _Atualizado em 07/11/2026_
 
 ## 1. Resumo executivo
 
-Ninguém no mercado entrega hoje exatamente a combinação do Settlr para PME: **régua determinística no WhatsApp + agente de IA que negocia só dentro da política + conciliação em camadas que não baixa título sem confirmação do banco + fila de exceções**. Mas cada peça tem concorrente forte, e dois players novos chegaram muito perto:
+Ninguém no mercado entrega hoje exatamente a combinação do Settlr para PME, BPO e banco: **régua determinística no WhatsApp + agente de IA que negocia só dentro da política + conciliação em camadas que não baixa título sem confirmação do banco + fila de exceções**. A PME é a primeira onda. BPO e banco entram na mesma oferta e ampliam o mercado. Mas cada peça tem concorrente forte, e dois players novos chegaram muito perto:
 
 - **FinanceiroAI** é o concorrente mais parecido: régua no WhatsApp, IA que lê comprovante e marca **"pago provisório"** até o banco confirmar, plano grátis e assinatura de R$ 99/mês. Ainda está em fila de espera e não mostra negociação estruturada nem matcher em camadas.
 - **Negocia.ai** tem bot generativo que negocia desconto e parcelamento, lê comprovante Pix e agrupa dívidas por CPF. Mas é caro (R$ 2.500 a R$ 6.000/mês) e voltado a operações de cobrança, não a PME.
@@ -74,7 +74,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 - **Taxas (out/2026):** Pix ou boleto R$ 1,99 (R$ 0,99 nos 3 primeiros meses); cartão 2,99% + R$ 0,49. Parceiros têm tabelas menores.
 - **Régua:** WhatsApp R$ 0,55 por notificação; e-mail e SMS R$ 0,99; carta R$ 2,91; robô de voz após o vencimento; negativação Serasa.
 - **Limites:** régua só para cobranças emitidas pelo próprio Asaas; sem agente conversacional; não concilia dinheiro que entra em outro banco.
-- **Ameaça:** 🔴 estrutural. Ele é dono do canal. Estratégia sugerida: **integrar com o Asaas** (muitos clientes do Settlr vão emitir por lá) e vender o que ele não faz: conversa, negociação, multi-banco e exceções.
+- **Ameaça:** 🔴 estrutural. Ele é dono do canal. Estratégia sugerida: **integrar com o Asaas** (muitos clientes do Settlr vão emitir por lá) e vender o que ele não faz: conversa, negociação, conciliação de dinheiro que entra fora do Asaas e exceções.
 
 ### 4.5 Monest (Mia)
 
@@ -165,7 +165,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 
 ## 7. Ameaças em ordem
 
-1. **Asaas lançar um agente de IA na régua.** Defesa: integração nativa com o Asaas + multi-banco + exceções.
+1. **Asaas lançar um agente de IA na régua.** Defesa: integração nativa com o Asaas, conciliação de outras contas por Open Finance ou arquivo, e exceções.
 2. **FinanceiroAI sair da fila de espera e escalar barato.** Defesa: negociação por política, matcher em camadas, painel de exceções e métricas que eles não mostram.
 3. **Kobana descer para PME** com Dunning + Kadu conversando com o devedor. Defesa: velocidade, foco no segmento e no WhatsApp; considerar parceria.
 4. **ERPs (Omie, Conta Azul) colocarem régua no WhatsApp nativa.** Defesa: o Settlr funciona por cima do ERP e do banco que o cliente já tem.
@@ -173,13 +173,14 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 
 ## 8. Posicionamento recomendado
 
+- **Para quem:** PME na primeira onda; BPO, com uma conta por empresa e sem cruzar dado; banco, como conta da própria carteira. O banco comprador não é um emissor novo.
 - **Frase:** "Cobra pelo WhatsApp, negocia dentro da sua regra e confere cada centavo contra o banco — em cima do banco e do sistema que você já usa."
 - **Diferenciais para colocar na página e no pitch:**
   - Comprovante nunca quita sozinho (anti-fraude), com prova no `audit_log`.
   - O agente não inventa condição: só oferece o que a política gerou; o que passar disso vai para aprovação humana.
   - Conciliação em 4 camadas que resolve o que ERP não resolve: Pix pago em boleto, soma de títulos, nome aproximado, pagamento parcial.
   - Métricas de recuperação, DSO, promessas cumpridas e % de baixa automática.
-  - Multi-banco e multi-gateway (Asaas, iugu, Inter, Sicoob, extrato OFX/Open Finance).
+  - Conciliação do Asaas e de qualquer conta pelo Open Finance (cliente genérico da API de contas) ou pelo arquivo do contador. Inter, Efí, iugu e Sicoob ficam no roadmap de emissor.
 - **Venda de entrada:** a conciliação (fase 1) como prova de valor, comparada à conciliação de ERP, que só olha 5 dias e exige tipo de documento igual.
 
 ## 9. O que ainda falta verificar
