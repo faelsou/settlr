@@ -16,6 +16,7 @@ from app.core.senders import apply_senders, listed_senders, normalize_senders
 from app.dunning.official import preserve_approved
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
+from app.onboarding.welcome import deliver_welcome
 from app.reconciliation.matcher import ReconciliationRules
 
 _RECON_DEFAULTS = ReconciliationRules()
@@ -207,6 +208,7 @@ def update_settings(
     user: CurrentUser = Depends(require_owner),
 ) -> TenantSettingsOut:
     tenant = db.get(Tenant, user.tenant_id)
+    previous_owner = (tenant.owner_email or "").strip().casefold()
     before = current_settings(tenant).model_dump(mode="json")
     data = body.model_dump(mode="json")
     data["dunning_rules"] = preserve_approved(tenant.dunning_rules, data["dunning_rules"])
@@ -220,7 +222,11 @@ def update_settings(
     tenant.legal_basis = data["legal_basis"] or None
     audit(db, tenant_id=tenant.id, actor=user.actor, action="atualiza_configuracoes",
           entity="tenant", entity_id=tenant.id, before=before, after=data)
-    return current_settings(tenant)
+    owner = (tenant.owner_email or "").strip().casefold()
+    saved = current_settings(tenant)
+    if owner and owner != previous_owner:
+        deliver_welcome(tenant.name, owner)
+    return saved
 
 
 def _instances_taken(db: Session, tenant_id, instances: list[str]) -> str | None:

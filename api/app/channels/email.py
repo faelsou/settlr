@@ -4,8 +4,8 @@ from email.message import EmailMessage
 from app.core.config import get_settings
 
 
-def send_email(to: str, subject: str, body: str) -> None:
-    """Canal secundário da régua (D+15). SMTP configurado por variável de ambiente."""
+def send_email(to: str, subject: str, body: str, html: str | None = None) -> None:
+    """E-mail transacional. `html` é a versão rica; `body` continua o texto puro."""
     settings = get_settings()
     if not settings.smtp_host:
         raise RuntimeError("SMTP não configurado (SMTP_HOST)")
@@ -15,6 +15,8 @@ def send_email(to: str, subject: str, body: str) -> None:
     msg["To"] = to
     msg["Subject"] = subject
     msg.set_content(body)
+    if html:
+        msg.add_alternative(html, subtype="html")
 
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:
         smtp.starttls()

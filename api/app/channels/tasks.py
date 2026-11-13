@@ -13,6 +13,7 @@ from app.agent.intent import classify_intent
 from app.agent.tasks import run_agent_turn
 from app.channels.metrics import record_file, record_message, route_context
 from app.channels.outbound import get_or_create_conversation, log_message, send_to_debtor
+from app.channels.speech import hear
 from app.channels.turn import claim_turn, release_turn
 from app.channels.whatsapp import EvolutionClient, debounce_drain
 from app.core.audit import audit
@@ -36,6 +37,41 @@ from app.workers.celery_app import celery_app
 log = get_logger(__name__)
 
 AGENT_INTENTS = {Intent.PARCELAR_DESCONTO, Intent.DUVIDA}
+UNHEARD_REPLY = "Não consegui ouvir o áudio. Nossa equipe vai conferir e retornar."
+
+
+def message_kind(msg) -> str:
+    if msg.is_audio:
+        return "audio"
+    if msg.is_receipt:
+        return "arquivo"
+    return "texto"
+
+
+def turn_text(messages, heard: dict[str, str | None]) -> tuple[str, bool]:
+    """Texto do turno e se ele nasceu de uma transcrição.
+
+    Áudio sem transcrição não entra. Legenda escrita no áudio entra, porque
+    a pessoa digitou. Comprovante não vira frase.
+    """
+    parts: list[str] = []
+    voice = False
+    for msg in messages:
+        if msg.is_audio:
+            spoken = (heard.get(msg.message_id) or "").strip()
+            caption = (msg.text or "").strip()
+            if spoken:
+                parts.append(spoken)
+                voice = True
+            if caption and caption != spoken:
+                parts.append(caption)
+            continue
+        if msg.is_receipt:
+            continue
+        caption = (msg.text or "").strip()
+        if caption:
+            parts.append(caption)
+    return "\n".join(parts).strip(), voice
 
 
 def phone_variants(phone: str) -> list[str]:
@@ -115,7 +151,7 @@ def fresh_inbound(session: Session, messages) -> list:
 
 def cache_inbound_media(tenant_id: str, msg) -> str | None:
     """Baixa a mídia na chegada e grava no MinIO antes de enfileirar o OCR."""
-    if not msg.has_media:
+    if not msg.is_receipt:
         return None
     try:
         data, mimetype = EvolutionClient().get_media(msg.instance, msg.key)
@@ -148,7 +184,7 @@ def process_inbound(tenant_id: str, buffer_key: str) -> str:
 def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
     media_keys: dict[str, str] = {}
     for msg in messages:
-        if msg.has_media and msg.message_id and msg.message_id not in media_keys:
+        if msg.is_receipt and msg.message_id and msg.message_id not in media_keys:
             key = cache_inbound_media(tenant_id, msg)
             if key:
                 media_keys[msg.message_id] = key
@@ -163,17 +199,15 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
             tenant = session.get(Tenant, tid)
 
             if first.is_group:
-                # Grupo do cliente: só aceitamos comprovante. Nunca respondemos cobrança em grupo.
+                # Grupo do cliente: só aceitamos comprovante. Áudio não vai ao OCR
+                # e não recebe resposta de cobrança, em texto nem em voz.
                 for msg in pending:
-                    if msg.has_media:
+                    if msg.is_receipt:
                         process_whatsapp_receipt.delay(
                             tenant_id, msg.instance, msg.key, msg.message_id,
                             None, None, None, media_keys.get(msg.message_id),
                         )
-                    record_message(
-                        "entrada", "roteada", "grupo",
-                        "arquivo" if msg.has_media else "texto", "ok",
-                    )
+                    record_message("entrada", "roteada", "grupo", message_kind(msg), "ok")
                 return "grupo"
 
             quoted = quoted_outbound(session, tid, first.quoted_id)
@@ -186,8 +220,7 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
                 log.info("inbound.unknown_contact", tenant_id=tenant_id)
                 for msg in pending:
                     record_message(
-                        "entrada", "roteada", "contato_desconhecido",
-                        "arquivo" if msg.has_media else "texto", "falha",
+                        "entrada", "roteada", "contato_desconhecido", message_kind(msg), "falha",
                     )
                 return "contato_desconhecido"
 
@@ -199,9 +232,24 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
                 claimed_for = (conv.id, token)
             if first.remote_jid.endswith("@s.whatsapp.net"):
                 conv.wa_jid = first.remote_jid
+
+            heard = _hear_pending(tenant_id, pending)
+            transcripts = {mid: item[0] for mid, item in heard.items()}
+            text, voice = turn_text(pending, transcripts)
+            replied_unheard = False
             for msg in pending:
                 cited = quoted_outbound(session, tid, msg.quoted_id) or quoted
-                if msg.has_media:
+                invoice_id = cited.invoice_id if cited else None
+                if msg.is_audio:
+                    spoken = (transcripts.get(msg.message_id) or "").strip()
+                    caption = (msg.text or "").strip()
+                    reply = not text and not spoken and not caption and not replied_unheard
+                    _record_audio(
+                        session, tenant, conv, msg, heard.get(msg.message_id), invoice_id,
+                        reply=reply,
+                    )
+                    replied_unheard = replied_unheard or reply
+                elif msg.is_receipt:
                     process_whatsapp_receipt.delay(
                         tenant_id, msg.instance, msg.key, msg.message_id,
                         str(conv.id), str(debtor.id), None, media_keys.get(msg.message_id),
@@ -209,21 +257,32 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
                 elif msg.text:
                     log_message(
                         session, conv, MessageDirection.IN, "devedor", msg.text,
-                        invoice_id=cited.invoice_id if cited else None,
-                        wa_message_id=msg.message_id,
+                        invoice_id=invoice_id, wa_message_id=msg.message_id,
                     )
 
-            text = "\n".join(m.text for m in pending if m.text and not m.has_media).strip()
-            outcome, turn = continue_after_inbound(session, tenant, debtor, conv, text)
+            if not text:
+                failed_audio = any(
+                    msg.is_audio and not (transcripts.get(msg.message_id) or "").strip()
+                    for msg in pending
+                )
+                outcome, turn = (
+                    ("sem_transcricao", None) if failed_audio else ("sem_texto_ou_humano", None)
+                )
+            else:
+                outcome, turn = continue_after_inbound(
+                    session, tenant, debtor, conv, text, reply_voice=voice,
+                )
             context = route_context(outcome, conv.intent)
             for msg in pending:
-                if msg.has_media:
+                if msg.is_receipt:
                     record_message("entrada", "roteada", "comprovante", "arquivo", "ok")
-                elif msg.text:
-                    record_message("entrada", "roteada", context, "texto", "ok")
+                elif msg.is_audio or msg.text:
+                    record_message("entrada", "roteada", context, message_kind(msg), "ok")
 
         if turn is not None:
-            run_agent_turn.delay(tenant_id, *turn, claimed_for[1] if claimed_for else None)
+            run_agent_turn.delay(
+                tenant_id, *turn, claimed_for[1] if claimed_for else None, voice,
+            )
         return outcome
     except TurnInProgress:
         raise
@@ -233,13 +292,56 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
         raise
 
 
-def continue_after_inbound(session, tenant, debtor, conv, text: str) -> tuple[str, tuple[str, str, str] | None]:
+def _hear_pending(tenant_id: str, pending) -> dict[str, tuple[str | None, str | None, str | None]]:
+    heard: dict[str, tuple[str | None, str | None, str | None]] = {}
+    for msg in pending:
+        if msg.is_audio and msg.message_id and msg.message_id not in heard:
+            heard[msg.message_id] = hear(tenant_id, msg.instance, msg.key)
+    return heard
+
+
+def _record_audio(session, tenant, conv, msg, heard, invoice_id, *, reply: bool):
+    """Grava a transcrição. Sem ela, abre exceção e não inventa a frase."""
+    transcript, media_key, content_type = heard or (None, None, None)
+    spoken = (transcript or "").strip()
+    caption = (msg.text or "").strip()
+    body = spoken
+    if caption and caption != spoken:
+        body = f"{spoken}\n{caption}".strip() if spoken else caption
+    stored = log_message(
+        session, conv, MessageDirection.IN, "devedor", body or None,
+        invoice_id=invoice_id, media_key=media_key, wa_message_id=msg.message_id,
+    )
+    if spoken:
+        return stored
+    open_exception(
+        session, tenant.id, ExceptionType.TRANSCRICAO_INDISPONIVEL,
+        invoice_id=invoice_id, conversation_id=conv.id,
+        details={
+            "motivo": "áudio sem transcrição utilizável",
+            "message_id": msg.message_id,
+            "file_key": media_key,
+            "content_type": content_type,
+        },
+    )
+    if reply:
+        conv.state = ConversationState.HUMANO
+        send_to_debtor(session, tenant, conv, UNHEARD_REPLY)
+    return stored
+
+
+def continue_after_inbound(
+    session, tenant, debtor, conv, text: str, *, reply_voice: bool = False,
+) -> tuple[str, tuple[str, str, str] | None]:
     """Roteia uma resposta já gravada. Devolve (outcome, turno_do_agente ou None)."""
     if not text or conv.state == ConversationState.HUMANO:
         return "sem_texto_ou_humano", None
     if conv.state == ConversationState.AGUARDANDO_APROVACAO:
-        send_to_debtor(session, tenant, conv,
-                       "Seu pedido está com nossa equipe. Retornamos assim que possível.")
+        send_to_debtor(
+            session, tenant, conv,
+            "Seu pedido está com nossa equipe. Retornamos assim que possível.",
+            voice=reply_voice,
+        )
         return "aguardando_aprovacao", None
 
     today = datetime.now(ZoneInfo(tenant.timezone)).date()
@@ -257,31 +359,37 @@ def continue_after_inbound(session, tenant, debtor, conv, text: str) -> tuple[st
         intent = result.intent
         conv.intent = intent
         conv_id = str(conv.id)
-        handled = _route_deterministic(session, tenant, debtor, conv, intent, result.promised_date, today)
+        handled = _route_deterministic(
+            session, tenant, debtor, conv, intent, result.promised_date, today,
+            reply_voice=reply_voice,
+        )
         if handled:
             return handled, None
 
     return "agente", (conv_id, text, str(intent))
 
 
-def _route_deterministic(session, tenant, debtor, conv, intent, promised_date, today) -> str | None:
+def _route_deterministic(
+    session, tenant, debtor, conv, intent, promised_date, today, *, reply_voice: bool = False,
+) -> str | None:
     """Intenções que não passam pelo agente. Devolve None para seguir ao agente."""
+    def reply(text: str) -> None:
+        send_to_debtor(session, tenant, conv, text, voice=reply_voice)
+
     if intent == Intent.PARAR:
         debtor.opt_out = True
         debtor.opt_out_at = datetime.now(UTC)
         conv.state = ConversationState.ENCERRADA
         audit(session, tenant_id=tenant.id, actor="devedor", action="opt_out",
               entity="debtor", entity_id=debtor.id)
-        send_to_debtor(session, tenant, conv,
-                       "Entendido. Você não receberá mais mensagens automáticas de cobrança.")
+        reply("Entendido. Você não receberá mais mensagens automáticas de cobrança.")
         return "opt_out"
 
     if intent == Intent.HOSTIL_SENSIVEL:
         conv.state = ConversationState.HUMANO
         audit(session, tenant_id=tenant.id, actor="agente", action="escalona",
               entity="conversation", entity_id=conv.id, after={"intent": intent})
-        send_to_debtor(session, tenant, conv,
-                       "Entendo. Vou pedir para alguém da nossa equipe falar com você.")
+        reply("Entendo. Vou pedir para alguém da nossa equipe falar com você.")
         return "escalonado"
 
     if intent == Intent.CONTESTACAO:
@@ -295,27 +403,24 @@ def _route_deterministic(session, tenant, debtor, conv, intent, promised_date, t
                        invoice_id=invoices[0].id if invoices else None,
                        details={"debtor_id": str(debtor.id)})
         conv.state = ConversationState.HUMANO
-        send_to_debtor(session, tenant, conv,
-                       "Obrigado por avisar. Vamos verificar com cuidado e nossa equipe retorna em breve.")
+        reply("Obrigado por avisar. Vamos verificar com cuidado e nossa equipe retorna em breve.")
         return "contestacao"
 
     if intent == Intent.JA_PAGUEI:
         conv.state = ConversationState.AGUARDANDO_COMPROVANTE
-        send_to_debtor(session, tenant, conv,
-                       "Obrigado! Pode enviar o comprovante por aqui, em foto ou PDF?")
+        reply("Obrigado! Pode enviar o comprovante por aqui, em foto ou PDF?")
         return "pede_comprovante"
 
     if intent == Intent.VOU_PAGAR:
         if promised_date is None:
-            send_to_debtor(session, tenant, conv, "Combinado! Em qual data você consegue pagar?")
+            reply("Combinado! Em qual data você consegue pagar?")
             return "pede_data"
         try:
             register_promise(session, tenant, debtor.id, promised_date, today, "agente")
         except PromiseRejected as exc:
-            send_to_debtor(session, tenant, conv, f"Não consigo registrar essa data: {exc}. Qual outra data?")
+            reply(f"Não consigo registrar essa data: {exc}. Qual outra data?")
             return "promessa_recusada"
-        send_to_debtor(session, tenant, conv,
-                       f"Anotado! Fica combinado para {promised_date:%d/%m}. Se precisar de algo, é só chamar.")
+        reply(f"Anotado! Fica combinado para {promised_date:%d/%m}. Se precisar de algo, é só chamar.")
         return "promessa"
 
     return None

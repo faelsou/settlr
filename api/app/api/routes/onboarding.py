@@ -15,6 +15,7 @@ from app.core.senders import fold_primary
 from app.dunning.rules import DEFAULT_ALLOWED_HOURS, DEFAULT_DUNNING_RULES
 from app.models import Tenant
 from app.onboarding.members import ensure_active_member, normalize_email
+from app.onboarding.welcome import deliver_welcome
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
@@ -128,8 +129,12 @@ def create_company(body: OnboardingIn) -> OnboardingOut:
             },
         )
         token = issue_access_token(email=body.owner_email, tenant=tenant, role="dono")
-        return OnboardingOut(
+        created = OnboardingOut(
             **token.model_dump(),
             active=tenant.active,
             missing=missing_requirements(tenant),
         )
+        company = tenant.name
+        owner = tenant.owner_email or ""
+    deliver_welcome(company, owner)
+    return created

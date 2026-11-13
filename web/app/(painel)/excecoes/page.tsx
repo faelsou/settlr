@@ -240,6 +240,12 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
         </div>
       ) : null}
 
+      {item.type === "transcricao_indisponivel" && item.details.file_key ? (
+        <div className="mt-5">
+          <ReceiptPreview exceptionId={item.id} contentType={item.details.content_type} />
+        </div>
+      ) : null}
+
       {item.type === "leitura_baixa_confianca" ? (
         <div className="mt-5 grid gap-3">
           {item.details.file_key ? <ReceiptPreview exceptionId={item.id} contentType={item.details.content_type} /> : null}
@@ -314,9 +320,11 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
         open={ask != null}
         title={ask === "reject" ? "Rejeitar esta exceção?" : "Confirmar esta exceção?"}
         body={
-          ask === "reject"
-            ? "Ela sai da fila sem baixar o pagamento. A nota entra no audit_log."
-            : "A baixa segue pela API e fica no audit_log. Confira valor e títulos antes de seguir."
+          item.type === "transcricao_indisponivel"
+            ? "O áudio sai da fila e a nota fica no audit_log. A conversa segue com a equipe."
+            : ask === "reject"
+              ? "Ela sai da fila sem baixar o pagamento. A nota entra no audit_log."
+              : "A baixa segue pela API e fica no audit_log. Confira valor e títulos antes de seguir."
         }
         confirmLabel={ask === "reject" ? "Rejeitar" : "Confirmar"}
         danger={ask === "reject"}
@@ -398,6 +406,9 @@ function ReceiptPreview({ exceptionId, contentType }: { exceptionId: string; con
   }, [exceptionId, contentType]);
 
   if (!url) return null;
+  if (kind.startsWith("audio/")) {
+    return <audio controls src={url} className="w-full" />;
+  }
   if (kind.startsWith("image/")) {
     return <img src={url} alt="Comprovante enviado" className="max-h-72 w-full rounded-xl object-contain bg-paper-50" />;
   }

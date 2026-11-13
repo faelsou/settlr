@@ -130,7 +130,15 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
         sent["subject"] = subject
         sent["body"] = body
 
+    welcomed: list[str] = []
+
+    def _welcome(company: str, to: str) -> bool:
+        welcomed.append(f"{company}|{to}")
+        return True
+
     monkeypatch.setattr("app.onboarding.members.send_email", _grava_email)
+    monkeypatch.setattr("app.api.routes.onboarding.deliver_welcome", _welcome)
+    monkeypatch.setattr("app.api.routes.settings.deliver_welcome", _welcome)
 
     def _db():
         yield memoria
@@ -139,6 +147,7 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
     client = TestClient(cadastro_app)
     try:
         conta = _empresa(client)
+        assert welcomed == ["Clínica Norte|dona@clinica.test"]
         assert conta["role"] == "dono"
         assert conta["email"] == "dona@clinica.test"
         assert "base legal (LGPD)" in conta["missing"]
@@ -159,6 +168,14 @@ def test_empresa_cria_pela_tela_e_ativacao_recusa_sem_base_legal(monkeypatch):
         corpo["negotiation_policy"]["max_installments"] = 4
         gravada = client.put("/settings", headers=headers, json=corpo)
         assert gravada.status_code == 200, gravada.text
+        assert welcomed == ["Clínica Norte|dona@clinica.test"]
+        corpo["owner_email"] = "nova-dona@clinica.test"
+        trocada = client.put("/settings", headers=headers, json=corpo)
+        assert trocada.status_code == 200, trocada.text
+        assert welcomed == [
+            "Clínica Norte|dona@clinica.test",
+            "Clínica Norte|nova-dona@clinica.test",
+        ]
         assert gravada.json()["negotiation_policy"]["max_installments"] == 4
         assert "base legal (LGPD)" not in gravada.json()["missing"]
 

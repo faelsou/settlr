@@ -19,7 +19,9 @@ OUTCOME_STATE = {
 }
 
 
-def _deliver(tenant_id: UUID, conversation_id: UUID, result: dict) -> None:
+def _deliver(
+    tenant_id: UUID, conversation_id: UUID, result: dict, *, reply_voice: bool = False,
+) -> None:
     with tenant_session(tenant_id) as session:
         tenant = session.get(Tenant, tenant_id)
         conv = session.get(Conversation, conversation_id)
@@ -29,7 +31,7 @@ def _deliver(tenant_id: UUID, conversation_id: UUID, result: dict) -> None:
         conv.identity_verified = bool(result.get("identity_verified"))
         conv.identity_attempts = result.get("identity_attempts", 0)
         for text in result.get("replies", []):
-            send_to_debtor(session, tenant, conv, text, author="agente")
+            send_to_debtor(session, tenant, conv, text, author="agente", voice=reply_voice)
 
 
 @celery_app.task(name="app.agent.tasks.run_agent_turn")
@@ -39,6 +41,7 @@ def run_agent_turn(
     text: str,
     intent: str,
     turn_token: str | None = None,
+    reply_voice: bool = False,
 ) -> str:
     tid, cid = UUID(tenant_id), UUID(conversation_id)
     try:
@@ -59,7 +62,7 @@ def run_agent_turn(
             }
 
         result = runner.run_turn(state)
-        _deliver(tid, cid, result)
+        _deliver(tid, cid, result, reply_voice=bool(reply_voice))
     except Exception:
         if turn_token:
             from app.channels.turn import release_turn

@@ -15,6 +15,7 @@ from app.dunning.official import parse_connection_state, parse_template_catalog
 
 GROUP_SUFFIX = "@g.us"
 MEDIA_TYPES = {"imageMessage", "documentMessage", "documentWithCaptionMessage"}
+AUDIO_TYPES = {"audioMessage", "pttMessage"}
 
 
 class EvolutionWebhook(BaseModel):
@@ -36,6 +37,7 @@ class InboundMessage:
     key: dict[str, Any]
     timestamp: int
     quoted_id: str | None = None
+    audio: bool = False
 
     @property
     def is_group(self) -> bool:
@@ -46,8 +48,17 @@ class InboundMessage:
         return self.remote_jid.split("@", 1)[0]
 
     @property
+    def is_audio(self) -> bool:
+        return self.audio
+
+    @property
     def has_media(self) -> bool:
         return self.media_type is not None
+
+    @property
+    def is_receipt(self) -> bool:
+        """Imagem e documento seguem para o OCR. Áudio nunca é comprovante."""
+        return self.has_media and not self.audio
 
     def to_json(self) -> str:
         return json.dumps(self.__dict__)
@@ -56,6 +67,7 @@ class InboundMessage:
     def from_json(cls, raw: str) -> "InboundMessage":
         data = json.loads(raw)
         data.setdefault("quoted_id", None)
+        data.setdefault("audio", False)
         return cls(**data)
 
 
@@ -76,6 +88,8 @@ def quoted_stanza_id(data: dict[str, Any]) -> str | None:
         data.get("contextInfo"),
         message.get("contextInfo"),
         (message.get("extendedTextMessage") or {}).get("contextInfo"),
+        (message.get("audioMessage") or {}).get("contextInfo"),
+        (message.get("pttMessage") or {}).get("contextInfo"),
     )
     for ctx in contexts:
         stanza = ctx.get("stanzaId") if isinstance(ctx, dict) else None
@@ -106,11 +120,16 @@ def parse_inbound(payload: EvolutionWebhook) -> InboundMessage | None:
         or (message.get("extendedTextMessage") or {}).get("text")
     )
     media_type = next((t for t in MEDIA_TYPES if t in message), None)
+    audio_type = next((t for t in AUDIO_TYPES if t in message), None)
     mimetype = None
     if media_type:
         media = message[media_type]
         if media_type == "documentWithCaptionMessage":
             media = media.get("message", {}).get("documentMessage", {})
+        mimetype = media.get("mimetype")
+        text = text or media.get("caption")
+    elif audio_type:
+        media = message[audio_type] or {}
         mimetype = media.get("mimetype")
         text = text or media.get("caption")
 
@@ -126,6 +145,7 @@ def parse_inbound(payload: EvolutionWebhook) -> InboundMessage | None:
         key=key,
         timestamp=int(data.get("messageTimestamp") or time.time()),
         quoted_id=quoted_stanza_id(data),
+        audio=audio_type is not None,
     )
 
 
@@ -168,6 +188,19 @@ class EvolutionClient:
     def send_text(self, instance: str, number: str, text: str) -> str | None:
         response = self._client.post(
             f"/message/sendText/{instance}", json={"number": number, "text": text}
+        )
+        response.raise_for_status()
+        return (response.json().get("key") or {}).get("id")
+
+    def send_audio(self, instance: str, number: str, audio: bytes) -> str | None:
+        """Nota de voz. `encoding` pede à Evolution o formato que o WhatsApp aceita como PTT."""
+        response = self._client.post(
+            f"/message/sendWhatsAppAudio/{instance}",
+            json={
+                "number": number,
+                "audio": base64.b64encode(audio).decode(),
+                "encoding": True,
+            },
         )
         response.raise_for_status()
         return (response.json().get("key") or {}).get("id")

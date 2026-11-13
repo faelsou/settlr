@@ -53,13 +53,14 @@ _ROUTE = {
     "regua": "regua",
     "operador": "operador",
     "comprovante": "comprovante",
+    "sem_transcricao": "transcricao",
     "aprovacao": "aprovacao",
     "humano": "humano",
     "roteamento": "roteamento",
 }
 _STAGES = {"aceita", "roteada", "enviada", "recibo"}
 _RECEIPT = {"entregue", "lido", "falhou", "sem_recibo"}
-_KINDS = {"texto", "arquivo"}
+_KINDS = {"texto", "arquivo", "audio"}
 _FILE_OK = {"duplicado", "ja_recebido", "aguardando_banco", "armazenado"}
 _FILE_FAIL = {"baixa_confianca", "download", "processamento", "envio"}
 
