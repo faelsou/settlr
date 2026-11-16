@@ -59,7 +59,7 @@ Antes do acesso. A venda começa pela carteira, não pelo agente. No piloto, o c
 | Comercial | Confirma volume, canal (PIX, boleto) e se a cobrança é recorrente ou parcelada. | Conversa |
 | Comercial | Separa os dois clientes: a empresa que contrata (a conta) e quem ela cobra (o devedor). | Conversa |
 | Comercial | Classifica o pagador (pessoa física ou jurídica) e a idade do CNPJ de quem recebe. | Conversa |
-| Comercial | Pergunta o emissor. Asaas entra sozinho. Inter, Efí, iugu e Sicoob ficam no roadmap e, até lá, entram por planilha. | Conversa |
+| Comercial | Pergunta o emissor. Asaas e Inter entram sozinhos. Efí, iugu e Sicoob ficam no roadmap e, até lá, entram por planilha. | Conversa |
 | Comercial | Mapeia quem opera: dono configura, financeiro baixa, atendente olha a fila e não baixa. | Conversa |
 
 ### 2. Propor

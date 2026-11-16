@@ -14,7 +14,7 @@ Um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que c
 - Volume de 100 a 5.000 cobranças por mês, recebendo majoritariamente por PIX e boleto.
 - Já usam WhatsApp com o cliente e têm alguém (geralmente o dono) fazendo a cobrança na mão.
 
-**Mercado.** Além da PME do piloto, o produto atende BPO e banco. O BPO opera várias contas, uma por empresa, sem cruzar dado entre elas. O banco entra como conta da própria carteira, com a mesma régua e a mesma baixa. Isso abrange o mercado de cobrança e conciliação. O banco comprador não é um emissor novo: em `main` o adaptador de emissor continua o Asaas.
+**Mercado.** Além da PME do piloto, o produto atende BPO e banco. O BPO opera várias contas, uma por empresa, sem cruzar dado entre elas. O banco entra como conta da própria carteira, com a mesma régua e a mesma baixa. Isso abrange o mercado de cobrança e conciliação. O banco comprador não é um emissor novo: em `main` os adaptadores de emissor são Asaas e Inter.
 
 **Oferta**
 
@@ -52,7 +52,7 @@ Todo dinheiro que entra vira um registro de pagamento, e cada pagamento tenta ca
 
 - Comprovante (imagem ou PDF) enviado no WhatsApp pelo devedor ou num grupo do cliente → OCR + extração estruturada por LLM (valor, data/hora, pagador, CPF/CNPJ parcial, ID E2E do PIX, banco).
 - Extrato bancário: Open Finance ou extrato do emissor, sem arquivo. O Open Finance é cliente genérico da API de contas (`base_url`, `token`, `account_id`), sem banco nomeado no código. OFX/CSV fica só como exceção. Webhook do banco quando o PIX é empurrado.
-- Webhook do emissor de cobrança (Asaas) quando o título nasce com PIX ou boleto registrado. Inter, Efí, iugu e Sicoob ficam no roadmap.
+- Webhook do emissor de cobrança (Asaas ou Inter) quando o título nasce com PIX ou boleto registrado. Efí, iugu e Sicoob ficam no roadmap.
 
 **Matching em camadas (para no primeiro que casa)**
 
