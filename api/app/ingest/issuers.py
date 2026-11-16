@@ -33,6 +33,28 @@ _PAGE = 100
 _MAX_ROWS = 2000
 
 
+ORPHAN_ATTR = "orphan_charges"
+
+
+def try_cancel(adapter, external_id: str) -> bool:
+    """Cancela no emissor. False quando o emissor não respondeu: a cobrança segue aberta lá."""
+    try:
+        adapter.cancel(external_id)
+    except httpx.HTTPError:
+        log.warning("issuer.cancel_failed", payment_id=external_id)
+        return False
+    return True
+
+
+def flag_orphan(error: BaseException, external_id: str) -> None:
+    """Anexa ao erro o id da cobrança que ficou aberta, sem trocar o erro original."""
+    setattr(error, ORPHAN_ATTR, [*orphans_of(error), external_id])
+
+
+def orphans_of(error: BaseException) -> list[str]:
+    return list(getattr(error, ORPHAN_ATTR, []))
+
+
 @dataclass(frozen=True)
 class IssuedCharge:
     """Cobrança criada no emissor, já com o código que o devedor usa para pagar."""
@@ -152,12 +174,15 @@ class AsaasAdapter:
         payment_id = payment["id"]
         try:
             pix, line = self._instrument(payment_id)
-        except httpx.HTTPError:
-            self.cancel(payment_id)
+        except httpx.HTTPError as err:
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
             raise
         if not pix and not line:
-            self.cancel(payment_id)
-            raise ValueError("emissor não devolveu PIX nem boleto")
+            err = ValueError("emissor não devolveu PIX nem boleto")
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
+            raise err
         return IssuedCharge(
             external_id=payment_id,
             txid=payment_id,
@@ -167,10 +192,8 @@ class AsaasAdapter:
         )
 
     def cancel(self, payment_id: str) -> None:
-        try:
-            self._request("DELETE", f"/payments/{payment_id}")
-        except httpx.HTTPError:
-            log.warning("issuer.cancel_failed", payment_id=payment_id)
+        """Levanta httpx.HTTPError se o Asaas não cancelar: quem chama decide o que fazer."""
+        self._request("DELETE", f"/payments/{payment_id}")
 
     def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
         """Marca a cobrança como recebida. Cobrança que o Asaas já quitou conta como feita."""
@@ -340,13 +363,16 @@ class InterAdapter:
         payment_id = str(created["codigoSolicitacao"])
         try:
             detail = self._request("GET", f"/cobranca/v3/cobrancas/{payment_id}")
-        except httpx.HTTPError:
-            self.cancel(payment_id)
+        except httpx.HTTPError as err:
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
             raise
         pix, line, txid = _inter_instruments(detail)
         if not pix and not line:
-            self.cancel(payment_id)
-            raise ValueError("emissor não devolveu PIX nem boleto")
+            err = ValueError("emissor não devolveu PIX nem boleto")
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
+            raise err
         return IssuedCharge(
             external_id=payment_id,
             txid=txid or payment_id,
@@ -356,14 +382,12 @@ class InterAdapter:
         )
 
     def cancel(self, payment_id: str) -> None:
-        try:
-            self._request(
-                "POST",
-                f"/cobranca/v3/cobrancas/{payment_id}/cancelar",
-                json={"motivoCancelamento": "Cancelado pelo Settlr"},
-            )
-        except httpx.HTTPError:
-            log.warning("issuer.cancel_failed", payment_id=payment_id)
+        """Levanta httpx.HTTPError se o Inter não cancelar: quem chama decide o que fazer."""
+        self._request(
+            "POST",
+            f"/cobranca/v3/cobrancas/{payment_id}/cancelar",
+            json={"motivoCancelamento": "Cancelado pelo Settlr"},
+        )
 
     def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
         """Baixa de prova. No Inter, `POST /pagar` existe no sandbox e dispara o callback."""

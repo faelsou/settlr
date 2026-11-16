@@ -1469,3 +1469,54 @@ def test_webhook_do_banco_assinado_para_uma_empresa_nao_vale_para_outra(
     with banco.admin() as session:
         donos = session.scalars(select(Payment.tenant_id)).all()
     assert donos == [tenant_a]
+
+
+def test_cobranca_orfa_abre_excecao_e_o_reenvio_fecha(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-46: exceção com o external_id, cancelamento agendado e fechado no retry."""
+    from app.ingest import tasks as ingest_tasks
+    from app.ingest.orphans import report_orphan_charges
+
+    agendados: list[tuple] = []
+    monkeypatch.setattr(ingest_tasks.cancel_issuer_charge, "delay", lambda *a: agendados.append(a))
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Clínica", slug="clinica", active=True, timezone="America/Sao_Paulo",
+                        issuer_provider="asaas", issuer_config={"api_key": "k"})
+        session.add(tenant)
+        session.flush()
+        tenant_id = tenant.id
+
+    (exception_id,) = report_orphan_charges(
+        tenant_id, "asaas", ["pay_1"], reason="acordo não concluído",
+    )
+    with banco.admin() as session:
+        exc = session.get(ReviewException, exception_id)
+        assert exc.type == ExceptionType.COBRANCA_EMISSOR
+        assert exc.status == "aberta"
+        assert exc.details["external_id"] == "pay_1"
+    assert agendados == [(str(tenant_id), "pay_1", str(exception_id))]
+
+    class _Fora:
+        def cancel(self, _id: str) -> None:
+            raise httpx.ConnectTimeout("asaas fora")
+
+    cancelados: list[str] = []
+
+    class _Volta:
+        def cancel(self, external_id: str) -> None:
+            cancelados.append(external_id)
+
+    monkeypatch.setattr(ingest_tasks, "get_adapter", lambda *_a, **_k: _Fora())
+    with pytest.raises(httpx.HTTPError):
+        ingest_tasks.cancel_issuer_charge.run(str(tenant_id), "pay_1", str(exception_id))
+    with banco.admin() as session:
+        assert session.get(ReviewException, exception_id).status == "aberta"
+
+    monkeypatch.setattr(ingest_tasks, "get_adapter", lambda *_a, **_k: _Volta())
+    assert ingest_tasks.cancel_issuer_charge.run(
+        str(tenant_id), "pay_1", str(exception_id),
+    ) == "cancelada"
+    assert cancelados == ["pay_1"]
+    with banco.admin() as session:
+        assert session.get(ReviewException, exception_id).status == "resolvida"

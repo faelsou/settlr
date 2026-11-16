@@ -44,6 +44,7 @@ const LABELS: Record<string, string> = {
   leitura_baixa_confianca: "Leitura fraca",
   transcricao_indisponivel: "Áudio sem transcrição",
   diferenca_valor: "Diferença de valor",
+  cobranca_emissor: "Cobrança no emissor",
   comprovante: "Comprovante",
   extrato: "Extrato",
   webhook: "Webhook",

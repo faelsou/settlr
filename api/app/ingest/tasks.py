@@ -100,3 +100,33 @@ def settle_issuer_charges(tenant_id: str, invoice_ids: list[str]) -> str:
     outcomes.extend(status for _, status in done)
     log.info("issuer.settled", tenant_id=tenant_id, results=outcomes)
     return ",".join(outcomes)
+
+
+@celery_app.task(
+    name="app.ingest.tasks.cancel_issuer_charge",
+    autoretry_for=(httpx.HTTPError,), retry_backoff=True, retry_backoff_max=600, max_retries=8,
+)
+def cancel_issuer_charge(tenant_id: str, external_id: str, exception_id: str) -> str:
+    """Tenta de novo cancelar a cobrança órfã. Conseguiu: fecha a exceção da fila."""
+    from datetime import UTC, datetime
+
+    from app.core.audit import audit
+    from app.models import ReviewException
+    from app.models.enums import ExceptionStatus
+
+    tid = UUID(tenant_id)
+    with tenant_session(tid) as session:
+        exc = session.get(ReviewException, UUID(exception_id))
+        if exc is None or exc.status != ExceptionStatus.ABERTA:
+            return "ja_tratada"
+        tenant = session.get(Tenant, tid)
+        adapter = get_adapter(tenant.issuer_provider, tenant.issuer_config or {})
+        adapter.cancel(external_id)
+        exc.status = ExceptionStatus.RESOLVIDA
+        exc.assignee = "sistema"
+        exc.resolution = "cobrança cancelada no emissor"
+        exc.resolved_at = datetime.now(UTC)
+        audit(session, tenant_id=tid, actor="sistema", action="cancela_cobranca_orfa",
+              entity="exception", entity_id=exc.id, after={"external_id": external_id})
+    log.info("issuer.orphan_cancelled", tenant_id=tenant_id, external_id=external_id)
+    return "cancelada"

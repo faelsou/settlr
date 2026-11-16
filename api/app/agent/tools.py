@@ -17,7 +17,8 @@ from app.channels.queue_notice import notify_human_queue
 from app.core.audit import audit
 from app.core.db import tenant_session
 from app.dunning.promises import register_promise as _register_promise
-from app.ingest.issuers import IssuedCharge, get_adapter
+from app.ingest.issuers import IssuedCharge, get_adapter, orphans_of, try_cancel
+from app.ingest.orphans import report_orphan_charges
 from app.models import Agreement, Approval, Conversation, Debtor, Invoice, Tenant
 from app.models.enums import (
     OPEN_INVOICE_STATUSES,
@@ -238,9 +239,17 @@ def create_agreement(
             audit(session, tenant_id=tenant_id, actor="agente", action="cria_acordo",
                   entity="agreement", entity_id=agreement.id,
                   after={"option": option.to_dict(), "source": [str(i.id) for i in invoices]})
-        except Exception:
+        except Exception as error:
+            orphans = orphans_of(error)
             for charge in issued:
-                adapter.cancel(charge.external_id)
+                if not try_cancel(adapter, charge.external_id):
+                    orphans.append(charge.external_id)
+            if orphans:
+                report_orphan_charges(
+                    tenant_id, tenant.issuer_provider, orphans,
+                    reason="acordo não concluído", debtor_id=debtor_id,
+                    source_invoice_ids=[i.id for i in invoices],
+                )
             raise
 
         return {
