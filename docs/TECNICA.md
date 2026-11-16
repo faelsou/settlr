@@ -24,7 +24,7 @@ api/          FastAPI + Celery + LangGraph + SQLAlchemy 2 + Alembic
   tests/      matching, régua, política, comprovante, fronteira dos serviços
 web/          Next.js App Router — painel das 4 fases
 docker/       compose.dev.yml (local) e stack.yml (Swarm)
-k8s/          minikube.yaml e k8s/observability (kustomize)
+k8s/          minikube e observability (kustomize)
 observability/ coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana
 ```
 
@@ -264,7 +264,7 @@ Cobertura atual (determinística):
 
 Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres `:55432` e Redis `:56379`. No host, o gateway escuta `:8000` e os serviços `:8001` (cobrança), `:8002` (conciliação) e `:8003` (cadastro). O profile `app` sobe os quatro processos no Docker. Login local: `operador@demo.local` / tenant `demo`.
 
-`observability/compose.yml` sobe o coletor e o Grafana em `:3001`. O Minikube usa `k8s/minikube.yaml` para a aplicação e `kubectl apply -k k8s/observability` para a telemetria. O passo a passo de cluster, build, bootstrap e port-forward está em [`MINIKUBE.md`](./MINIKUBE.md).
+`observability/compose.yml` sobe o coletor e o Grafana em `:3001`. O Minikube usa `kubectl apply -k k8s/minikube` para a aplicação e `kubectl apply -k k8s/observability` para a telemetria. O passo a passo de cluster, build, bootstrap e port-forward está em [`MINIKUBE.md`](./MINIKUBE.md).
 
 ## 13. O que ainda não é o piloto completo
 

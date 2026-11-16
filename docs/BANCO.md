@@ -214,10 +214,10 @@ Restore com `pg_restore` num volume novo, depois confira `alembic_version` antes
 
 ## 8. Minikube
 
-`k8s/minikube.yaml` sobe o mesmo desenho no namespace `cobranca`: Secret `postgres-secrets`, ConfigMap `postgres-init`, PVC `postgres-data`, Service `postgres` e o Job `bootstrap`.
+`k8s/minikube` sobe o mesmo desenho no namespace `cobranca`: Secret `postgres-secrets`, ConfigMap `postgres-init`, PVC `postgres-data`, Service `postgres` e o Job `bootstrap`.
 
 ```bash
-kubectl apply -f k8s/minikube.yaml
+kubectl apply -k k8s/minikube
 kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 ```
 

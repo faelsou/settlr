@@ -683,7 +683,7 @@ nomes (`postgres_password_hml`, etc.).
 | Provedor de LLM | API externa | chamada só nos três pontos de IA |
 | Sentry | SaaS, opcional | erros, só com `SENTRY_DSN` |
 | Langfuse | endpoint externo, opcional | traces de LLM, só com as duas chaves |
-| Minikube | `k8s/minikube.yaml` e `k8s/observability` | cluster local; não substitui o Swarm de produção |
+| Minikube | `k8s/minikube` e `k8s/observability` (kustomize) | cluster local; não substitui o Swarm de produção |
 | Registry das imagens | GHCR ou registry privado | o Swarm puxa por tag, não faz build no nó |
 | Backup externo | storage fora do nó `data` | o volume local não sobrevive à perda do disco |
 

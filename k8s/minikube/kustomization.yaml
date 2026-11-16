@@ -1,0 +1,71 @@
+# Minikube local. Passo a passo: docs/MINIKUBE.md
+# Não use docker/stack.yml aqui: aquele arquivo é do Swarm.
+#
+# Um arquivo por recurso, uma pasta por componente. Este arquivo junta tudo:
+#   kubectl apply -k k8s/minikube
+#   kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
+#   kubectl -n cobranca port-forward svc/frontend-web 3000:3000
+#
+# As imagens vêm do Docker Hub (faelsouz/cobranca-api e faelsouz/cobranca-web),
+# publicadas pelo .github/workflows/ci.yml. A tag fica só no bloco images abaixo.
+# Tag nova: troque newTag e aplique, ou use scripts/deploy-minikube.sh <tag>.
+# A imagem web é construída com API_UPSTREAM=http://webhook-api:8000; não serve
+# fora deste cluster.
+#
+# O PVC usa a StorageClass standard do Minikube. Se o perfil não tiver:
+#   minikube addons enable storage-provisioner default-storageclass -p <perfil>
+#
+# Observabilidade fica de fora. Namespace próprio:
+#   kubectl apply -k k8s/observability
+#   kubectl -n observability port-forward svc/grafana 3001:3000
+# O painel encaminha /auth, /invoices e os demais prefixos da API para o
+# gateway dentro do cluster. Não é preciso publicar a API no host.
+#
+# Painel: http://127.0.0.1:3000  login operador@demo.local  tenant demo
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cobranca
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: settlr
+    includeSelectors: false
+
+resources:
+  - namespace.yaml
+  # Configuração lida por todos os processos
+  - cobranca-env/configmap.yaml
+  # Dados
+  - postgres/secret.yaml
+  - postgres/init-configmap.yaml
+  - postgres/pvc.yaml
+  - postgres/deployment.yaml
+  - postgres/service.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  # Migração e seed
+  - bootstrap/job.yaml
+  # APIs
+  - webhook-api/deployment.yaml
+  - webhook-api/service.yaml
+  - cobranca/deployment.yaml
+  - cobranca/service.yaml
+  - conci-pgto/deployment.yaml
+  - conci-pgto/service.yaml
+  - cadastro/deployment.yaml
+  - cadastro/service.yaml
+  # Workers Celery e Beat
+  - worker-cobranca/deployment.yaml
+  - worker-conciliacao/deployment.yaml
+  - worker-cadastro/deployment.yaml
+  - relo-disp/deployment.yaml
+  # Painel
+  - frontend-web/deployment.yaml
+  - frontend-web/service.yaml
+
+images:
+  - name: faelsouz/cobranca-api
+    newTag: sha-96c7dad
+  - name: faelsouz/cobranca-web
+    newTag: sha-96c7dad

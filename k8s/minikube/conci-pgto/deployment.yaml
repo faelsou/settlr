@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conci-pgto
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: conci-pgto }
+  template:
+    metadata:
+      labels: { app: conci-pgto }
+    spec:
+      containers:
+        - name: conci-pgto
+          image: faelsouz/cobranca-api
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_NAME, value: conci-pgto }
+          envFrom:
+            - configMapRef:
+                name: cobranca-env
+          command: ["uvicorn", "app.services.conciliacao:app", "--host", "0.0.0.0", "--port", "8000"]
+          resources:
+            requests: { cpu: 25m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10

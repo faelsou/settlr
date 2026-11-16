@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy do k8s/minikube.yaml com uma tag do Docker Hub, smoke test e rollback.
+# Deploy do k8s/minikube (kustomize) com uma tag do Docker Hub, smoke test e rollback.
 #
 #   scripts/deploy-minikube.sh <tag> [namespace-docker-hub]
 #
@@ -12,7 +12,7 @@ tag="${1:?informe a tag da imagem (ex.: sha-1a2b3c4)}"
 registry="${2:-faelsouz}"
 context="${KUBE_CONTEXT:-devops-dev}"
 ns=cobranca
-manifest="$(dirname "$0")/../k8s/minikube.yaml"
+manifest="$(dirname "$0")/../k8s/minikube"
 
 kc() { kubectl --context "$context" "$@"; }
 
@@ -69,7 +69,8 @@ echo "Cluster: $context | anterior: ${previous:-nenhuma} | nova: $tag"
 
 rendered="$(mktemp)"
 trap 'rm -f "$rendered"' EXIT
-sed -E "s#image: [^ ]*cobranca-(api|web):[^ ]+#image: ${registry}/cobranca-\1:${tag}#" "$manifest" > "$rendered"
+kc kustomize "$manifest" \
+  | sed -E "s#image: [^ ]*cobranca-(api|web):[^ ]+#image: ${registry}/cobranca-\1:${tag}#" > "$rendered"
 
 # Template de Job é imutável: o bootstrap precisa ser recriado a cada tag.
 kc -n "$ns" delete job bootstrap --ignore-not-found --wait=true

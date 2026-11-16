@@ -117,7 +117,7 @@ docker build -f docker/web.Dockerfile \
   --build-arg NEXT_PUBLIC_API_BASE_URL= \
   --build-arg API_UPSTREAM=http://webhook-api:8000 \
   -t cobranca-web:dev .
-kubectl apply -f k8s/minikube.yaml
+kubectl apply -k k8s/minikube
 kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 kubectl -n cobranca port-forward svc/frontend-web 3000:3000
 ```

@@ -1,6 +1,6 @@
 # Subir a aplicação no Minikube
 
-O manifesto da aplicação é [`k8s/minikube.yaml`](../k8s/minikube.yaml). Ele sobe o namespace `cobranca`: Postgres, Redis, o job `bootstrap` (migração e seed), o gateway, os três serviços, os workers, o Beat e o painel.
+Os manifestos da aplicação ficam em [`k8s/minikube/`](../k8s/minikube/), um arquivo por recurso e uma pasta por componente (`postgres/`, `webhook-api/`, `worker-cobranca/`…). O [`kustomization.yaml`](../k8s/minikube/kustomization.yaml) junta tudo, aplica o namespace e guarda a tag das imagens no bloco `images`. Eles sobem o namespace `cobranca`: Postgres, Redis, o job `bootstrap` (migração e seed), o gateway, os três serviços, os workers, o Beat e o painel.
 
 Não use [`docker/stack.yml`](../docker/stack.yml) aqui. Aquele arquivo é do Swarm.
 
@@ -61,7 +61,7 @@ A imagem da API é única. Gateway, cobrança, conciliação, cadastro, workers,
 ## 4. Aplicar o manifesto
 
 ```bash
-kubectl apply -f k8s/minikube.yaml
+kubectl apply -k k8s/minikube
 kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 ```
 
@@ -171,14 +171,14 @@ Mudança de schema: apague o Job (Jobs concluídos não rodam de novo) e aplique
 
 ```bash
 kubectl -n cobranca delete job bootstrap
-kubectl apply -f k8s/minikube.yaml
+kubectl apply -k k8s/minikube
 kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 ```
 
 O `seed-demo` de novo no mesmo banco é idempotente para o tenant `demo`. O volume do Postgres permanece. Para zerar os dados, apague o PVC depois dos pods que o usam:
 
 ```bash
-kubectl delete -f k8s/minikube.yaml
+kubectl delete -k k8s/minikube
 kubectl -n cobranca delete pvc postgres-data
 ```
 
@@ -195,7 +195,7 @@ kubectl -n cobranca rollout restart deployment frontend-web
 
 ## HPA
 
-[`k8s/hpa.yaml`](../k8s/hpa.yaml) escala só o `webhook-api` (1 a 4 réplicas, CPU 70%). Ele não entra no `kubectl apply -f k8s/minikube.yaml`. O Minikube precisa do metrics-server antes:
+[`k8s/hpa.yaml`](../k8s/hpa.yaml) escala só o `webhook-api` (1 a 4 réplicas, CPU 70%). Ele não entra no `kubectl apply -k k8s/minikube`. O Minikube precisa do metrics-server antes:
 
 ```bash
 minikube addons enable metrics-server
@@ -227,7 +227,7 @@ kubectl -n cobranca logs deploy/frontend-web
 O port-forward sai com Ctrl+C. O cluster:
 
 ```bash
-kubectl delete -f k8s/minikube.yaml
+kubectl delete -k k8s/minikube
 kubectl delete -k k8s/observability
 ```
 

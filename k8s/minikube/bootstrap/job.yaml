@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bootstrap
+spec:
+  backoffLimit: 8
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: faelsouz/cobranca-api
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: cobranca-env
+          command: ["python", "-c"]
+          args:
+            - |
+              import socket, subprocess, sys, time
+              for _ in range(60):
+                  try:
+                      socket.create_connection(("postgres", 5432), 2).close()
+                      break
+                  except OSError:
+                      time.sleep(2)
+              else:
+                  sys.exit("postgres nao subiu")
+              subprocess.check_call([sys.executable, "-m", "app.cli", "migrate"])
+              subprocess.check_call([sys.executable, "-m", "app.cli", "seed-demo"])

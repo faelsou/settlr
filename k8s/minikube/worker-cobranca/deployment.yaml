@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-cobranca
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: worker-cobranca }
+  template:
+    metadata:
+      labels: { app: worker-cobranca }
+    spec:
+      containers:
+        - name: worker
+          image: faelsouz/cobranca-api
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_NAME, value: worker-cobranca }
+            - name: EVOLUTION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-api
+                  key: EVOLUTION_API_KEY
+                  optional: true
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api
+                  key: LLM_API_KEY
+                  optional: true
+            - name: SPEECH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: speech-api
+                  key: SPEECH_API_KEY
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: cobranca-env
+          command:
+            - celery
+            - -A
+            - app.workers.celery_app
+            - worker
+            - -Q
+            - cobranca,cobranca-llm
+            - -n
+            - cobranca@%h
+            - --loglevel=info
+            - --concurrency=2
+          resources:
+            requests: { cpu: 50m, memory: 256Mi }
+            limits: { memory: 512Mi }

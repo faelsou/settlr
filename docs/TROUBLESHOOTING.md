@@ -124,7 +124,7 @@ No dev, o turno disparado pelo polling roda dentro do processo `cobranca`, sem p
 
 ## 5. Dados e configuração
 
-Tudo que os pods leem no Minikube está no ConfigMap `cobranca-env` (`k8s/minikube.yaml`). Mudança de variável só vale depois de `kubectl -n cobranca rollout restart` do deploy que a usa. O processo guarda a configuração em memória.
+Tudo que os pods leem no Minikube está no ConfigMap `cobranca-env` (`k8s/minikube/cobranca-env/configmap.yaml`). Mudança de variável só vale depois de `kubectl -n cobranca rollout restart` do deploy que a usa. O processo guarda a configuração em memória.
 
 | Variável | Efeito se estiver vazia ou errada |
 | --- | --- |

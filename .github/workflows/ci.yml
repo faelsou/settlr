@@ -73,7 +73,8 @@ jobs:
       - name: Manifestos Kubernetes
         run: |
           curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz kubeconform
-          ./kubeconform -strict -summary -kubernetes-version 1.28.3 k8s/minikube.yaml k8s/hpa.yaml k8s/aiops/aiops.yaml k8s/observability/alertmanager.yaml
+          kubectl kustomize k8s/minikube > minikube.rendered.yaml
+          ./kubeconform -strict -summary -kubernetes-version 1.28.3 minikube.rendered.yaml k8s/hpa.yaml k8s/aiops/aiops.yaml k8s/observability/alertmanager.yaml
 
   test-api:
     needs: lint
@@ -180,7 +181,7 @@ jobs:
           - name: cobranca-api
             dockerfile: docker/api.Dockerfile
             build_args: ""
-          # Mesmos build args do k8s/minikube.yaml: o Next.js grava o proxy no build.
+          # Mesmos build args do k8s/minikube: o Next.js grava o proxy no build.
           - name: cobranca-web
             dockerfile: docker/web.Dockerfile
             build_args: |

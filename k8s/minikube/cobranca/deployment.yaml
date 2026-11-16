@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cobranca
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: cobranca }
+  template:
+    metadata:
+      labels: { app: cobranca }
+    spec:
+      containers:
+        - name: cobranca
+          image: faelsouz/cobranca-api
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_NAME, value: cobranca }
+            - name: EVOLUTION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: evolution-api
+                  key: EVOLUTION_API_KEY
+                  optional: true
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api
+                  key: LLM_API_KEY
+                  optional: true
+            - name: SPEECH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: speech-api
+                  key: SPEECH_API_KEY
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: cobranca-env
+          command: ["uvicorn", "app.services.cobranca:app", "--host", "0.0.0.0", "--port", "8000"]
+          resources:
+            requests: { cpu: 25m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
