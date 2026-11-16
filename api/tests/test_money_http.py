@@ -1224,3 +1224,43 @@ def test_rejeitar_contestacao_devolve_o_titulo_para_cobranca(banco: Banco) -> No
     assert resposta.status_code == 200, resposta.text
     assert resposta.json()["status"] == "rejeitada"
     assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.EM_COBRANCA
+
+
+def test_atendente_nao_resolve_contestacao(banco: Banco) -> None:
+    """SETL-45: atendente recebe 403 e o título continua contestado."""
+    caso = _semear_contestacao(banco).caso
+    for rota, corpo in (("confirm", {"contestation": "devedor"}), ("reject", {})):
+        resposta = banco.conc.post(
+            f"/exceptions/{caso.exception_id}/{rota}",
+            headers=_auth(caso, "atendente"),
+            json=corpo,
+        )
+        assert resposta.status_code == 403, resposta.text
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CONTESTADO
+
+
+def test_atendente_nao_descarta_pagamento(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="atendente@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.PAGAMENTO_NAO_IDENTIFICADO,
+    )
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "atendente"),
+        json={"discard_payment": True},
+    )
+    assert resposta.status_code == 403, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.EM_EXCECAO
+        assert session.get(ReviewException, caso.exception_id).status == "aberta"
+
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "financeiro"),
+        json={"discard_payment": True},
+    )
+    assert resposta.status_code == 200, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.DESCARTADO

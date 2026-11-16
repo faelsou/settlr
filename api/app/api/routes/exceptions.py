@@ -128,6 +128,8 @@ def confirm_exception(
     exc = _get_open(db, exception_id)
     if exc.type in PAYMENT_TYPES and not can_settle(user.role):
         raise HTTPException(403, "atendente não confirma baixa")
+    if exc.type == ExceptionType.CONTESTACAO and not can_settle(user.role):
+        raise HTTPException(403, "atendente não resolve contestação")
 
     if exc.type in PAYMENT_TYPES:
         if not body.allocations:
@@ -194,6 +196,10 @@ def reject_exception(
     user: CurrentUser = Depends(require_tenant_user),
 ) -> ExceptionOut:
     exc = _get_open(db, exception_id)
+    if exc.type == ExceptionType.CONTESTACAO and not can_settle(user.role):
+        raise HTTPException(403, "atendente não resolve contestação")
+    if body.discard_payment and exc.payment_id and not can_settle(user.role):
+        raise HTTPException(403, "atendente não descarta pagamento")
     _close(db, exc, ExceptionStatus.REJEITADA, user, body.note)
 
     if exc.type == ExceptionType.CONTESTACAO:
