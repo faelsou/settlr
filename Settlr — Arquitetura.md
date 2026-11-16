@@ -14,7 +14,7 @@ Um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que c
 - Volume de 100 a 5.000 cobranças por mês, recebendo majoritariamente por PIX e boleto.
 - Já usam WhatsApp com o cliente e têm alguém (geralmente o dono) fazendo a cobrança na mão.
 
-**Mercado.** Além da PME do piloto, o produto atende BPO e banco. O BPO opera várias contas, uma por empresa, sem cruzar dado entre elas. O banco entra como conta da própria carteira, com a mesma régua e a mesma baixa. Isso abrange o mercado de cobrança e conciliação. O banco comprador não é um emissor novo: em `main` o adaptador de emissor continua o Asaas.
+**Mercado.** Além da PME do piloto, o produto atende BPO e banco. O BPO opera várias contas, uma por empresa, sem cruzar dado entre elas. O banco entra como conta da própria carteira, com a mesma régua e a mesma baixa. Isso abrange o mercado de cobrança e conciliação. O banco comprador não é um emissor novo: em `main` os adaptadores de emissor são Asaas e Inter.
 
 **Oferta**
 
