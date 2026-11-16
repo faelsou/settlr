@@ -1520,3 +1520,90 @@ def test_cobranca_orfa_abre_excecao_e_o_reenvio_fecha(
     assert cancelados == ["pay_1"]
     with banco.admin() as session:
         assert session.get(ReviewException, exception_id).status == "resolvida"
+
+
+INTER_CODIGO = "183e982a-34e5-4bc0-9643-def5432abcde"
+
+
+def test_falha_na_baixa_do_inter_abre_excecao_com_o_codigo(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-64: o Inter recusou; a cobrança segue aberta lá e vai para a fila."""
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+    )
+    _confirmar(banco, caso)
+
+    class _InterRecusa:
+        def mark_paid(self, payment_id: str, *_a) -> str:
+            request = httpx.Request("POST", f"https://inter/{payment_id}/cancelar")
+            response = httpx.Response(500, json={"title": "erro"}, request=request)
+            raise httpx.HTTPStatusError("500", request=request, response=response)
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _InterRecusa())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "falhou"
+    with banco.admin() as session:
+        exc = session.scalars(
+            select(ReviewException).where(ReviewException.type == ExceptionType.COBRANCA_EMISSOR)
+        ).one()
+    assert exc.status == "aberta"
+    assert exc.invoice_id == caso.invoice_id
+    assert exc.details["external_id"] == INTER_CODIGO
+    assert exc.details["provider"] == "inter"
+
+
+def test_cobranca_que_o_inter_ja_quitou_nao_recebe_chamada(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.WEBHOOK, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+        raw={"provider": "inter", "situacao": "RECEBIDO"},
+    )
+    _confirmar(banco, caso)
+    chamadas: list = []
+
+    class _Inter:
+        def mark_paid(self, *args) -> str:
+            chamadas.append(args)
+            return "cancelled"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _Inter())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "ja_no_emissor"
+    assert chamadas == []
+
+
+def test_inter_cancela_titulo_pago_por_outro_canal(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+    )
+    _confirmar(banco, caso)
+
+    class _Inter:
+        def mark_paid(self, *_args) -> str:
+            return "cancelled"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _Inter())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(
+        str(caso.tenant_id), [str(caso.invoice_id)],
+    ) == "cancelada_no_emissor"
+    with banco.admin() as session:
+        assert session.scalars(
+            select(ReviewException).where(ReviewException.status == "aberta")
+        ).first() is None

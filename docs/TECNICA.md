@@ -121,7 +121,7 @@ Transições de status ficam em `app/models/states.py`. Mudar status fora dali �
 
 ### 6.2 Matcher
 
-`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro. No Asaas isso chama `receiveInCash`. No Inter chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar`, rota que só existe no sandbox (ver §13). Emissor fora de `asaas` e `inter` levanta `NotImplementedError` e não cai no Asaas. `GET /payments/export` devolve o CSV do período.
+`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro. No Asaas isso chama `receiveInCash`. No Inter, em produção, cancela a cobrança (`POST /cobranca/v3/cobrancas/{codigoSolicitacao}/cancelar`), porque o dinheiro entrou por outro canal; no sandbox (`issuer_config.sandbox` ou URL `uatinter`) chama `/pagar`. Cobrança que o próprio emissor já quitou não recebe chamada. Falha na chamada abre exceção `cobranca_emissor` com o id da cobrança, e o Inter dizendo que já recebeu abre a mesma exceção como pagamento em dobro. Emissor fora de `asaas` e `inter` levanta `NotImplementedError` e não cai no Asaas. `GET /payments/export` devolve o CSV do período.
 
 Locks Redis em `payment:{id}` evitam baixa duplicada em concorrência.
 
@@ -283,7 +283,7 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 ## 13. O que ainda não é o piloto completo
 
 - Webhook do Asaas e do Inter em cliente vivo. Efí, iugu e Sicoob ficam no roadmap
-- Baixa no Inter em produção: `mark_paid` chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar`, que só existe no sandbox. Em produção a cobrança do Inter continua aberta no emissor depois da baixa no Settlr
+- Baixa no Inter em produção cancela a cobrança (SETL-64). Falta rodar contra a conta real do primeiro cliente
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
 - Parecer jurídico dos textos da régua e do contrato ainda não registrado no SETL-15. A versão `2026-11-08` e a minuta já estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) e [CONTRATO.md](./CONTRATO.md). Produção não ativa o primeiro cliente sem `LEGAL_OPINION_REF`
 - Faixas de preço com custo medido no piloto
