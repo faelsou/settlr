@@ -20,6 +20,8 @@ api/          FastAPI + Celery + LangGraph + SQLAlchemy 2 + Alembic
   app/receipts/ extração LLM + validação determinística
   app/reconciliation/ matcher em camadas (sem LLM)
   app/agent/  grafo LangGraph, tools, política, intenção
+  app/onboarding/ convite da equipe e guia de boas-vindas
+  app/aiops/  correlação de alertas, diagnóstico e remediação no Slack
   app/workers/ Celery + Beat (filas separadas por serviço)
   tests/      matching, régua, política, comprovante, fronteira dos serviços
 web/          Next.js App Router — painel das 4 fases
@@ -28,7 +30,7 @@ k8s/          minikube.yaml e k8s/observability (kustomize)
 observability/ coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana
 ```
 
-Processos em produção: `frontend-web`, `webhook-api` (gateway), `cobranca`, `conci-pgto`, `cadastro`, `worker-cobranca`, `worker-conciliacao`, `worker-cadastro`, `relo-disp`, mais `postgres`, `redis`, `minio`, `evolution`, `traefik`.
+Processos em produção: `frontend-web`, `webhook-api` (gateway), `cobranca`, `conci-pgto`, `cadastro`, `worker-cobranca`, `worker-conciliacao`, `worker-cadastro`, `relo-disp`, mais `postgres`, `redis`, `minio`, `evolution`, `traefik`. O `aiops` roda só no Kubernetes (`k8s/aiops`) e não está no `docker/stack.yml`.
 
 O banco continua um só. O serviço não chama o outro por HTTP para dar baixa ou mudar status: isso precisa da mesma transação. O gateway é quem recebe o painel e os webhooks e encaminha. Task de outro serviço entra na fila do dono (`app/services/queues.py`).
 
@@ -58,6 +60,7 @@ O banco continua um só. O serviço não chama o outro por HTTP para dar baixa o
 | `worker-cadastro` | `celery … worker -Q cadastro` | Importação e evento do emissor |
 | `relo-disp` | `celery -A app.workers.celery_app beat` | Agenda `run_dunning`, `check-promises` (07:00) e `pull-statements` (30 min) |
 | `frontend-web` | Next.js standalone :3000 | Painel do operador |
+| `aiops` | `uvicorn app.services.aiops:app` | Recebe o Alertmanager e posta o diagnóstico no Slack. Só no Kubernetes; ver [AIOPS.md](./AIOPS.md) |
 
 A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovante é `conciliacao-llm`. Não existe mais a fila `default`/`llm`: task sem rota cai em `sem-dono` e ninguém consome.
 
@@ -118,7 +121,7 @@ Transições de status ficam em `app/models/states.py`. Mudar status fora dali �
 
 ### 6.2 Matcher
 
-`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro. No Asaas isso chama `receiveInCash`. No Inter chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar` (sandbox). Emissor fora de `asaas` e `inter` levanta `NotImplementedError` e não cai no Asaas. `GET /payments/export` devolve o CSV do período.
+`match_payment(payment, candidates, rules)` devolve `AUTO`, `PARTIAL`, `SUGGESTION`, `AMOUNT_MISMATCH` ou `UNIDENTIFIED`. Comprovante sem banco só grava match **provisório**. Banco/webhook aplica baixa e `audit_log`. Título `pago` enfileira `app.ingest.tasks.settle_issuer_charges` na fila do cadastro. No Asaas isso chama `receiveInCash`. No Inter chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar`, rota que só existe no sandbox (ver §13). Emissor fora de `asaas` e `inter` levanta `NotImplementedError` e não cai no Asaas. `GET /payments/export` devolve o CSV do período.
 
 Locks Redis em `payment:{id}` evitam baixa duplicada em concorrência.
 
@@ -192,7 +195,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 
 ## 9. Persistência, secrets e deploy
 
-Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `redis_password`, `evolution_api_key`, `jwt_secret`, `llm_api_key`, `minio_root_password`, `webhook_hmac`.
+Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `postgres_app_password`, `redis_password`, `evolution_api_key`, `jwt_secret`, `llm_api_key`, `minio_root_password`, `webhook_hmac`, `smtp_password`.
 
 URLs internas montadas no entrypoint a partir dos arquivos em `/run/secrets`, para a senha não aparecer em `docker service inspect`.
 
@@ -257,6 +260,17 @@ Cobertura atual (determinística):
 - `tests/test_phones.py` — até cinco celulares do devedor, normalização e roteamento
 - `tests/test_senders.py` — até cinco WhatsApps de disparo da empresa e troca do número que envia
 - `tests/test_inbound.py` — mensagem que entra pelo WhatsApp
+- `tests/test_speech.py` — transcrição de áudio sem inventar frase
+- `tests/test_delivery.py` e `tests/test_delivery_queue.py` — status de entrega trava ou libera a etapa; arquivo recebido ou não
+- `tests/test_reconcile.py` — janela do recibo de entrega e precedência do recibo da Evolution
+- `tests/test_whatsapp_metrics.py` — métricas do WhatsApp no Prometheus sem vazar autor
+- `tests/test_issuer_inter.py` — callback em lista, extrato, emissão, cancelamento e baixa do Inter; emissor desconhecido não cai no Asaas
+- `tests/test_issuer_settlement.py` — baixa no Asaas sem aviso novo ao devedor; cobrança já recebida
+- `tests/test_statement_feed.py` — extrato do emissor e Open Finance sem lançamento duplicado
+- `tests/test_onboarding.py` — conta pela tela, ativação que recusa sem base legal, papéis na baixa
+- `tests/test_queue_notice.py` — aviso da fila humana para o dono, fora da conversa do devedor
+- `tests/test_welcome.py` — guia de boas-vindas e cadastro que não cai sem SMTP
+- `tests/test_aiops.py` — correlação de alertas e lista fechada de ações
 
 `python -m app.cli seed-demo` (bloqueado em `ENV=prod`) cria o tenant `demo` (Clínica Demo) com títulos, pagamentos, exceções, conversa e uma aprovação de 8x (acima do teto 6).
 
@@ -268,7 +282,8 @@ Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres 
 
 ## 13. O que ainda não é o piloto completo
 
-- Webhook assinado do Asaas em cliente vivo. Inter, Efí, iugu e Sicoob ficam no roadmap
+- Webhook do Asaas e do Inter em cliente vivo. Efí, iugu e Sicoob ficam no roadmap
+- Baixa no Inter em produção: `mark_paid` chama `POST /cobranca/v3/cobrancas/{codigoSolicitacao}/pagar`, que só existe no sandbox. Em produção a cobrança do Inter continua aberta no emissor depois da baixa no Settlr
 - Supabase Auth + `app_metadata.tenant_id` em produção (dev usa `/auth/dev-login`)
 - Parecer jurídico dos textos da régua e do contrato ainda não registrado no SETL-15. A versão `2026-11-08` e a minuta já estão em [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) e [CONTRATO.md](./CONTRATO.md). Produção não ativa o primeiro cliente sem `LEGAL_OPINION_REF`
 - Faixas de preço com custo medido no piloto

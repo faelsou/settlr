@@ -180,7 +180,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
   - O agente não inventa condição: só oferece o que a política gerou; o que passar disso vai para aprovação humana.
   - Conciliação em 4 camadas que resolve o que ERP não resolve: Pix pago em boleto, soma de títulos, nome aproximado, pagamento parcial.
   - Métricas de recuperação, DSO, promessas cumpridas e % de baixa automática.
-  - Conciliação do Asaas e de qualquer conta pelo Open Finance (cliente genérico da API de contas) ou pelo arquivo do contador. Inter, Efí, iugu e Sicoob ficam no roadmap de emissor.
+  - Conciliação do Asaas e de qualquer conta pelo Open Finance (cliente genérico da API de contas) ou pelo arquivo do contador. Asaas e Inter já têm adaptador; Efí, iugu e Sicoob ficam no roadmap de emissor.
 - **Venda de entrada:** a conciliação (fase 1) como prova de valor, comparada à conciliação de ERP, que só olha 5 dias e exige tipo de documento igual.
 
 ## 9. O que ainda falta verificar
