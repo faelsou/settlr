@@ -202,6 +202,12 @@ def _start(endpoint: str, service: str, environment: str):
     return tracer_provider, meter_provider, logger_provider
 
 
+async def _async_redact(span, _request) -> None:  # noqa: ANN001
+    from app.core.redact import redact_span
+
+    redact_span(span)
+
+
 def _instrument_clients() -> None:
     global _http_clients
     if _http_clients:
@@ -209,7 +215,12 @@ def _instrument_clients() -> None:
     try:
         from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
-        HTTPXClientInstrumentor().instrument()
+        from app.core.redact import redact_span
+
+        HTTPXClientInstrumentor().instrument(
+            request_hook=lambda span, _request: redact_span(span),
+            async_request_hook=_async_redact,
+        )
     except Exception:
         logger.warning("tracing: httpx sem instrumentação", exc_info=True)
     _http_clients = True
@@ -221,7 +232,12 @@ def instrument_app(app, service: str) -> None:
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-        FastAPIInstrumentor.instrument_app(app, excluded_urls="health,internal/metrics")
+        from app.core.redact import redact_span
+
+        FastAPIInstrumentor.instrument_app(
+            app, excluded_urls="health,internal/metrics",
+            server_request_hook=lambda span, _scope: redact_span(span),
+        )
     except Exception:
         logger.warning("tracing: fastapi sem instrumentação", exc_info=True)
 

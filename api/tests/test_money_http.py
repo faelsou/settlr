@@ -1607,3 +1607,27 @@ def test_inter_cancela_titulo_pago_por_outro_canal(
         assert session.scalars(
             select(ReviewException).where(ReviewException.status == "aberta")
         ).first() is None
+
+
+def test_webhook_do_emissor_continua_aceitando_o_token_do_inter(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-67: na URL ou no cabeçalho, token inválido 401 e válido 202."""
+    enfileirados: list[tuple] = []
+    monkeypatch.setattr(
+        "app.api.routes.webhooks.handle_issuer_event.delay", lambda *a: enfileirados.append(a),
+    )
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Clínica", slug="clinica", active=True, timezone="America/Sao_Paulo",
+                        issuer_provider="inter", issuer_webhook_token="tok-inter-valido")
+        session.add(tenant)
+        session.flush()
+        tenant_id = tenant.id
+
+    assert banco.cad.post("/webhooks/emissor?token=errado", json=[]).status_code == 401
+    assert banco.cad.post("/webhooks/emissor", json=[]).status_code == 401
+    assert banco.cad.post("/webhooks/emissor?token=tok-inter-valido", json=[]).status_code == 202
+    assert banco.cad.post(
+        "/webhooks/emissor", json=[], headers={"x-webhook-token": "tok-inter-valido"},
+    ).status_code == 202
+    assert enfileirados == [(str(tenant_id), []), (str(tenant_id), [])]
