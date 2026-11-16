@@ -415,3 +415,22 @@ def test_issuer_failure_asks_for_approval_and_sends_no_code():
     assert result["outcome"] == "aguardando_aprovacao"
     assert PIX not in reply
     assert "Código:" not in reply
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("123", True),
+        ("12345678900", True),
+        ("123.456.789-00", True),
+        ("124", False),
+        ("1234", False),
+        ("", False),
+    ],
+)
+def test_identidade_confere_com_documento_pontuado(texto: str, esperado: bool) -> None:
+    """SETL-47: o cadastro com pontuação aceita 3 dígitos e o CPF completo."""
+    from app.agent.graph import identity_matches
+
+    assert identity_matches(texto, "123.456.789-00") is esperado
+    assert identity_matches(texto, "12345678900") is esperado
