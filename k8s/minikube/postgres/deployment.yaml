@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres }
+  template:
+    metadata:
+      labels: { app: postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: cobranca
+            - name: POSTGRES_USER
+              value: cobranca
+            - name: POSTGRES_PASSWORD_FILE
+              value: /secrets/postgres_password
+            - name: POSTGRES_APP_PASSWORD_FILE
+              value: /secrets/postgres_app_password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "cobranca", "-d", "cobranca"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-data
+        - name: secrets
+          secret:
+            secretName: postgres-secrets
+        - name: init
+          configMap:
+            name: postgres-init
+            defaultMode: 0555

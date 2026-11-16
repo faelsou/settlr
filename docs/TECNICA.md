@@ -26,7 +26,7 @@ api/          FastAPI + Celery + LangGraph + SQLAlchemy 2 + Alembic
   tests/      matching, régua, política, comprovante, fronteira dos serviços
 web/          Next.js App Router — painel das 4 fases
 docker/       compose.dev.yml (local) e stack.yml (Swarm)
-k8s/          minikube.yaml e k8s/observability (kustomize)
+k8s/          minikube e observability (kustomize)
 observability/ coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana
 ```
 
@@ -131,7 +131,7 @@ LLM preenche `ReceiptExtraction` (Pydantic). `receipts/validation.py` exige valo
 
 ### 6.4 Agente
 
-Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição usa a API de áudio da OpenAI, com a mesma chave do chat, e só quando `LLM_MODEL` começa com `openai:`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário, sem chave, ou com outro provedor, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
+Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição e a síntese usam a API de áudio (`SPEECH_API_KEY` / `SPEECH_BASE_URL`); se a chave de áudio estiver vazia e o chat for OpenAI (`LLM_MODEL` com prefixo `openai:`), reutiliza `LLM_API_KEY`. Com chat em outro provedor (ex.: Claude) é obrigatório configurar `SPEECH_API_KEY`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário ou sem chave de áudio, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
 
 Grafo: identificar → identidade → títulos → classificar → política → opções → aceite → acordo, ou `request_human`.
 
@@ -195,7 +195,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 
 ## 9. Persistência, secrets e deploy
 
-Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `postgres_app_password`, `redis_password`, `evolution_api_key`, `jwt_secret`, `llm_api_key`, `minio_root_password`, `webhook_hmac`, `smtp_password`.
+
 
 URLs internas montadas no entrypoint a partir dos arquivos em `/run/secrets`, para a senha não aparecer em `docker service inspect`.
 
@@ -278,7 +278,7 @@ Cobertura atual (determinística):
 
 Ver [`README.md`](../README.md). Resumo: `docker/compose.dev.yml` sobe Postgres `:55432` e Redis `:56379`. No host, o gateway escuta `:8000` e os serviços `:8001` (cobrança), `:8002` (conciliação) e `:8003` (cadastro). O profile `app` sobe os quatro processos no Docker. Login local: `operador@demo.local` / tenant `demo`.
 
-`observability/compose.yml` sobe o coletor e o Grafana em `:3001`. O Minikube usa `k8s/minikube.yaml` para a aplicação e `kubectl apply -k k8s/observability` para a telemetria. O passo a passo de cluster, build, bootstrap e port-forward está em [`MINIKUBE.md`](./MINIKUBE.md).
+`observability/compose.yml` sobe o coletor e o Grafana em `:3001`. O Minikube usa `kubectl apply -k k8s/minikube` para a aplicação e `kubectl apply -k k8s/observability` para a telemetria. O passo a passo de cluster, build, bootstrap e port-forward está em [`MINIKUBE.md`](./MINIKUBE.md).
 
 ## 13. O que ainda não é o piloto completo
 

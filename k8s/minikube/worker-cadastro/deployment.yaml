@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-cadastro
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: worker-cadastro }
+  template:
+    metadata:
+      labels: { app: worker-cadastro }
+    spec:
+      containers:
+        - name: worker
+          image: faelsouz/cobranca-api
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SERVICE_NAME, value: worker-cadastro }
+          envFrom:
+            - configMapRef:
+                name: cobranca-env
+          command:
+            - celery
+            - -A
+            - app.workers.celery_app
+            - worker
+            - -Q
+            - cadastro
+            - -n
+            - cadastro@%h
+            - --loglevel=info
+            - --concurrency=2
+          resources:
+            requests: { cpu: 50m, memory: 256Mi }
+            limits: { memory: 512Mi }

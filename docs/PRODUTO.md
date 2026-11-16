@@ -18,6 +18,18 @@ O produto também atende BPO e banco. Com esses três compradores ele abrange o 
 | BPO | Várias empresas | Cada empresa é uma conta. O BPO opera a cobrança; o dado de um cliente dele não cruza com o do outro |
 | Banco | A carteira do banco | A mesma régua e a mesma baixa. O banco é a conta, não um emissor a mais. Os adaptadores de emissor em `main` são Asaas e Inter |
 
+### BPO — contrato, LGPD e preço (proposta SETL-55)
+
+Proposta registrada em [CONTRATO-BPO.md](./CONTRATO-BPO.md). Ainda depende do parecer jurídico.
+
+| Tema | Decisão proposta |
+| --- | --- |
+| Venda (SETL-35) | Direta ao BPO (parceiro operacional). White-label/revenda fora desta versão |
+| LGPD | Empresa da carteira = controladora; BPO = operador; Settlr = suboperador |
+| Login da empresa | Opcional (`dono`); BPO opera com `bpo_admin` / `bpo_operador` |
+| Preço | Mensalidade da organização + valor por empresa ativa |
+| WhatsApp | Uma instância por empresa; a trava `_ensure_unique_instances` permanece |
+
 ## 2. Três peças do produto
 
 | Peça | Para quem | O que faz |

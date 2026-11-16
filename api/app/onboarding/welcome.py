@@ -1,6 +1,7 @@
 """Guia de uso do painel. Sai quando a empresa entra no banco, para o e-mail do dono."""
 
 from html import escape
+from pathlib import Path
 
 from app.channels.email import send_email
 from app.core.config import get_settings
@@ -9,11 +10,14 @@ from app.core.logging import get_logger
 log = get_logger(__name__)
 
 _INK = "#12101f"
-_MUTED = "#5f5a78"
 _BRAND = "#5b3df5"
 _LIME = "#c6f432"
 _PAPER = "#f7f6fc"
 _LINE = "#e3def7"
+_LOGO_CID = "settlr-logo"
+_LOGO_PATH = Path(__file__).with_name("settlr-logo.png")
+_SANS = "'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+_SERIF = "Georgia,'Times New Roman',serif"
 
 
 def welcome_copy(company: str, panel_url: str) -> tuple[str, str, str]:
@@ -38,7 +42,13 @@ def deliver_welcome(company: str, to: str, panel_url: str | None = None) -> bool
     panel = (panel_url or get_settings().panel_base_url).rstrip("/")
     subject, text, html = welcome_copy(company, panel)
     try:
-        send_email(destination, subject, text, html)
+        send_email(
+            destination,
+            subject,
+            text,
+            html,
+            inline=[(_LOGO_CID, _LOGO_PATH.read_bytes(), "png")],
+        )
     except Exception as exc:
         log.warning("boas_vindas.nao_enviado", to=destination, motivo=str(exc))
         return False
@@ -160,57 +170,63 @@ def _html(name: str, login: str, settings: str, titles: str, home: str) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Como usar o painel — {safe}</title>
 </head>
-<body style="margin:0;padding:0;background:{_PAPER};">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+<body bgcolor="{_PAPER}" style="margin:0;padding:0;background-color:{_PAPER};color:{_INK};">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;mso-hide:all;overflow:hidden;">
     A conta {safe} está no Settlr. A cobrança só começa depois que você conferir a carteira e ligar a conta.
   </div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_PAPER};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{_PAPER}" style="background-color:{_PAPER};">
     <tr>
-      <td align="center" style="padding:32px 16px;">
+      <td align="center" bgcolor="{_PAPER}" style="padding:32px 16px;background-color:{_PAPER};color:{_INK};">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;">
           <tr>
-            <td style="background:{_INK};border-radius:28px 28px 0 0;padding:32px 36px 28px;">
-              <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1;color:#ffffff;">
-                Settlr<span style="color:{_LIME};">.</span>
-              </p>
-              <p style="margin:22px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.15;color:#ffffff;">
-                Cobrou, recebeu, conciliou.
-              </p>
-              <p style="margin:14px 0 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;color:#d9d6ea;">
-                A conta {safe} entrou no painel. Estes são os passos até a primeira cobrança sair sozinha.
-              </p>
+            <td align="center" bgcolor="{_BRAND}" style="background-color:{_BRAND};border-radius:28px 28px 0 0;padding:28px 36px;">
+              <img src="cid:{_LOGO_CID}" width="320" alt="Settlr" style="display:block;width:320px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;">
             </td>
           </tr>
           <tr>
-            <td style="background:#ffffff;padding:8px 36px 8px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};">
-              <p style="margin:24px 0 8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:{_INK};">
+            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:28px 36px 8px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};color:{_INK};">
+              <p style="margin:0;font-family:{_SERIF};font-size:32px;line-height:1.2;color:{_INK};">
+                Cobrou, recebeu, conciliou.
+              </p>
+              <p style="margin:14px 0 0;font-family:{_SANS};font-size:16px;line-height:1.55;color:{_INK};">
+                A conta {safe} entrou no painel. Estes são os passos até a primeira cobrança sair sozinha.
+              </p>
+              <p style="margin:16px 0 8px;font-family:{_SANS};font-size:16px;line-height:1.6;color:{_INK};">
                 A cobrança ainda não dispara. A conta nasce desligada de propósito: dá tempo de importar a base e conferir antes de qualquer mensagem.
               </p>
             </td>
           </tr>
           {rows}
           <tr>
-            <td style="background:#ffffff;padding:8px 36px 28px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};">
-              <p style="margin:8px 0 10px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:{_BRAND};">
+            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:8px 36px 28px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};color:{_INK};">
+              <p style="margin:8px 0 10px;font-family:{_SANS};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:{_BRAND};">
                 Cabeçalho do CSV
               </p>
-              <p style="margin:0;padding:14px 16px;background:{_PAPER};border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.55;color:{_INK};">
+              <p style="margin:0;padding:14px 16px;background-color:{_PAPER};border-radius:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.55;color:{_INK};">
                 {escape(header)}
               </p>
             </td>
           </tr>
           <tr>
-            <td align="center" style="background:#ffffff;padding:4px 36px 36px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};border-bottom:1px solid {_LINE};border-radius:0 0 28px 28px;">
-              <a href="{escape(login, quote=True)}" style="display:inline-block;background:{_BRAND};color:#ffffff;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:999px;">
-                Abrir o painel
-              </a>
+            <td align="center" bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 36px 36px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};border-bottom:1px solid {_LINE};border-radius:0 0 28px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" bgcolor="{_BRAND}" style="background-color:{_BRAND};border-radius:999px;">
+                    <a href="{escape(login, quote=True)}" style="display:inline-block;padding:14px 28px;font-family:{_SANS};font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                      Abrir o painel
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:18px 8px 0;">
-              <p style="margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:{_MUTED};">
+            <td style="padding:18px 8px 0;color:{_INK};">
+              <p style="margin:0;font-family:{_SANS};font-size:13px;line-height:1.5;color:{_INK};">
                 Settlr enviou este guia porque a conta {safe} foi cadastrada. O financeiro confirma a baixa. O atendente acompanha a fila. O dono configura a política.
               </p>
             </td>
@@ -226,19 +242,23 @@ def _html(name: str, login: str, settings: str, titles: str, home: str) -> str:
 
 def _step_row(number: str, title: str, body: str, href: str, label: str) -> str:
     return f"""<tr>
-            <td style="background:#ffffff;padding:14px 36px 6px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};">
+            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:14px 36px 6px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};color:{_INK};">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="52" valign="top" style="width:52px;">
-                    <p style="margin:0;width:40px;height:40px;background:{_INK};border-radius:14px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;line-height:40px;text-align:center;color:{_LIME};">
-                      {number}
-                    </p>
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="40" height="40" align="center" bgcolor="{_LIME}" style="width:40px;height:40px;background-color:{_LIME};border-radius:14px;font-family:{_SANS};font-size:13px;font-weight:700;color:{_INK};">
+                          {number}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
-                  <td valign="top" style="padding-bottom:8px;">
-                    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:20px;line-height:1.3;color:{_INK};">{escape(title)}</p>
-                    <p style="margin:6px 0 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:{_MUTED};">{escape(body)}</p>
+                  <td valign="top" style="padding:0 0 8px 12px;color:{_INK};">
+                    <p style="margin:0;font-family:{_SERIF};font-size:20px;line-height:1.3;color:{_INK};">{escape(title)}</p>
+                    <p style="margin:6px 0 0;font-family:{_SANS};font-size:15px;line-height:1.6;color:{_INK};">{escape(body)}</p>
                     <p style="margin:8px 0 0;">
-                      <a href="{escape(href, quote=True)}" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;color:{_BRAND};text-decoration:none;">{escape(label)}</a>
+                      <a href="{escape(href, quote=True)}" style="font-family:{_SANS};font-size:14px;font-weight:700;color:{_BRAND};text-decoration:none;">{escape(label)}</a>
                     </p>
                   </td>
                 </tr>

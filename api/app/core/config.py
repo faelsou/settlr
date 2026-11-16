@@ -68,9 +68,17 @@ class Settings(BaseSettings):
 
     llm_model: str = "openai:gpt-4o-mini"
     llm_api_key: str = ""
+    # Áudio (STT/TTS) pode usar chave própria — o chat pode ser Claude e a voz OpenAI.
+    speech_api_key: str = ""
+    speech_base_url: str = "https://api.openai.com/v1"
     stt_model: str = "gpt-4o-mini-transcribe"
     tts_model: str = "gpt-4o-mini-tts"
-    tts_voice: str = "alloy"
+    tts_voice: str = "marin"
+    tts_instructions: str = (
+        "Fale em português do Brasil, tom calmo, conversacional e humano. "
+        "Soa como uma pessoa que entende o problema de quem está do outro lado: "
+        "empática, clara e sem pressa. Evite tom robótico, formal demais ou de call center."
+    )
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     panel_base_url: str = "http://localhost:3000"

@@ -1,7 +1,7 @@
-# Pods de observabilidade, separados do app em k8s/minikube.yaml.
+# Pods de observabilidade, separados do app em k8s/minikube.
 #
 #   minikube start --memory=4096 --cpus=2
-#   kubectl apply -f k8s/minikube.yaml
+#   kubectl apply -k k8s/minikube
 #   kubectl apply -k k8s/observability
 #   kubectl -n observability port-forward svc/grafana 3001:3000
 #

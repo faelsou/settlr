@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/candidate.json",
+    "sha256": "4b5722e2ab935c14e55ee6409b5f2f6fd4b5836410797e65d0e05daf162e825e",
+    "bytes": 15174
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/settlr-e2e.html",
+    "sha256": "8e78dd1173283b1f8ba994f01131feb69bc14ef73646afa78f3293f8b6acac7f",
+    "bytes": 864091
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/review-5/settlr-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/review-5/settlr-e2e.finalize-summary.json",
+    "browserCheckReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/review-5/settlr-e2e.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-12T18:52:17.036Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A previous check at 2026-11-12T18:52:17.036Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4084,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 8,
+      "routesOverSuggestedBends": 4
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "emissor-in",
+            "from": "emissor",
+            "to": "gateway",
+            "label": "token",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "id": "to-cobranca",
+            "from": "gateway",
+            "to": "cobranca",
+            "label": "cobrança",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "point": [
+            715,
+            374
+          ],
+          "sharedNode": "gateway"
+        },
+        {
+          "left": {
+            "id": "emissor-in",
+            "from": "emissor",
+            "to": "gateway",
+            "label": "token",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "point": [
+            926,
+            696
+          ]
+        },
+        {
+          "left": {
+            "id": "run-cadastro",
+            "from": "redis",
+            "to": "wcad",
+            "label": "cadastro",
+            "collectionIndex": 16,
+            "artifactIndex": 17
+          },
+          "right": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "point": [
+            670,
+            696
+          ]
+        },
+        {
+          "left": {
+            "id": "run-cobranca",
+            "from": "redis",
+            "to": "wcob",
+            "label": "cobrança",
+            "collectionIndex": 18,
+            "artifactIndex": 19
+          },
+          "right": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "point": [
+            608,
+            696
+          ],
+          "sharedNode": "wcob"
+        },
+        {
+          "left": {
+            "id": "sql-cadastro",
+            "from": "wcad",
+            "to": "postgres",
+            "label": "SQL",
+            "collectionIndex": 19,
+            "artifactIndex": 20
+          },
+          "right": {
+            "id": "ocr",
+            "from": "wcon",
+            "to": "llm",
+            "label": "extração",
+            "collectionIndex": 25,
+            "artifactIndex": 26
+          },
+          "point": [
+            732,
+            998
+          ]
+        },
+        {
+          "left": {
+            "id": "sql-cadastro",
+            "from": "wcad",
+            "to": "postgres",
+            "label": "SQL",
+            "collectionIndex": 19,
+            "artifactIndex": 20
+          },
+          "right": {
+            "id": "agente",
+            "from": "wcob",
+            "to": "llm",
+            "label": "agente",
+            "collectionIndex": 26,
+            "artifactIndex": 27
+          },
+          "point": [
+            732,
+            898
+          ]
+        },
+        {
+          "left": {
+            "id": "sql-cobranca",
+            "from": "wcob",
+            "to": "postgres",
+            "label": "SQL",
+            "collectionIndex": 21,
+            "artifactIndex": 22
+          },
+          "right": {
+            "id": "arquivo",
+            "from": "wcon",
+            "to": "minio",
+            "label": "comprovante",
+            "collectionIndex": 22,
+            "artifactIndex": 23
+          },
+          "point": [
+            444,
+            834
+          ]
+        },
+        {
+          "left": {
+            "id": "sql-cobranca",
+            "from": "wcob",
+            "to": "postgres",
+            "label": "SQL",
+            "collectionIndex": 21,
+            "artifactIndex": 22
+          },
+          "right": {
+            "id": "ocr",
+            "from": "wcon",
+            "to": "llm",
+            "label": "extração",
+            "collectionIndex": 25,
+            "artifactIndex": 26
+          },
+          "point": [
+            444,
+            998
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "to-conciliacao",
+            "from": "gateway",
+            "to": "conciliacao",
+            "label": "pagamentos",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "bends": 3,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "sql-cobranca",
+            "from": "wcob",
+            "to": "postgres",
+            "label": "SQL",
+            "collectionIndex": 21,
+            "artifactIndex": 22
+          },
+          "bends": 3,
+          "stretch": 1.158
+        },
+        {
+          "relationship": {
+            "id": "envio",
+            "from": "wcob",
+            "to": "evolution",
+            "label": "envio",
+            "collectionIndex": 24,
+            "artifactIndex": 25
+          },
+          "bends": 4,
+          "stretch": 1.053
+        },
+        {
+          "relationship": {
+            "id": "agente",
+            "from": "wcob",
+            "to": "llm",
+            "label": "agente",
+            "collectionIndex": 26,
+            "artifactIndex": 27
+          },
+          "bends": 4,
+          "stretch": 1
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "redis has 3 relationships facing its left side, which fits 2 ports: make that side at least 60px, or move some of those neighbours so they face another side of redis.",
+      "emissor → gateway and gateway → cobranca cross next to gateway: move node emissor or cobranca so the two reach gateway from different sides (for example one level with it, one directly above or below it).",
+      "emissor → gateway crosses wcob → evolution: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "redis → wcad crosses wcob → evolution: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "redis → wcob and wcob → evolution cross next to wcob: move node redis or evolution so the two reach wcob from different sides (for example one level with it, one directly above or below it).",
+      "wcad → postgres crosses wcon → llm: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "wcad → postgres crosses wcob → llm: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "wcob → postgres crosses wcon → minio: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

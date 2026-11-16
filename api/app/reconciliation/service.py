@@ -286,7 +286,9 @@ class BankPaymentIn:
 
 
 def _find_receipt_twin(session: Session, tenant_id: UUID, data: BankPaymentIn) -> Payment | None:
-    """Comprovante sem E2E aguardando banco com mesmo valor, data próxima e documento."""
+    """Sem documento do pagador, valor e data sozinhos baixam o comprovante de outra pessoa."""
+    if not data.payer_doc:
+        return None
     candidates = session.scalars(
         select(Payment).where(
             Payment.tenant_id == tenant_id,
@@ -296,12 +298,11 @@ def _find_receipt_twin(session: Session, tenant_id: UUID, data: BankPaymentIn) -
             Payment.paid_at.between(data.paid_at - timedelta(days=1), data.paid_at + timedelta(days=1)),
         )
     ).all()
-    if data.payer_doc:
-        candidates = [
-            p for p in candidates
-            if p.payer_doc and (document_matches(p.payer_doc, data.payer_doc)
-                                or document_matches(data.payer_doc, p.payer_doc))
-        ]
+    candidates = [
+        p for p in candidates
+        if p.payer_doc and (document_matches(p.payer_doc, data.payer_doc)
+                            or document_matches(data.payer_doc, p.payer_doc))
+    ]
     return candidates[0] if len(candidates) == 1 else None
 
 

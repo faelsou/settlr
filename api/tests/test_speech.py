@@ -59,6 +59,38 @@ def test_transcribe_without_openai_does_not_invent(monkeypatch):
     assert transcribe(b"ogg", "audio/ogg") is None
 
 
+def test_transcribe_uses_speech_key_when_chat_is_not_openai(monkeypatch):
+    """O chat pode ser Claude. A nota de voz usa a chave de áudio, não a do chat."""
+    monkeypatch.setattr(
+        "app.channels.speech.get_settings",
+        lambda: SimpleNamespace(
+            llm_model="anthropic:claude-sonnet-4-5",
+            llm_api_key="sk-ant-chat",
+            speech_api_key="sk-speech",
+            speech_base_url="https://api.openai.com/v1",
+            stt_model="gpt-4o-mini-transcribe",
+        ),
+    )
+    seen = {}
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"text": "quero parcelar"}
+
+    def post(url, headers=None, files=None, data=None, timeout=None):
+        seen["url"] = url
+        seen["auth"] = headers["Authorization"]
+        return Response()
+
+    monkeypatch.setattr("app.channels.speech.httpx.post", post)
+    assert transcribe(b"ogg", "audio/ogg") == "quero parcelar"
+    assert seen["auth"] == "Bearer sk-speech"
+    assert seen["url"] == "https://api.openai.com/v1/audio/transcriptions"
+
+
 def test_transcribe_keeps_the_phrase(monkeypatch):
     monkeypatch.setattr("app.channels.speech._openai_key", lambda: "sk-test")
 
@@ -71,6 +103,41 @@ def test_transcribe_keeps_the_phrase(monkeypatch):
 
     monkeypatch.setattr("app.channels.speech.httpx.post", lambda *a, **k: Response())
     assert transcribe(b"ogg", "audio/ogg") == "quero parcelar"
+
+
+def test_synthesize_uses_speech_key_when_chat_is_not_openai(monkeypatch):
+    monkeypatch.setattr(
+        "app.channels.speech.get_settings",
+        lambda: SimpleNamespace(
+            llm_model="anthropic:claude-sonnet-4-5",
+            llm_api_key="sk-ant-chat",
+            speech_api_key="sk-speech",
+            speech_base_url="https://api.openai.com/v1",
+            tts_model="gpt-4o-mini-tts",
+            tts_voice="marin",
+            tts_instructions="Tom calmo, brasileiro, conversacional.",
+        ),
+    )
+    seen = {}
+
+    class Response:
+        content = b"opus"
+
+        def raise_for_status(self):
+            return None
+
+    def post(url, headers=None, json=None, timeout=None):
+        seen["url"] = url
+        seen["auth"] = headers["Authorization"]
+        seen["body"] = json
+        return Response()
+
+    monkeypatch.setattr("app.channels.speech.httpx.post", post)
+    assert synthesize("combinado") == b"opus"
+    assert seen["auth"] == "Bearer sk-speech"
+    assert seen["url"] == "https://api.openai.com/v1/audio/speech"
+    assert seen["body"]["voice"] == "marin"
+    assert "calmo" in seen["body"]["instructions"]
 
 
 def test_synthesize_returns_bytes(monkeypatch):

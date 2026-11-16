@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  10-init-roles.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    APP_PW="$(cat "${POSTGRES_APP_PASSWORD_FILE:-/secrets/postgres_app_password}")"
+    EVO_PW="$(cat "${POSTGRES_PASSWORD_FILE:-/secrets/postgres_password}")"
+    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+      -v app_pw="$APP_PW" -v evo_pw="$EVO_PW" -v db="$POSTGRES_DB" <<'SQL'
+    CREATE ROLE cobranca_app LOGIN PASSWORD :'app_pw' NOSUPERUSER NOBYPASSRLS;
+    GRANT CONNECT ON DATABASE :"db" TO cobranca_app;
+    GRANT USAGE ON SCHEMA public TO cobranca_app;
+    CREATE ROLE evolution LOGIN PASSWORD :'evo_pw';
+    CREATE DATABASE evolution OWNER evolution;
+    SQL

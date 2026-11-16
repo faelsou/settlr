@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cobranca-env
+data:
+  ENV: dev
+  DATABASE_HOST: postgres
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: cobranca
+  POSTGRES_PASSWORD: cobranca
+  POSTGRES_APP_PASSWORD: cobranca_app
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  JWT_SECRET: dev-secret-change-me
+  WEBHOOK_HMAC: dev-webhook-secret
+  EVOLUTION_BASE_URL: https://apiwp.aiagentautomate.com.br
+  # Vazios de propósito. A chave real fica nos Secrets evolution-api, llm-api e speech-api
+  # (não versionados). Os processos leem o Secret por cima deste valor.
+  EVOLUTION_API_KEY: ""
+  LLM_API_KEY: ""
+  SPEECH_API_KEY: ""
+  SPEECH_BASE_URL: https://api.openai.com/v1
+  COBRANCA_URL: http://cobranca:8000
+  CONCILIACAO_URL: http://conci-pgto:8000
+  CADASTRO_URL: http://cadastro:8000
+  CORS_ORIGINS: '["http://127.0.0.1:3000","http://localhost:3000"]'
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4317
