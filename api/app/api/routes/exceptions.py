@@ -22,8 +22,9 @@ from app.models.enums import (
     PaymentOrigin,
     PaymentStatus,
 )
-from app.reconciliation.matcher import Allocation
+from app.reconciliation.matcher import Allocation, ReconciliationRules
 from app.reconciliation.service import (
+    applied_amount,
     apply_allocations,
     open_exception,
     reconcile_payment,
@@ -137,11 +138,14 @@ def confirm_exception(
         payment = db.get(Payment, exc.payment_id)
         if payment.bank_confirmed_at is None:
             raise HTTPException(409, "pagamento ainda sem confirmação do banco")
-        if sum(a.amount for a in body.allocations) > payment.amount:
-            raise HTTPException(422, "valor alocado maior que o pagamento")
+        saldo = payment.amount - applied_amount(db, payment.id)
+        if sum(a.amount for a in body.allocations) > saldo:
+            raise HTTPException(422, "valor alocado maior que o saldo do pagamento")
+        tenant = db.get(Tenant, exc.tenant_id)
         apply_allocations(
             db, payment, [Allocation(a.invoice_id, a.amount) for a in body.allocations],
             MatchMethod.MANUAL, 1.0, user.actor,
+            rules=ReconciliationRules.from_json(tenant.reconciliation_rules),
         )
 
     elif exc.type == ExceptionType.LEITURA_BAIXA_CONFIANCA:

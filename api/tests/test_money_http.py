@@ -1266,6 +1266,66 @@ def test_atendente_nao_descarta_pagamento(banco: Banco) -> None:
         assert session.get(Payment, caso.payment_id).status == PaymentStatus.DESCARTADO
 
 
+def test_baixa_manual_parcial_deixa_o_saldo_em_excecao(banco: Banco) -> None:
+    """SETL-41: PIX de 300 com 100 aplicados não fecha como conciliado."""
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="financeiro@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.DIFERENCA_VALOR,
+    )
+    with banco.admin() as session, session.begin():
+        session.get(Payment, caso.payment_id).amount = Decimal("300.00")
+
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "100.00"}]},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert _titulo(banco, caso.invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+    with banco.admin() as session:
+        pagamento = session.get(Payment, caso.payment_id)
+        abertas = session.scalars(
+            select(ReviewException).where(
+                ReviewException.payment_id == caso.payment_id,
+                ReviewException.status == "aberta",
+            )
+        ).all()
+    assert pagamento.status == PaymentStatus.EM_EXCECAO
+    assert len(abertas) == 1
+    assert abertas[0].type == ExceptionType.DIFERENCA_VALOR
+    assert Decimal(abertas[0].details["remaining"]) == Decimal("200.00")
+
+    # O saldo não pode ser alocado de novo acima do que sobrou.
+    resposta = banco.conc.post(
+        f"/exceptions/{abertas[0].id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "250.00"}]},
+    )
+    assert resposta.status_code == 422
+
+
+def test_baixa_manual_integral_concilia_o_pagamento(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="financeiro@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+    )
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "100.00"}]},
+    )
+    assert resposta.status_code == 200, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.CONCILIADO
+        assert session.scalars(
+            select(ReviewException).where(ReviewException.status == "aberta")
+        ).first() is None
+
+
 def _semear_titulo_e_pagamentos(banco: Banco, valores: list[str], txid: str | None = None):
     with banco.admin() as session, session.begin():
         tenant = Tenant(name="Academia", slug="academia", active=True, timezone="America/Sao_Paulo")

@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import delete, event, or_, select, update
+from sqlalchemy import delete, event, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.channels.queue_notice import notify_human_queue
@@ -30,6 +30,7 @@ from app.reconciliation.matcher import (
     MatchResult,
     PaymentData,
     ReconciliationRules,
+    amount_fits,
     document_matches,
     match_payment,
 )
@@ -151,6 +152,16 @@ def _locked(session: Session, model, row_id: UUID):
     ).one()
 
 
+def applied_amount(session: Session, payment_id: UUID) -> Decimal:
+    """Quanto do pagamento já virou baixa definitiva."""
+    total = session.scalar(
+        select(func.coalesce(func.sum(Match.amount_applied), 0)).where(
+            Match.payment_id == payment_id, Match.provisional.is_(False),
+        )
+    )
+    return Decimal(total)
+
+
 def apply_allocations(
     session: Session,
     payment: Payment,
@@ -158,21 +169,25 @@ def apply_allocations(
     method: MatchMethod,
     score: float,
     actor: str,
-) -> None:
+    rules: ReconciliationRules | None = None,
+) -> Decimal:
     """Baixa definitiva. Exige pagamento confirmado pelo banco.
 
     Pagamento e títulos são relidos sob trava, e o valor soma no banco: duas baixas
-    no mesmo título não se sobrescrevem.
+    no mesmo título não se sobrescrevem. Só fecha como `conciliado` quando o valor
+    aplicado cobre o pagamento (com a folga de juros do tenant). O saldo que sobra
+    fica em exceção. Devolve esse saldo.
     """
     payment = _locked(session, Payment, payment.id)
     if payment.status in (PaymentStatus.CONCILIADO, PaymentStatus.DESCARTADO):
         log.info("baixa.ignorada", payment_id=str(payment.id), status=payment.status)
-        return
+        return Decimal("0")
     if payment.bank_confirmed_at is None:
         raise ValueError("baixa definitiva exige confirmação do banco")
 
     session.execute(delete(Match).where(Match.payment_id == payment.id, Match.provisional.is_(True)))
-    remaining = payment.amount
+    applied_before = applied_amount(session, payment.id)
+    remaining = payment.amount - applied_before
     today = datetime.now(UTC).date()
 
     for alloc in allocations:
@@ -214,7 +229,20 @@ def apply_allocations(
                    "payment_id": payment.id, "method": method},
         )
 
-    set_payment_status(payment, PaymentStatus.CONCILIADO)
+    applied_total = payment.amount - remaining
+    rules = rules or ReconciliationRules()
+    if remaining <= 0 or (applied_total > 0 and amount_fits(payment.amount, applied_total, rules)):
+        set_payment_status(payment, PaymentStatus.CONCILIADO)
+        return Decimal("0")
+
+    set_payment_status(payment, PaymentStatus.EM_EXCECAO)
+    open_exception(
+        session, payment.tenant_id, ExceptionType.DIFERENCA_VALOR,
+        payment_id=payment.id,
+        details={"reason": f"saldo não aplicado: {remaining} de {payment.amount}",
+                 "remaining": str(remaining)},
+    )
+    return remaining
 
 
 def open_exception(
@@ -290,6 +318,7 @@ def reconcile_payment(session: Session, payment: Payment, tenant: Tenant) -> Mat
         if result.decision in (Decision.AUTO, Decision.PARTIAL):
             apply_allocations(
                 session, payment, result.allocations, result.method, result.score, "sistema",
+                rules=rules,
             )
         else:
             set_payment_status(payment, PaymentStatus.EM_EXCECAO)
