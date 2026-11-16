@@ -218,7 +218,7 @@ Open Finance entra no mesmo ciclo quando a conta tem `bank_feed.open_finance` co
 
 Quando o devedor aceita um acordo, o sistema cria a cobrança dessa parcela no Asaas e grava o PIX ou o boleto antes de confirmar. Sem essa cobrança, o acordo não fica registrado. `issuer_config.billing_type` escolhe `PIX` (padrão) ou `BOLETO`.
 
-Inter, Efí, iugu e Sicoob ainda não têm esse encaixe e ficam no roadmap. Para eles, o caminho é a planilha.
+
 
 ---
 

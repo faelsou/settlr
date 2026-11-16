@@ -116,10 +116,12 @@ def _apply_delivery_receipt(payload: EvolutionWebhook) -> dict:
 @issuer_router.post("/emissor", status_code=status.HTTP_202_ACCEPTED)
 async def issuer_webhook(
     request: Request,
+    token: str | None = Query(default=None),
     asaas_access_token: str | None = Header(default=None),
     x_webhook_token: str | None = Header(default=None),
 ) -> dict:
-    token = asaas_access_token or x_webhook_token
+    """Asaas manda o token no header. O Inter não: o token vai na URL do callback."""
+    token = asaas_access_token or x_webhook_token or token
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token ausente")
     with system_session() as session:

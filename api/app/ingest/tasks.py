@@ -10,7 +10,7 @@ from app.ingest.service import import_invoices, upsert_invoice
 from app.ingest.settlement import plan_issuer_settlements, record_issuer_settlement
 from app.models import Tenant
 from app.models.enums import PaymentOrigin
-from app.reconciliation.service import BankPaymentIn, register_bank_payment
+from app.reconciliation.service import register_bank_payment
 from app.reconciliation.tasks import reconcile
 from app.workers.celery_app import celery_app
 
@@ -30,25 +30,32 @@ def import_invoices_task(tenant_id: str, rows: list[dict], actor: str) -> dict:
     name="app.ingest.tasks.handle_issuer_event",
     autoretry_for=(httpx.TransportError,), retry_backoff=True, max_retries=5,
 )
-def handle_issuer_event(tenant_id: str, body: dict) -> str:
+def handle_issuer_event(tenant_id: str, body: dict | list) -> str:
     tid = UUID(tenant_id)
+    payment_ids: list[str] = []
+    outcomes: list[str] = []
     with tenant_session(tid) as session:
         tenant = session.get(Tenant, tid)
-        parsed = get_adapter(tenant.issuer_provider, tenant.issuer_config).parse(body)
-
-        if isinstance(parsed, InvoiceIn):
-            upsert_invoice(session, tid, parsed, actor=f"emissor:{tenant.issuer_provider}")
-            return "invoice"
-        if isinstance(parsed, BankPaymentIn):
+        if tenant is None:
+            raise ValueError("tenant ausente")
+        adapter = get_adapter(tenant.issuer_provider, tenant.issuer_config or {})
+        for parsed in adapter.events(body):
+            if isinstance(parsed, InvoiceIn):
+                upsert_invoice(session, tid, parsed, actor=f"emissor:{tenant.issuer_provider}")
+                outcomes.append("invoice")
+                continue
             payment = register_bank_payment(session, tid, parsed, PaymentOrigin.WEBHOOK)
             if payment is None:
-                return "duplicate"
-            payment_id = str(payment.id)
-        else:
-            return "ignored"
+                outcomes.append("duplicate")
+            else:
+                payment_ids.append(str(payment.id))
+                outcomes.append("payment")
 
-    reconcile.delay(tenant_id, payment_id)
-    return "payment"
+    for payment_id in payment_ids:
+        reconcile.delay(tenant_id, payment_id)
+    if not outcomes:
+        return "ignored"
+    return outcomes[0] if len(outcomes) == 1 else ",".join(outcomes)
 
 
 @celery_app.task(

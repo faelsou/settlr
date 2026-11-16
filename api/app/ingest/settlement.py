@@ -1,4 +1,4 @@
-"""Baixa que volta ao emissor. Só cobrança do piloto (Asaas, id `pay_`) entra aqui."""
+"""Baixa que volta ao emissor. Entra cobrança do Asaas (`pay_`) ou do Inter (UUID)."""
 
 import re
 from dataclasses import dataclass
@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.audit import audit
+from app.ingest.issuers import _INTER_CHARGE
 from app.models import AuditLog, Invoice, Match, Payment, Tenant
 from app.models.enums import InvoiceStatus
 
@@ -33,10 +34,11 @@ def tenant_zone(name: str | None) -> ZoneInfo:
 
 
 def charge_id_for(provider: str | None, external_id: str | None, txid: str | None) -> str | None:
-    if provider != "asaas":
+    pattern = {"asaas": ASAAS_CHARGE, "inter": _INTER_CHARGE}.get(provider or "")
+    if pattern is None:
         return None
     for candidate in (external_id, txid):
-        if candidate and ASAAS_CHARGE.fullmatch(candidate):
+        if candidate and pattern.fullmatch(candidate):
             return candidate
     return None
 

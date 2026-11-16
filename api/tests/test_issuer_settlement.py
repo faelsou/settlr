@@ -56,12 +56,16 @@ def test_asaas_propaga_erro_que_nao_e_cobranca_quitada():
         )
 
 
-def test_so_cobranca_do_asaas_volta_para_o_emissor():
+def test_cada_emissor_so_reconhece_a_propria_cobranca():
+    codigo = "183e982a-34e5-4bc0-9643-def5432abcde"
     assert charge_id_for("asaas", "pay_piloto", None) == "pay_piloto"
     assert charge_id_for("asaas", "NF-1", "pay_txid") == "pay_txid"
     assert charge_id_for("asaas", "NF-1", "txid") is None
+    assert charge_id_for("asaas", codigo, None) is None
     assert charge_id_for(None, "pay_piloto", None) is None
     assert charge_id_for("inter", "pay_piloto", None) is None
+    assert charge_id_for("inter", codigo, "txid") == codigo
+    assert charge_id_for("efi", codigo, None) is None
 
 
 def test_pagamento_nascido_no_emissor_ja_esta_quitado_la():
