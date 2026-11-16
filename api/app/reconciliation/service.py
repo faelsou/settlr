@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import delete, event, or_, select
+from sqlalchemy import delete, event, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.channels.queue_notice import notify_human_queue
@@ -141,6 +141,16 @@ def _fulfil_promises(session: Session, invoice: Invoice, today: date) -> None:
         promise.checked_at = datetime.now(UTC)
 
 
+def _locked(session: Session, model, row_id: UUID):
+    """Trava a linha e relê do banco: o objeto da sessão pode estar velho."""
+    return session.scalars(
+        select(model)
+        .where(model.id == row_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).one()
+
+
 def apply_allocations(
     session: Session,
     payment: Payment,
@@ -149,7 +159,15 @@ def apply_allocations(
     score: float,
     actor: str,
 ) -> None:
-    """Baixa definitiva. Exige pagamento confirmado pelo banco."""
+    """Baixa definitiva. Exige pagamento confirmado pelo banco.
+
+    Pagamento e títulos são relidos sob trava, e o valor soma no banco: duas baixas
+    no mesmo título não se sobrescrevem.
+    """
+    payment = _locked(session, Payment, payment.id)
+    if payment.status in (PaymentStatus.CONCILIADO, PaymentStatus.DESCARTADO):
+        log.info("baixa.ignorada", payment_id=str(payment.id), status=payment.status)
+        return
     if payment.bank_confirmed_at is None:
         raise ValueError("baixa definitiva exige confirmação do banco")
 
@@ -158,14 +176,17 @@ def apply_allocations(
     today = datetime.now(UTC).date()
 
     for alloc in allocations:
-        invoice = session.scalars(
-            select(Invoice).where(Invoice.id == alloc.invoice_id).with_for_update()
-        ).one()
+        invoice = _locked(session, Invoice, alloc.invoice_id)
         applied = min(alloc.amount, invoice.amount_open, remaining)
         if applied <= 0:
             continue
         before = {"status": invoice.status, "amount_paid": invoice.amount_paid}
-        invoice.amount_paid += applied
+        session.execute(
+            update(Invoice)
+            .where(Invoice.id == invoice.id)
+            .values(amount_paid=Invoice.amount_paid + applied)
+        )
+        session.refresh(invoice, ["amount_paid"])
         remaining -= applied
         if invoice.amount_open <= 0:
             set_invoice_status(invoice, InvoiceStatus.PAGO)
@@ -259,8 +280,17 @@ def reconcile_payment(session: Session, payment: Payment, tenant: Tenant) -> Mat
         return result
 
     with redis_lock(f"payment:{payment.id}"):
+        # Outra tarefa pode ter conciliado enquanto esperávamos: relê e decide de novo.
+        payment = _locked(session, Payment, payment.id)
+        if payment.status != PaymentStatus.CONFIRMADO:
+            return result
+        result = match_payment(
+            to_payment_data(payment), load_candidates(session, payment, rules), rules,
+        )
         if result.decision in (Decision.AUTO, Decision.PARTIAL):
-            apply_allocations(session, payment, result.allocations, result.method, result.score, "sistema")
+            apply_allocations(
+                session, payment, result.allocations, result.method, result.score, "sistema",
+            )
         else:
             set_payment_status(payment, PaymentStatus.EM_EXCECAO)
             open_exception(

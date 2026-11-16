@@ -1264,3 +1264,98 @@ def test_atendente_nao_descarta_pagamento(banco: Banco) -> None:
     assert resposta.status_code == 200, resposta.text
     with banco.admin() as session:
         assert session.get(Payment, caso.payment_id).status == PaymentStatus.DESCARTADO
+
+
+def _semear_titulo_e_pagamentos(banco: Banco, valores: list[str], txid: str | None = None):
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Academia", slug="academia", active=True, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="Ana", document="12345678901", phone="11999999999",
+        )
+        session.add(debtor)
+        session.flush()
+        invoice = Invoice(
+            tenant_id=tenant.id, debtor_id=debtor.id, external_id="NF-1",
+            description="mensalidade", amount=Decimal("100.00"), amount_paid=Decimal("0"),
+            due_date=date(2026, 11, 1), status=InvoiceStatus.EM_COBRANCA, txid=txid,
+        )
+        session.add(invoice)
+        session.flush()
+        pagamentos = []
+        for valor in valores:
+            payment = Payment(
+                tenant_id=tenant.id, origin=PaymentOrigin.EXTRATO,
+                status=PaymentStatus.CONFIRMADO, amount=Decimal(valor), paid_at=PAGO_EM,
+                payer_name="Ana", payer_doc="12345678901", debtor_id=debtor.id, txid=txid,
+                raw={}, bank_confirmed_at=datetime.now(UTC),
+            )
+            session.add(payment)
+            session.flush()
+            pagamentos.append(payment.id)
+        return tenant.id, invoice.id, pagamentos
+
+
+def test_baixas_concorrentes_no_mesmo_titulo_somam(banco: Banco) -> None:
+    """SETL-43: PIX de 60 e de 40 ao mesmo tempo quitam o título de 100."""
+    import threading
+
+    from app.models.enums import MatchMethod
+    from app.reconciliation.matcher import Allocation
+    from app.reconciliation.service import apply_allocations
+
+    tenant_id, invoice_id, pagamentos = _semear_titulo_e_pagamentos(banco, ["60.00", "40.00"])
+    leram = threading.Barrier(2)
+    erros: list[BaseException] = []
+
+    def baixa(payment_id: UUID) -> None:
+        try:
+            with banco.como_app(tenant_id) as session:
+                payment = session.get(Payment, payment_id)
+                titulo = session.get(Invoice, invoice_id)  # na memória, ainda em 0
+                assert titulo.amount_paid == 0
+                leram.wait(timeout=10)
+                apply_allocations(
+                    session, payment, [Allocation(invoice_id, payment.amount)],
+                    MatchMethod.MANUAL, 1.0, "sistema",
+                )
+        except BaseException as exc:  # noqa: BLE001
+            erros.append(exc)
+
+    threads = [threading.Thread(target=baixa, args=(pid,)) for pid in pagamentos]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    assert not erros, erros
+    assert _titulo(banco, invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+
+
+def test_reconciliar_duas_vezes_gera_um_vinculo(banco: Banco) -> None:
+    """SETL-43: a segunda tarefa vê o pagamento já conciliado e não grava de novo."""
+    from app.reconciliation.service import reconcile_payment
+
+    tenant_id, invoice_id, (payment_id,) = _semear_titulo_e_pagamentos(
+        banco, ["100.00"], txid="TX-1",
+    )
+    with banco.como_app(tenant_id) as atrasada:
+        velho = atrasada.get(Payment, payment_id)
+        titulo_velho = atrasada.get(Invoice, invoice_id)
+        assert titulo_velho.amount_paid == 0
+        tenant_velho = atrasada.get(Tenant, tenant_id)
+
+        with banco.como_app(tenant_id) as primeira:
+            reconcile_payment(
+                primeira, primeira.get(Payment, payment_id), primeira.get(Tenant, tenant_id),
+            )
+
+        reconcile_payment(atrasada, velho, tenant_velho)
+
+    with banco.admin() as session:
+        vinculos = session.scalars(
+            select(Match).where(Match.payment_id == payment_id, Match.provisional.is_(False))
+        ).all()
+        assert session.get(Payment, payment_id).status == PaymentStatus.CONCILIADO
+    assert len(vinculos) == 1
+    assert _titulo(banco, invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
