@@ -115,7 +115,7 @@ flowchart TD
   templates.
 - **Horário permitido**: janela de envio por tenant (compliance CDC).
 - **Número WhatsApp** e credenciais da Evolution.
-- **Integração do emissor** para webhooks de PIX/boleto. Em `main` o adaptador é o Asaas. Inter, Efí, iugu e Sicoob ficam no roadmap; até lá esses títulos entram por planilha.
+- **Integração do emissor** para webhooks de PIX/boleto. Em `main` há dois adaptadores: Asaas e Inter (Cobrança v3). O Inter ainda não rodou em cliente vivo. Efí, iugu e Sicoob ficam no roadmap; até lá esses títulos entram por planilha.
 
 **Regra:** nenhum tenant entra em produção sem política, régua, horário e base
 legal (LGPD) registrados. A ativação devolve 422 com a lista do que falta.
