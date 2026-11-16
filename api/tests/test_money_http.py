@@ -258,7 +258,7 @@ def _banco_limpo(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> Iterator[None
         dbmod.SessionLocal = original
 
 
-def _token(tenant_id: UUID, email: str) -> str:
+def _token(tenant_id: UUID, email: str, role: str = "operador") -> str:
     settings = get_settings()
     now = datetime.now(UTC)
     encoded = jwt.encode(
@@ -268,7 +268,7 @@ def _token(tenant_id: UUID, email: str) -> str:
             "aud": settings.jwt_audience,
             "iat": int(now.timestamp()),
             "exp": int((now + timedelta(hours=1)).timestamp()),
-            "app_metadata": {"tenant_id": str(tenant_id), "role": "operador"},
+            "app_metadata": {"tenant_id": str(tenant_id), "role": role},
         },
         settings.jwt_secret,
         algorithm="HS256",
@@ -276,8 +276,8 @@ def _token(tenant_id: UUID, email: str) -> str:
     return encoded if isinstance(encoded, str) else encoded.decode()
 
 
-def _auth(caso: Caso) -> dict[str, str]:
-    return {"Authorization": f"Bearer {_token(caso.tenant_id, caso.email)}"}
+def _auth(caso: Caso, role: str = "operador") -> dict[str, str]:
+    return {"Authorization": f"Bearer {_token(caso.tenant_id, caso.email, role)}"}
 
 
 def _semear_pagamento(
@@ -1112,3 +1112,115 @@ def test_webhook_do_emissor_nao_marca_a_cobranca_de_novo(
 
 
 
+
+
+@dataclass(frozen=True)
+class Contestacao:
+    caso: Caso
+    outros: tuple[UUID, UUID]
+    conversation_id: UUID
+
+
+def _semear_contestacao(banco: Banco, *, abrir_excecao: bool = True) -> Contestacao:
+    """Devedor com três mensalidades em aberto; a conversa cita a segunda."""
+    from app.models import Conversation, Message
+
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Escola", slug="escola", active=True, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="João", document="12345678901", phone="11999999999",
+        )
+        session.add(debtor)
+        session.flush()
+        ids = []
+        for mes in (9, 10, 11):
+            invoice = Invoice(
+                tenant_id=tenant.id, debtor_id=debtor.id, external_id=f"NF-{mes}",
+                description=f"mensalidade {mes}", amount=Decimal("100.00"),
+                amount_paid=Decimal("0"), due_date=date(2026, mes, 1),
+                status=InvoiceStatus.EM_COBRANCA,
+            )
+            session.add(invoice)
+            session.flush()
+            ids.append(invoice.id)
+        conv = Conversation(
+            tenant_id=tenant.id, debtor_id=debtor.id, wa_jid="5511999999999@s.whatsapp.net",
+        )
+        session.add(conv)
+        session.flush()
+        session.add(Message(
+            tenant_id=tenant.id, conversation_id=conv.id, invoice_id=ids[1],
+            direction="out", author="regua", body="Lembrete da mensalidade 10",
+        ))
+        exc_id = None
+        if abrir_excecao:
+            session.get(Invoice, ids[1]).status = InvoiceStatus.CONTESTADO
+            exc = ReviewException(
+                tenant_id=tenant.id, type=ExceptionType.CONTESTACAO, status="aberta",
+                invoice_id=ids[1], conversation_id=conv.id,
+                details={"debtor_id": str(debtor.id)},
+            )
+            session.add(exc)
+            session.flush()
+            exc_id = exc.id
+        return Contestacao(
+            Caso(tenant.id, "financeiro@escola.test", debtor.id, ids[1], None, exc_id),
+            (ids[0], ids[2]),
+            conv.id,
+        )
+
+
+def test_contestacao_marca_so_o_titulo_citado(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> None:
+    """SETL-44: o devedor reclama de uma mensalidade; as outras duas seguem na régua."""
+    from app.agent.intent import Intent
+    from app.channels import tasks
+    from app.models import Conversation
+
+    monkeypatch.setattr(tasks, "send_to_debtor", lambda *_a, **_k: None)
+    semente = _semear_contestacao(banco, abrir_excecao=False)
+    caso = semente.caso
+    with banco.como_app(caso.tenant_id) as session:
+        tenant = session.get(Tenant, caso.tenant_id)
+        debtor = session.get(Debtor, caso.debtor_id)
+        conv = session.get(Conversation, semente.conversation_id)
+        assert tasks._route_deterministic(
+            session, tenant, debtor, conv, Intent.CONTESTACAO, None, HOJE,
+        ) == "contestacao"
+
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CONTESTADO
+    for outro in semente.outros:
+        assert _titulo(banco, outro)[0] == InvoiceStatus.EM_COBRANCA
+    with banco.admin() as session:
+        exc = session.scalars(
+            select(ReviewException).where(ReviewException.type == ExceptionType.CONTESTACAO)
+        ).one()
+    assert exc.invoice_id == caso.invoice_id
+
+
+def test_resolver_a_favor_do_devedor_cancela_so_o_titulo_contestado(banco: Banco) -> None:
+    semente = _semear_contestacao(banco)
+    caso = semente.caso
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"contestation": "devedor"},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CANCELADO
+    for outro in semente.outros:
+        assert _titulo(banco, outro)[0] == InvoiceStatus.EM_COBRANCA
+
+
+def test_rejeitar_contestacao_devolve_o_titulo_para_cobranca(banco: Banco) -> None:
+    semente = _semear_contestacao(banco)
+    caso = semente.caso
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "dono"),
+        json={"note": "valor correto"},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert resposta.json()["status"] == "rejeitada"
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.EM_COBRANCA

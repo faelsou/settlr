@@ -369,6 +369,33 @@ def continue_after_inbound(
     return "agente", (conv_id, text, str(intent))
 
 
+def _cited_invoice(session, conv, debtor) -> Invoice | None:
+    """Título de que a pessoa está falando: o da última mensagem da conversa que cita um.
+
+    Sem citação, só há certeza quando o devedor tem um único título em aberto.
+    Com vários e nenhum citado, a contestação vai à fila sem marcar título.
+    """
+    open_invoices = {
+        inv.id: inv
+        for inv in session.scalars(
+            select(Invoice).where(
+                Invoice.debtor_id == debtor.id, Invoice.status.in_(OPEN_INVOICE_STATUSES),
+            )
+        ).all()
+    }
+    cited_id = session.scalar(
+        select(Message.invoice_id)
+        .where(Message.conversation_id == conv.id, Message.invoice_id.is_not(None))
+        .order_by(Message.created_at.desc())
+        .limit(1)
+    )
+    if cited_id in open_invoices:
+        return open_invoices[cited_id]
+    if len(open_invoices) == 1:
+        return next(iter(open_invoices.values()))
+    return None
+
+
 def _route_deterministic(
     session, tenant, debtor, conv, intent, promised_date, today, *, reply_voice: bool = False,
 ) -> str | None:
@@ -393,14 +420,11 @@ def _route_deterministic(
         return "escalonado"
 
     if intent == Intent.CONTESTACAO:
-        invoices = session.scalars(
-            select(Invoice).where(Invoice.debtor_id == debtor.id, Invoice.status.in_(OPEN_INVOICE_STATUSES))
-        ).all()
-        for inv in invoices:
-            if inv.status != InvoiceStatus.EM_NEGOCIACAO:
-                set_invoice_status(inv, InvoiceStatus.CONTESTADO)
+        invoice = _cited_invoice(session, conv, debtor)
+        if invoice is not None and invoice.status != InvoiceStatus.EM_NEGOCIACAO:
+            set_invoice_status(invoice, InvoiceStatus.CONTESTADO)
         open_exception(session, tenant.id, ExceptionType.CONTESTACAO, conversation_id=conv.id,
-                       invoice_id=invoices[0].id if invoices else None,
+                       invoice_id=invoice.id if invoice else None,
                        details={"debtor_id": str(debtor.id)})
         conv.state = ConversationState.HUMANO
         reply("Obrigado por avisar. Vamos verificar com cuidado e nossa equipe retorna em breve.")

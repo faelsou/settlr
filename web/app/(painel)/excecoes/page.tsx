@@ -143,8 +143,9 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
     invoices.data?.items.forEach((inv) => map.set(inv.id, inv));
     return map;
   }, [catalog.data, invoices.data]);
+  // A contestação vale só para o título citado na conversa (item.invoice_id).
   const contested = catalog.data?.items.filter(
-    (inv) => inv.status === "contestado" && inv.debtor.id === item.details.debtor_id,
+    (inv) => inv.status === "contestado" && inv.id === item.invoice_id,
   ) ?? [];
 
   return (

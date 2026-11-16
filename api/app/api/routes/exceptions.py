@@ -77,6 +77,18 @@ def _close(db: Session, exc: ReviewException, status: ExceptionStatus, user: Cur
           entity="exception", entity_id=exc.id, after={"type": exc.type, "note": note})
 
 
+def _contested_invoice(db: Session, exc: ReviewException) -> Invoice | None:
+    """Só o título da exceção, e só se ele ainda estiver contestado."""
+    if exc.invoice_id is None:
+        return None
+    invoice = db.scalars(
+        select(Invoice).where(Invoice.id == exc.invoice_id).with_for_update()
+    ).first()
+    if invoice is None or invoice.status != InvoiceStatus.CONTESTADO:
+        return None
+    return invoice
+
+
 @router.get("", response_model=Page[ExceptionOut])
 def list_exceptions(
     status: ExceptionStatus = ExceptionStatus.ABERTA,
@@ -159,13 +171,12 @@ def confirm_exception(
         new_status = (
             InvoiceStatus.EM_COBRANCA if body.contestation == "cobranca" else InvoiceStatus.CANCELADO
         )
-        contested = db.scalars(
-            select(Invoice).where(
-                Invoice.debtor_id == UUID(exc.details["debtor_id"]),
-                Invoice.status == InvoiceStatus.CONTESTADO,
+        invoice = _contested_invoice(db, exc)
+        if invoice is None and body.contestation == "devedor":
+            raise HTTPException(
+                422, "contestação sem título citado: cancele o título certo pela tela do título",
             )
-        ).all()
-        for invoice in contested:
+        if invoice is not None:
             set_invoice_status(invoice, new_status)
             audit(db, tenant_id=exc.tenant_id, actor=user.actor, action="resolve_contestacao",
                   entity="invoice", entity_id=invoice.id, after={"status": new_status})
@@ -184,6 +195,15 @@ def reject_exception(
 ) -> ExceptionOut:
     exc = _get_open(db, exception_id)
     _close(db, exc, ExceptionStatus.REJEITADA, user, body.note)
+
+    if exc.type == ExceptionType.CONTESTACAO:
+        # Contestação improcedente: o título volta para a régua.
+        invoice = _contested_invoice(db, exc)
+        if invoice is not None:
+            set_invoice_status(invoice, InvoiceStatus.EM_COBRANCA)
+            audit(db, tenant_id=exc.tenant_id, actor=user.actor, action="rejeita_contestacao",
+                  entity="invoice", entity_id=invoice.id,
+                  after={"status": InvoiceStatus.EM_COBRANCA})
 
     if exc.payment_id:
         payment = db.get(Payment, exc.payment_id)
