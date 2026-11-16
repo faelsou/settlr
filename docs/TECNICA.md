@@ -128,7 +128,7 @@ LLM preenche `ReceiptExtraction` (Pydantic). `receipts/validation.py` exige valo
 
 ### 6.4 Agente
 
-Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição usa a API de áudio da OpenAI, com a mesma chave do chat, e só quando `LLM_MODEL` começa com `openai:`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário, sem chave, ou com outro provedor, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
+Nota de voz e áudio (`audioMessage`, `pttMessage`) não entram no OCR. A transcrição e a síntese usam a API de áudio (`SPEECH_API_KEY` / `SPEECH_BASE_URL`); se a chave de áudio estiver vazia e o chat for OpenAI (`LLM_MODEL` com prefixo `openai:`), reutiliza `LLM_API_KEY`. Com chat em outro provedor (ex.: Claude) é obrigatório configurar `SPEECH_API_KEY`. O texto gravado segue o mesmo roteamento da mensagem escrita. A resposta pode sair como nota de voz (`sendWhatsAppAudio`) dentro de `allowed_hours`; o texto fica em `messages`. Fora do horário ou sem chave de áudio, a resposta sai escrita. Áudio sem transcrição abre `transcricao_indisponivel` e não inventa a frase. Grupo não recebe essa resposta.
 
 Grafo: identificar → identidade → títulos → classificar → política → opções → aceite → acordo, ou `request_human`.
 
@@ -192,7 +192,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 
 ## 9. Persistência, secrets e deploy
 
-Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `redis_password`, `evolution_api_key`, `jwt_secret`, `llm_api_key`, `minio_root_password`, `webhook_hmac`.
+Secrets do Swarm (nunca na imagem nem no Git): `postgres_password`, `redis_password`, `evolution_api_key`, `jwt_secret`, `llm_api_key`, `speech_api_key`, `minio_root_password`, `webhook_hmac`.
 
 URLs internas montadas no entrypoint a partir dos arquivos em `/run/secrets`, para a senha não aparecer em `docker service inspect`.
 

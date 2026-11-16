@@ -158,8 +158,10 @@ Riscos já aceitos no piloto: webhook assinado do Asaas em cliente vivo. Inter, 
 
 | Termo | Neste sistema |
 | --- | --- |
-| Tenant | Empresa cliente do Settlr, controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id` |
-| Agência | Equipe do Settlr que opera várias contas pela role `agencia` (`/admin/tenants`). Não é um intermediário |
+| Tenant | Empresa controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id`. Na PME, a empresa contrata o Settlr; no BPO, a empresa entra na carteira do BPO |
+| Agência | Equipe do Settlr que opera várias contas pela role `agencia` (`/admin/tenants`). Não é o BPO nem um revendedor |
+| Organização | Agrupa os tenants de um BPO. Proposta em SETL-56; contrato e LGPD em [CONTRATO-BPO.md](./CONTRATO-BPO.md) |
+| BPO | Operador da empresa (LGPD). Opera a carteira com `bpo_admin` / `bpo_operador`. O Settlr fica suboperador. Não compartilha WhatsApp entre empresas |
 | Título | `invoices`. Centro da régua, da conversa e da baixa |
 | Baixa | Match confirmado pelo banco que muda o status do título |
 | Provisório | Match de comprovante ainda sem extrato ou webhook |

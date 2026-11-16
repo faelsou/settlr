@@ -441,12 +441,26 @@ export default function ConfiguracoesPage() {
               </Field>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Template oficial (nome na Meta)">
-                  <Input value={official.name} placeholder="lembrete_pix" onChange={(e) => setOfficial({ name: e.target.value })} />
+                  <Input value={official.name} placeholder="settlr_lembrete" onChange={(e) => setOfficial({ name: e.target.value })} />
                 </Field>
                 <Field label="Idioma do template">
                   <Input value={official.language} placeholder="pt_BR" onChange={(e) => setOfficial({ language: e.target.value })} />
                 </Field>
               </div>
+              <Field label="Params (ordem das variáveis {{1}}, {{2}}, … na Meta)">
+                <Input
+                  value={(official.params ?? []).join(", ")}
+                  placeholder="{nome}, {descricao}, {valor}, {vencimento}, {pix}"
+                  onChange={(e) =>
+                    setOfficial({
+                      params: e.target.value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                />
+              </Field>
             </div>
           );
         })}

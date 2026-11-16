@@ -11,7 +11,10 @@
 | [JORNADA-VENDA-B2B.md](./JORNADA-VENDA-B2B.md) | Da qualificação à carteira: venda B2B no modelo de fase 1, Pix Automático e copia-e-cola |
 | [CADASTRAR-CLIENTE.md](./CADASTRAR-CLIENTE.md) | Passo a passo para colocar os dados de um cliente B2B e a régua disparar |
 | [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) | Textos versionados da régua, à espera do parecer do SETL-15 |
-| [CONTRATO.md](./CONTRATO.md) | Minuta de contrato: base legal, retenção, CDC e LGPD |
+| [TEMPLATES-WHATSAPP-META.md](./TEMPLATES-WHATSAPP-META.md) | 9 templates Meta (PME/BPO) para criar na WABA e gravar no onboarding |
+| [templates-whatsapp-meta.json](./templates-whatsapp-meta.json) | Nomes, params e payload pronto para `whatsapp_templates` |
+| [CONTRATO.md](./CONTRATO.md) | Minuta PME: base legal, retenção, CDC e LGPD (Settlr = operador) |
+| [CONTRATO-BPO.md](./CONTRATO-BPO.md) | Minuta BPO: cadeia LGPD, preço, WhatsApp e termo de adesão da empresa (SETL-55) |
 | [TECNICA.md](./TECNICA.md) | O que foi implementado: gateway, cobrança, conciliação, cadastro, painel, OTLP e deploy |
 | [BANCO.md](./BANCO.md) | Criação do Postgres 16: databases, roles, Alembic, RLS e checkpointer |
 | [../FLUXOS.md](../FLUXOS.md) | Passo a passo dos 9 fluxos e qual serviço executa cada um |

@@ -1,6 +1,6 @@
 """Áudio do WhatsApp: transcrição da entrada e nota de voz da resposta.
 
-A régua não passa por aqui. Sem chave OpenAI, ou com o chat em outro provedor,
+A régua não passa por aqui. Sem chave de áudio (nem chave OpenAI do chat),
 a transcrição volta vazia e o turno não inventa o que foi dito.
 """
 
@@ -49,10 +49,18 @@ def usable_transcript(text: str | None) -> str | None:
 
 
 def _openai_key() -> str | None:
+    """Chave da API de áudio. Preferência: SPEECH_API_KEY; senão a do chat OpenAI."""
     settings = get_settings()
-    if not settings.llm_api_key or not settings.llm_model.startswith("openai:"):
-        return None
-    return settings.llm_api_key
+    if settings.speech_api_key:
+        return settings.speech_api_key
+    if settings.llm_api_key and settings.llm_model.startswith("openai:"):
+        return settings.llm_api_key
+    return None
+
+
+def _speech_base_url() -> str:
+    settings = get_settings()
+    return (settings.speech_base_url or _OPENAI).rstrip("/")
 
 
 def stage_voice(tenant_id: str, data: bytes, content_type: str) -> str:
@@ -73,7 +81,7 @@ def transcribe(data: bytes, content_type: str) -> str | None:
     settings = get_settings()
     try:
         response = httpx.post(
-            f"{_OPENAI}/audio/transcriptions",
+            f"{_speech_base_url()}/audio/transcriptions",
             headers={"Authorization": f"Bearer {key}"},
             files={"file": (f"audio.{ext}", data, mime)},
             data={"model": settings.stt_model, "language": "pt"},
@@ -92,16 +100,20 @@ def synthesize(text: str) -> bytes | None:
     if not key or not spoken:
         return None
     settings = get_settings()
+    body: dict = {
+        "model": settings.tts_model,
+        "voice": settings.tts_voice,
+        "input": spoken,
+        "response_format": "opus",
+    }
+    instructions = (settings.tts_instructions or "").strip()
+    if instructions:
+        body["instructions"] = instructions
     try:
         response = httpx.post(
-            f"{_OPENAI}/audio/speech",
+            f"{_speech_base_url()}/audio/speech",
             headers={"Authorization": f"Bearer {key}"},
-            json={
-                "model": settings.tts_model,
-                "voice": settings.tts_voice,
-                "input": spoken,
-                "response_format": "opus",
-            },
+            json=body,
             timeout=60,
         )
         response.raise_for_status()

@@ -4,6 +4,8 @@ Versão `2026-11-08`. Esta é a versão submetida ao parecer do [SETL-15](https:
 
 O disparo proativo usa o template oficial da Meta. O texto abaixo é o da resposta, do e-mail e o que a Meta precisa aprovar. Condição de desconto ou parcelamento só nasce depois, na conversa, dentro da política da empresa. Nenhum texto ameaça, cita restrição de crédito ou cobra em grupo.
 
+Para criar os 9 modelos na Meta e mapear nomes/`params` no Settlr (PME e BPO usam o mesmo conjunto por conta), use [TEMPLATES-WHATSAPP-META.md](./TEMPLATES-WHATSAPP-META.md) e [templates-whatsapp-meta.json](./templates-whatsapp-meta.json).
+
 A versão anterior anunciava 15% de desconto, parcelamento em até 6 vezes, entrada mais 3 parcelas e possível restrição do nome. Esses trechos saíram nesta versão.
 
 ## lembrete

@@ -2,6 +2,8 @@
 
 Minuta para o parecer do [SETL-15](https://rafadsouz.atlassian.net/browse/SETL-15). Não é parecer jurídico, não está assinada e não autoriza ativar o primeiro cliente. O advogado confirma o recorte de CDC e LGPD e o registro fica no ticket. Produção só ativa a conta com `LEGAL_OPINION_REF` apontando esse registro.
 
+**Escopo:** venda direta à **PME** (empresa = controladora; Settlr = operador). Quando o comprador é **BPO** com várias empresas, use a minuta [CONTRATO-BPO.md](./CONTRATO-BPO.md) (SETL-55): empresa = controladora, BPO = operador, Settlr = suboperador.
+
 ## 1. Partes
 
 - **Contratante:** a empresa que cobra os próprios clientes. É a controladora dos dados desses clientes.

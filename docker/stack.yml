@@ -149,6 +149,7 @@ services:
       - evolution_api_key
       - jwt_secret
       - llm_api_key
+      - speech_api_key
       - webhook_hmac
       - smtp_password
     environment:
@@ -221,6 +222,7 @@ services:
       - redis_password
       - evolution_api_key
       - llm_api_key
+      - speech_api_key
       - smtp_password
     environment:
       <<: *app-env
@@ -469,6 +471,7 @@ secrets:
   evolution_api_key: { external: true }
   jwt_secret: { external: true }
   llm_api_key: { external: true }
+  speech_api_key: { external: true }
   minio_root_password: { external: true }
   webhook_hmac: { external: true }
   smtp_password: { external: true }

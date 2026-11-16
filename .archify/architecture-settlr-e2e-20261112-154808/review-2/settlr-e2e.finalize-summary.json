@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/candidate.json",
+    "sha256": "6d08384ac7822d791b8d35bbe81eeb24f9a7871bb1d48b929bb8ae610b7049a7",
+    "bytes": 20049
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/settlr-e2e.html",
+    "sha256": "8e78dd1173283b1f8ba994f01131feb69bc14ef73646afa78f3293f8b6acac7f",
+    "bytes": 864091
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "layout/component-overlap",
+      "severity": "error",
+      "message": "Components \"conciliacao\" and \"cobranca\" are less than 8px apart — move one or shrink its size.\n  \"conciliacao\" [410, 400, 150, 56]; \"cobranca\" [560, 400, 140, 56]\n  Suggested fix: move \"cobranca\" pos to [568, 400] (right of \"conciliacao\") or [560, 464] (below)",
+      "subject": {
+        "diagramType": "architecture",
+        "nodeId": "conciliacao"
+      },
+      "evidence": {
+        "otherId": "cobranca",
+        "minimumGapPx": 8,
+        "boxes": [
+          {
+            "id": "conciliacao",
+            "type": "backend",
+            "label": "Conciliação",
+            "x": 410,
+            "y": 400,
+            "width": 150,
+            "height": 56,
+            "pos": [
+              410,
+              400
+            ]
+          },
+          {
+            "id": "cobranca",
+            "type": "backend",
+            "label": "Cobrança",
+            "x": 560,
+            "y": 400,
+            "width": 140,
+            "height": 56,
+            "pos": [
+              560,
+              400
+            ]
+          }
+        ]
+      },
+      "supportedFixes": [
+        "move component \"cobranca\" pos to [568, 400] (right of \"conciliacao\")",
+        "or move component \"cobranca\" pos to [560, 464] (below)",
+        "or shrink \"conciliacao\" or \"cobranca\" while keeping every label and sublabel readable"
+      ]
+    },
+    {
+      "code": "layout/boundary-encloses-non-member",
+      "severity": "error",
+      "message": "Component \"devedor\" is not wrapped by boundary \"Rede backend\" but sits inside its frame — move it outside the frame, place the wrapped members in one compact axis-aligned cluster (no empty bay for a non-member), or add it to wraps only when it truly belongs there.",
+      "subject": {
+        "diagramType": "architecture",
+        "boundary": {
+          "kind": "region",
+          "label": "Rede backend",
+          "wraps": [
+            "gateway",
+            "cadastro",
+            "conciliacao",
+            "cobranca",
+            "redis",
+            "beat",
+            "wcad",
+            "wcon",
+            "wcob",
+            "postgres",
+            "minio"
+          ]
+        },
+        "component": "devedor"
+      },
+      "evidence": {
+        "bounds": {
+          "x": 234,
+          "y": 168,
+          "width": 782,
+          "height": 1004
+        },
+        "component": {
+          "id": "devedor",
+          "type": "external",
+          "label": "Devedor",
+          "x": 820,
+          "y": 626,
+          "width": 140,
+          "height": 48,
+          "pos": [
+            820,
+            626
+          ]
+        }
+      },
+      "supportedFixes": [
+        "move \"devedor\" outside the boundary frame",
+        "reposition the wrapped members into one compact axis-aligned cluster (no empty bay) that leaves non-members outside"
+      ]
+    },
+    {
+      "code": "layout/boundary-encloses-non-member",
+      "severity": "error",
+      "message": "Component \"evolution\" is not wrapped by boundary \"Rede backend\" but sits inside its frame — move it outside the frame, place the wrapped members in one compact axis-aligned cluster (no empty bay for a non-member), or add it to wraps only when it truly belongs there.",
+      "subject": {
+        "diagramType": "architecture",
+        "boundary": {
+          "kind": "region",
+          "label": "Rede backend",
+          "wraps": [
+            "gateway",
+            "cadastro",
+            "conciliacao",
+            "cobranca",
+            "redis",
+            "beat",
+            "wcad",
+            "wcon",
+            "wcob",
+            "postgres",
+            "minio"
+          ]
+        },
+        "component": "evolution"
+      },
+      "evidence": {
+        "bounds": {
+          "x": 234,
+          "y": 168,
+          "width": 782,
+          "height": 1004
+        },
+        "component": {
+          "id": "evolution",
+          "type": "backend",
+          "label": "Evolution API",
+          "x": 660,
+          "y": 620,
+          "width": 145,
+          "height": 60,
+          "pos": [
+            660,
+            620
+          ]
+        }
+      },
+      "supportedFixes": [
+        "move \"evolution\" outside the boundary frame",
+        "reposition the wrapped members into one compact axis-aligned cluster (no empty bay) that leaves non-members outside"
+      ]
+    },
+    {
+      "code": "layout/boundary-encloses-non-member",
+      "severity": "error",
+      "message": "Component \"llm\" is not wrapped by boundary \"Rede backend\" but sits inside its frame — move it outside the frame, place the wrapped members in one compact axis-aligned cluster (no empty bay for a non-member), or add it to wraps only when it truly belongs there.",
+      "subject": {
+        "diagramType": "architecture",
+        "boundary": {
+          "kind": "region",
+          "label": "Rede backend",
+          "wraps": [
+            "gateway",
+            "cadastro",
+            "conciliacao",
+            "cobranca",
+            "redis",
+            "beat",
+            "wcad",
+            "wcon",
+            "wcob",
+            "postgres",
+            "minio"
+          ]
+        },
+        "component": "llm"
+      },
+      "evidence": {
+        "bounds": {
+          "x": 234,
+          "y": 168,
+          "width": 782,
+          "height": 1004
+        },
+        "component": {
+          "id": "llm",
+          "type": "external",
+          "label": "LLM",
+          "x": 660,
+          "y": 760,
+          "width": 145,
+          "height": 56,
+          "pos": [
+            660,
+            760
+          ]
+        }
+      },
+      "supportedFixes": [
+        "move \"llm\" outside the boundary frame",
+        "reposition the wrapped members into one compact axis-aligned cluster (no empty bay) that leaves non-members outside"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 4,
+    "shown": 4,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/review-2/settlr-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/review-2/settlr-e2e.finalize-summary.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-12T18:52:17.036Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A previous check at 2026-11-12T18:52:17.036Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 718,
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "/home/rafael/www/Settlr/.archify/architecture-settlr-e2e-20261112-154808/candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}

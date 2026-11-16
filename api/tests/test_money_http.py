@@ -34,6 +34,7 @@ from app.core.db import set_tenant
 from app.models import Agreement, AuditLog, Debtor, Invoice, Match, Payment, ReviewException, Tenant
 from app.models.enums import ExceptionType, InvoiceStatus, PaymentOrigin, PaymentStatus
 from app.reconciliation.feeds import pull_tenant
+from app.reconciliation.service import BankPaymentIn, register_bank_payment
 from app.services.cadastro import app as cadastro_app
 from app.services.conciliacao import app as conciliacao_app
 
@@ -422,6 +423,88 @@ def test_comprovante_sem_banco_nao_quita_o_titulo(banco: Banco) -> None:
         assert pagamento is not None
         assert pagamento.status == PaymentStatus.AGUARDANDO_BANCO
         assert pagamento.bank_confirmed_at is None
+
+
+def test_credito_sem_documento_nao_confirma_comprovante_alheio(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco,
+        slug="clinica",
+        email="operador@clinica.test",
+        nome="Ana",
+        documento="12345678901",
+        external_id="NF-1",
+        bank=False,
+        origin=PaymentOrigin.COMPROVANTE,
+        status=PaymentStatus.AGUARDANDO_BANCO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+    )
+    credito = BankPaymentIn(amount=Decimal("100.00"), paid_at=PAGO_EM)
+    with banco.como_app(caso.tenant_id) as session:
+        primeiro = register_bank_payment(session, caso.tenant_id, credito, PaymentOrigin.WEBHOOK)
+        segundo = register_bank_payment(session, caso.tenant_id, credito, PaymentOrigin.WEBHOOK)
+        comprovante = session.get(Payment, caso.payment_id)
+
+    assert comprovante is not None
+    assert comprovante.status == PaymentStatus.AGUARDANDO_BANCO
+    assert comprovante.bank_confirmed_at is None
+    assert primeiro is not None and segundo is not None
+    assert {primeiro.id, segundo.id}.isdisjoint({caso.payment_id})
+    assert primeiro.id != segundo.id
+    assert primeiro.status == PaymentStatus.CONFIRMADO
+    assert segundo.status == PaymentStatus.CONFIRMADO
+
+
+def test_credito_com_e2e_ou_documento_confirma_o_comprovante(banco: Banco) -> None:
+    por_e2e = _semear_pagamento(
+        banco,
+        slug="clinica",
+        email="operador@clinica.test",
+        nome="Ana",
+        documento="12345678901",
+        external_id="NF-1",
+        bank=False,
+        origin=PaymentOrigin.COMPROVANTE,
+        status=PaymentStatus.AGUARDANDO_BANCO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+        e2e_id="E2EANA1",
+    )
+    with banco.como_app(por_e2e.tenant_id) as session:
+        achado = register_bank_payment(
+            session,
+            por_e2e.tenant_id,
+            BankPaymentIn(amount=Decimal("100.00"), paid_at=PAGO_EM, e2e_id="E2EANA1"),
+            PaymentOrigin.WEBHOOK,
+        )
+        comprovante = session.get(Payment, por_e2e.payment_id)
+    assert achado is not None and achado.id == por_e2e.payment_id
+    assert comprovante is not None
+    assert comprovante.status == PaymentStatus.CONFIRMADO
+    assert comprovante.bank_confirmed_at is not None
+
+    por_doc = _semear_pagamento(
+        banco,
+        slug="escola",
+        email="operador@escola.test",
+        nome="Bruno",
+        documento="10987654321",
+        external_id="NF-2",
+        bank=False,
+        origin=PaymentOrigin.COMPROVANTE,
+        status=PaymentStatus.AGUARDANDO_BANCO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+    )
+    with banco.como_app(por_doc.tenant_id) as session:
+        achado = register_bank_payment(
+            session,
+            por_doc.tenant_id,
+            BankPaymentIn(amount=Decimal("100.00"), paid_at=PAGO_EM, payer_doc="10987654321"),
+            PaymentOrigin.WEBHOOK,
+        )
+        comprovante = session.get(Payment, por_doc.payment_id)
+    assert achado is not None and achado.id == por_doc.payment_id
+    assert comprovante is not None
+    assert comprovante.status == PaymentStatus.CONFIRMADO
+    assert comprovante.bank_confirmed_at is not None
 
 
 def test_rejeitar_sugestao_devolve_pagamento_nao_identificado(banco: Banco) -> None:

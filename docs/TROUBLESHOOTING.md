@@ -84,10 +84,11 @@ Ordem:
 3. `inbound.synced` grava a mensagem. `inbound.sync_chats_failed` ou `inbound.sync_messages_failed` é a Evolution inacessível ou a chave rejeitada.
 4. Conversa em `HUMANO` não aciona o agente. O rodapé "Assuma a conversa para responder" significa que ela ainda está com o agente.
 5. Sem `LLM_API_KEY`, o log é `inbound.agent_skipped_no_llm` e o turno não roda. Com a chave, `agent.turn` e um `POST /message/sendText/<instância>` 201. O modelo padrão é `openai:gpt-4o-mini`.
-6. Uma bolha verde pode ser a régua, não o modelo. O autor está em `messages.author` (`agente`, `regua:D+5`, `humano:...`).
-7. Intenções que não chamam o modelo: `PARAR`, `HOSTIL_SENSIVEL`, `CONTESTACAO`, `JA_PAGUEI`. O log é `inbound.routed` com o outcome.
-8. `inbound.agent_failed` é exceção no turno. `inbound.receipt_failed` é comprovante (a mídia não veio em base64). Isso se repete a cada ciclo e não impede a resposta de texto.
-9. `inbound.unknown_contact` é a instância do tenant diferente da instância que recebeu a mensagem.
+6. Nota de voz sem transcrição: com `LLM_MODEL` fora de `openai:` (ex.: Claude) é obrigatório `SPEECH_API_KEY` (OpenAI). Sem ela a exceção é `transcricao_indisponivel` e a resposta é "Não consegui ouvir o áudio…".
+7. Uma bolha verde pode ser a régua, não o modelo. O autor está em `messages.author` (`agente`, `regua:D+5`, `humano:...`).
+8. Intenções que não chamam o modelo: `PARAR`, `HOSTIL_SENSIVEL`, `CONTESTACAO`, `JA_PAGUEI`. O log é `inbound.routed` com o outcome.
+9. `inbound.agent_failed` é exceção no turno. `inbound.receipt_failed` é comprovante (a mídia não veio em base64). Isso se repete a cada ciclo e não impede a resposta de texto.
+10. `inbound.unknown_contact` é a instância do tenant diferente da instância que recebeu a mensagem.
 
 ```bash
 kubectl -n cobranca logs deploy/cobranca --since=30m | grep -E 'inbound\.|agent\.|gateway\.'
@@ -129,6 +130,7 @@ Tudo que os pods leem no Minikube está no ConfigMap `cobranca-env` (`k8s/miniku
 | --- | --- |
 | `EVOLUTION_BASE_URL` / `EVOLUTION_API_KEY` | Não lê nem envia WhatsApp |
 | `LLM_API_KEY` | Agente não responde |
+| `SPEECH_API_KEY` | Nota de voz não transcreve (obrigatória se o chat não for OpenAI) |
 | `WEBHOOK_HMAC` | Webhook da Evolution responde 401 |
 | `JWT_SECRET` | Sessão do painel inválida |
 | `DATABASE_*` / `REDIS_*` | `/health` 503 |

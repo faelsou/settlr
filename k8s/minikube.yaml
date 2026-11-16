@@ -69,10 +69,12 @@ data:
   JWT_SECRET: dev-secret-change-me
   WEBHOOK_HMAC: dev-webhook-secret
   EVOLUTION_BASE_URL: https://apiwp.aiagentautomate.com.br
-  # Vazios de propósito. A chave real fica nos Secrets evolution-api e llm-api
+  # Vazios de propósito. A chave real fica nos Secrets evolution-api, llm-api e speech-api
   # (não versionados). Os processos leem o Secret por cima deste valor.
   EVOLUTION_API_KEY: ""
   LLM_API_KEY: ""
+  SPEECH_API_KEY: ""
+  SPEECH_BASE_URL: https://api.openai.com/v1
   COBRANCA_URL: http://cobranca:8000
   CONCILIACAO_URL: http://conci-pgto:8000
   CADASTRO_URL: http://cadastro:8000
@@ -301,6 +303,12 @@ spec:
                   name: llm-api
                   key: LLM_API_KEY
                   optional: true
+            - name: SPEECH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: speech-api
+                  key: SPEECH_API_KEY
+                  optional: true
           envFrom:
             - configMapRef:
                 name: cobranca-env
@@ -435,6 +443,12 @@ spec:
                 secretKeyRef:
                   name: llm-api
                   key: LLM_API_KEY
+                  optional: true
+            - name: SPEECH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: speech-api
+                  key: SPEECH_API_KEY
                   optional: true
           envFrom:
             - configMapRef:
