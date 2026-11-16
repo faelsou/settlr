@@ -7,6 +7,7 @@ de painel); o HTTP prova que só o tenant dono lê as parcelas.
 
 from __future__ import annotations
 
+import hmac
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
@@ -1419,3 +1420,52 @@ def test_reconciliar_duas_vezes_gera_um_vinculo(banco: Banco) -> None:
         assert session.get(Payment, payment_id).status == PaymentStatus.CONCILIADO
     assert len(vinculos) == 1
     assert _titulo(banco, invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+
+
+def test_webhook_do_banco_assinado_para_uma_empresa_nao_vale_para_outra(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-42: o x-tenant-id entra na assinatura; replay em outra empresa dá 401."""
+    import json
+
+    from app.api.routes.webhooks import bank_signature
+
+    monkeypatch.setattr("app.api.routes.webhooks.reconcile.delay", lambda *_a, **_k: None)
+    with banco.admin() as session, session.begin():
+        a = Tenant(name="A", slug="empresa-a", active=True, timezone="America/Sao_Paulo")
+        b = Tenant(name="B", slug="empresa-b", active=True, timezone="America/Sao_Paulo")
+        session.add_all([a, b])
+        session.flush()
+        tenant_a, tenant_b = a.id, b.id
+
+    corpo = json.dumps({"transactions": [{
+        "amount": "250.00", "paid_at": PAGO_EM.isoformat(), "e2e_id": "E2E-REPLAY",
+        "source_id": "tx-1",
+    }]}).encode()
+    assinatura = bank_signature(tenant_a, corpo)
+
+    replay = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_b), "x-signature": assinatura,
+                 "content-type": "application/json"},
+    )
+    assert replay.status_code == 401, replay.text
+
+    antigo = hmac.new(get_settings().webhook_hmac.encode(), corpo, "sha256").hexdigest()
+    so_corpo = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_a), "x-signature": antigo,
+                 "content-type": "application/json"},
+    )
+    assert so_corpo.status_code == 401, so_corpo.text
+
+    valido = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_a), "x-signature": assinatura,
+                 "content-type": "application/json"},
+    )
+    assert valido.status_code == 202, valido.text
+    assert valido.json()["registered"] == 1
+    with banco.admin() as session:
+        donos = session.scalars(select(Payment.tenant_id)).all()
+    assert donos == [tenant_a]

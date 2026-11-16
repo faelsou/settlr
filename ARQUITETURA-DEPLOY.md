@@ -476,7 +476,16 @@ verificação de assinatura no código:
 | `GET /health` | Traefik | `webhook-api` (gateway) |
 
 A assinatura é conferida no serviço dono da rota, depois do gateway encaminhar
-o corpo sem alterá-lo. Cobrança, conciliação e cadastro não têm router no Traefik.
+o corpo sem alterá-lo.
+
+`POST /webhooks/banco` exige os cabeçalhos `x-tenant-id` e `x-signature`. A
+assinatura é o HMAC-SHA256, em hex, de `<x-tenant-id>.<corpo>` com o
+`WEBHOOK_HMAC`: o id da empresa, um ponto e o corpo exatamente como enviado. O
+mesmo corpo assinado para uma empresa dá 401 com o id de outra (SETL-42).
+
+```python
+hmac.new(secret, f"{tenant_id}.".encode() + body, hashlib.sha256).hexdigest()
+``` Cobrança, conciliação e cadastro não têm router no Traefik.
 
 O console do MinIO (`:9001`) não ganha router no Traefik.
 
