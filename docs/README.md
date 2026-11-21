@@ -9,6 +9,7 @@
 | [SRE.md](./SRE.md) | SLI/SLO, orçamento de erro, plantão, incidente, postmortem e integridade |
 | [WHATSAPP-ENTREGA.md](./WHATSAPP-ENTREGA.md) | Como não perder mensagem e arquivo no WhatsApp: status, recibo, storage e fila no painel |
 | [JORNADA-VENDA-B2B.md](./JORNADA-VENDA-B2B.md) | Da qualificação à carteira: venda B2B no modelo de fase 1, Pix Automático e copia-e-cola |
+| [PROSPECCAO-30-DIAS.md](./PROSPECCAO-30-DIAS.md) | Plano de prospecção de 23/11 a 22/12/2026: ICP clínica, oferta, canais, roteiros e metas |
 | [CADASTRAR-CLIENTE.md](./CADASTRAR-CLIENTE.md) | Passo a passo para colocar os dados de um cliente B2B e a régua disparar |
 | [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) | Textos versionados da régua, à espera do parecer do SETL-15 |
 | [TEMPLATES-WHATSAPP-META.md](./TEMPLATES-WHATSAPP-META.md) | 9 templates Meta (PME/BPO) para criar na WABA e gravar no onboarding |

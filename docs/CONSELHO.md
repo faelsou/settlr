@@ -110,5 +110,5 @@ A ativação exige ao mesmo tempo `connectionState == open` e template `approved
 - [x] Campo `integration` da instância: `WHATSAPP-BAILEYS`. Decisão de migrar para `WHATSAPP-BUSINESS` antes do piloto, sem afrouxar a trava.
 - [x] Frase do Pix Automático em [PRODUTO.md](./PRODUTO.md) §5, com o recorte de pessoa física, seis meses, B2B e condomínio.
 - [x] Preço da fase 1, distribuição, comparação de etapas e dados entre empresas escritos.
-- [ ] Tabela da seção 2 com 5 a 8 conversas, e a contagem de sim na pergunta 5.
+- [ ] Tabela da seção 2 com 5 a 8 conversas, e a contagem de sim na pergunta 5. Plano para preencher: [PROSPECCAO-30-DIAS.md](./PROSPECCAO-30-DIAS.md).
 - [x] Jornada de venda no modelo desta rodada, em [JORNADA-VENDA-B2B.md](./JORNADA-VENDA-B2B.md).
