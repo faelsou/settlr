@@ -21,7 +21,13 @@ from app.core.phones import contact_phones
 from app.core.redis import get_redis
 from app.dunning.official import approved_for
 from app.dunning.payment import has_payment_code, payment_code_clause
-from app.dunning.rules import DEFAULT_DUNNING_RULES, Step, decide, parse_steps
+from app.dunning.rules import (
+    DEFAULT_DUNNING_RULES,
+    Step,
+    decide,
+    parse_steps,
+    steps_for_invoice,
+)
 from app.models import Debtor, DunningEvent, Invoice, Promise, Tenant
 from app.models.enums import DUNNING_STATUSES, ExceptionType, InvoiceStatus, MessageDirection
 from app.reconciliation.service import open_exception, set_invoice_status
@@ -105,7 +111,7 @@ def process_invoice(
             Promise.invoice_id == invoice.id, Promise.fulfilled.is_(None)
         )
     )
-    steps = parse_steps(tenant.dunning_rules)
+    steps = steps_for_invoice(tenant.dunning_rules, invoice.id)
     decision = decide(
         today=today,
         due_date=invoice.due_date,

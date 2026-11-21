@@ -196,6 +196,7 @@ export type TenantSettings = {
     whatsapp_templates: Record<string, { name: string; language: string; params: string[] }>;
     rate_per_minute: number;
     text_version?: string;
+    piloto_regua?: { quatro_etapas_pct: number } | null;
   };
   allowed_hours: { start: string; end: string; weekdays: number[] };
   reconciliation_rules: {
@@ -231,4 +232,14 @@ export type Metrics = {
   auto_reconciliation_rate: number | null;
   exceptions_open: number;
   avg_exception_resolution_hours: number | null;
+  regua_variants?: ReguaVariantMetrics[];
+};
+
+export type ReguaVariantMetrics = {
+  variant: "dez_etapas" | "quatro_etapas";
+  invoices: number;
+  overdue_amount: string;
+  recovered_amount: string;
+  recovery_rate: number | null;
+  dispatches: number;
 };

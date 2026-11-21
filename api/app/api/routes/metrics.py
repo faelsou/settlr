@@ -6,10 +6,20 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends
 from sqlalchemy import Date, case, cast, func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import Subquery
 
 from app.api.deps import CurrentUser, get_db, require_tenant_user
-from app.api.schemas import Metrics
-from app.models import Invoice, Match, Payment, Promise, ReviewException, Tenant
+from app.api.schemas import Metrics, ReguaVariantMetrics
+from app.dunning.rules import VARIANT_FULL, VARIANT_SHORT, regua_variant, short_share
+from app.models import (
+    DunningEvent,
+    Invoice,
+    Match,
+    Payment,
+    Promise,
+    ReviewException,
+    Tenant,
+)
 from app.models.enums import ExceptionStatus, InvoiceStatus, PaymentStatus
 
 router = APIRouter(prefix="/metrics", tags=["metricas"])
@@ -32,15 +42,16 @@ def get_metrics(
     end_dt = datetime.combine(end, time.max, tzinfo=UTC)
 
     # Recuperação: valor aplicado após o vencimento ÷ valor vencido no período.
+    overdue_filter = (
+        Invoice.due_date.between(start, end),
+        Invoice.due_date < end,
+        Invoice.status.not_in([InvoiceStatus.CANCELADO, InvoiceStatus.RENEGOCIADO]),
+    )
     overdue = db.scalar(
-        select(func.coalesce(func.sum(Invoice.amount), 0)).where(
-            Invoice.due_date.between(start, end),
-            Invoice.due_date < end,
-            Invoice.status.not_in([InvoiceStatus.CANCELADO, InvoiceStatus.RENEGOCIADO]),
-        )
+        select(func.coalesce(func.sum(Invoice.amount), 0)).where(*overdue_filter)
     ) or Decimal("0")
     late = (
-        select(Match.amount_applied, Payment.paid_at, Invoice.due_date)
+        select(Match.invoice_id, Match.amount_applied, Payment.paid_at, Invoice.due_date)
         .join(Payment, Payment.id == Match.payment_id)
         .join(Invoice, Invoice.id == Match.invoice_id)
         .where(Match.provisional.is_(False))
@@ -101,4 +112,52 @@ def get_metrics(
         avg_exception_resolution_hours=round(float(avg_resolution) / 3600, 2)
         if avg_resolution
         else None,
+        regua_variants=_variant_metrics(db, tenant, overdue_filter, late),
     )
+
+
+def _variant_metrics(
+    db: Session, tenant: Tenant | None, overdue_filter: tuple, late: Subquery
+) -> list[ReguaVariantMetrics]:
+    """Recuperação e disparos por variante do piloto da régua (SETL-65). A variante
+    sai do id do título, então a conta é feita aqui e não no SQL."""
+    rules = None if tenant is None else tenant.dunning_rules
+    if short_share(rules) is None:
+        return []
+    invoices = db.execute(select(Invoice.id, Invoice.amount).where(*overdue_filter)).all()
+    if not invoices:
+        return []
+    ids = [row.id for row in invoices]
+    recovered = dict(
+        db.execute(
+            select(late.c.invoice_id, func.sum(late.c.amount_applied)).group_by(late.c.invoice_id)
+        ).all()
+    )
+    dispatches = dict(
+        db.execute(
+            select(DunningEvent.invoice_id, func.count())
+            .where(DunningEvent.invoice_id.in_(ids))
+            .group_by(DunningEvent.invoice_id)
+        ).all()
+    )
+    totals = {
+        v: {"invoices": 0, "overdue": Decimal("0"), "recovered": Decimal("0"), "dispatches": 0}
+        for v in (VARIANT_FULL, VARIANT_SHORT)
+    }
+    for row in invoices:
+        bucket = totals[regua_variant(rules, row.id)]
+        bucket["invoices"] += 1
+        bucket["overdue"] += Decimal(row.amount)
+        bucket["recovered"] += Decimal(recovered.get(row.id) or 0)
+        bucket["dispatches"] += int(dispatches.get(row.id) or 0)
+    return [
+        ReguaVariantMetrics(
+            variant=variant,
+            invoices=data["invoices"],
+            overdue_amount=data["overdue"],
+            recovered_amount=data["recovered"],
+            recovery_rate=_ratio(data["recovered"], data["overdue"]),
+            dispatches=data["dispatches"],
+        )
+        for variant, data in totals.items()
+    ]
