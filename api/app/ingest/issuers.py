@@ -33,6 +33,28 @@ _PAGE = 100
 _MAX_ROWS = 2000
 
 
+ORPHAN_ATTR = "orphan_charges"
+
+
+def try_cancel(adapter, external_id: str) -> bool:
+    """Cancela no emissor. False quando o emissor não respondeu: a cobrança segue aberta lá."""
+    try:
+        adapter.cancel(external_id)
+    except httpx.HTTPError:
+        log.warning("issuer.cancel_failed", payment_id=external_id)
+        return False
+    return True
+
+
+def flag_orphan(error: BaseException, external_id: str) -> None:
+    """Anexa ao erro o id da cobrança que ficou aberta, sem trocar o erro original."""
+    setattr(error, ORPHAN_ATTR, [*orphans_of(error), external_id])
+
+
+def orphans_of(error: BaseException) -> list[str]:
+    return list(getattr(error, ORPHAN_ATTR, []))
+
+
 @dataclass(frozen=True)
 class IssuedCharge:
     """Cobrança criada no emissor, já com o código que o devedor usa para pagar."""
@@ -152,12 +174,15 @@ class AsaasAdapter:
         payment_id = payment["id"]
         try:
             pix, line = self._instrument(payment_id)
-        except httpx.HTTPError:
-            self.cancel(payment_id)
+        except httpx.HTTPError as err:
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
             raise
         if not pix and not line:
-            self.cancel(payment_id)
-            raise ValueError("emissor não devolveu PIX nem boleto")
+            err = ValueError("emissor não devolveu PIX nem boleto")
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
+            raise err
         return IssuedCharge(
             external_id=payment_id,
             txid=payment_id,
@@ -167,10 +192,8 @@ class AsaasAdapter:
         )
 
     def cancel(self, payment_id: str) -> None:
-        try:
-            self._request("DELETE", f"/payments/{payment_id}")
-        except httpx.HTTPError:
-            log.warning("issuer.cancel_failed", payment_id=payment_id)
+        """Levanta httpx.HTTPError se o Asaas não cancelar: quem chama decide o que fazer."""
+        self._request("DELETE", f"/payments/{payment_id}")
 
     def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
         """Marca a cobrança como recebida. Cobrança que o Asaas já quitou conta como feita."""
@@ -237,6 +260,10 @@ class InterAdapter:
 
     def __init__(self, config: dict[str, Any], client: httpx.Client | None = None):
         self.base_url = str(config.get("base_url", INTER_BASE)).rstrip("/")
+        # `/pagar` só existe no sandbox. Em produção a baixa cancela a cobrança.
+        self.sandbox = bool(config.get("sandbox")) or any(
+            mark in self.base_url for mark in ("sandbox", "uatinter")
+        )
         self.access_token = str(config.get("access_token") or "")
         self.conta = str(config.get("conta_corrente") or "")
         self.client_id = str(config.get("client_id") or "")
@@ -340,13 +367,16 @@ class InterAdapter:
         payment_id = str(created["codigoSolicitacao"])
         try:
             detail = self._request("GET", f"/cobranca/v3/cobrancas/{payment_id}")
-        except httpx.HTTPError:
-            self.cancel(payment_id)
+        except httpx.HTTPError as err:
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
             raise
         pix, line, txid = _inter_instruments(detail)
         if not pix and not line:
-            self.cancel(payment_id)
-            raise ValueError("emissor não devolveu PIX nem boleto")
+            err = ValueError("emissor não devolveu PIX nem boleto")
+            if not try_cancel(self, payment_id):
+                flag_orphan(err, payment_id)
+            raise err
         return IssuedCharge(
             external_id=payment_id,
             txid=txid or payment_id,
@@ -355,18 +385,39 @@ class InterAdapter:
             payment_url=None,
         )
 
-    def cancel(self, payment_id: str) -> None:
-        try:
-            self._request(
-                "POST",
-                f"/cobranca/v3/cobrancas/{payment_id}/cancelar",
-                json={"motivoCancelamento": "Cancelado pelo Settlr"},
-            )
-        except httpx.HTTPError:
-            log.warning("issuer.cancel_failed", payment_id=payment_id)
+    def cancel(self, payment_id: str, reason: str = "Cancelado pelo Settlr") -> None:
+        """Levanta httpx.HTTPError se o Inter não cancelar: quem chama decide o que fazer."""
+        self._request(
+            "POST",
+            f"/cobranca/v3/cobrancas/{payment_id}/cancelar",
+            json={"motivoCancelamento": reason},
+        )
 
     def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
-        """Baixa de prova. No Inter, `POST /pagar` existe no sandbox e dispara o callback."""
+        """Fecha a cobrança no Inter depois da baixa no Settlr.
+
+        Produção: o dinheiro entrou por outro canal, então a cobrança é cancelada
+        (`/cancelar`). O Inter não tem "recebido em dinheiro". Se o Inter disser
+        que já recebeu, o devedor pagou duas vezes: `double_paid`.
+        Sandbox: `/pagar`, que simula o pagamento e dispara o callback.
+        """
+        if not self.sandbox:
+            return self._cancel_settled(payment_id)
+        return self._pay_sandbox(payment_id, paid_on, value)
+
+    def _cancel_settled(self, payment_id: str) -> str:
+        try:
+            self.cancel(payment_id, reason="Pago por outro canal")
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code in {400, 409, 422}:
+                if _inter_says(exc.response, "cancelad"):
+                    return "already_cancelled"
+                if _inter_already(exc.response):
+                    return "double_paid"
+            raise
+        return "cancelled"
+
+    def _pay_sandbox(self, payment_id: str, paid_on: date, value: Decimal) -> str:
         log.info(
             "issuer.inter_pagar",
             payment_id=payment_id,
@@ -677,13 +728,16 @@ def _inter_payment(item: dict[str, Any], *, raw: dict[str, Any]) -> BankPaymentI
     )
 
 
-def _inter_already(response: httpx.Response) -> bool:
+def _inter_says(response: httpx.Response, word: str) -> bool:
     try:
         body = response.json()
     except ValueError:
         return False
-    text = str(body).lower()
-    return "recebid" in text or "marcado_recebido" in text
+    return word in str(body).lower()
+
+
+def _inter_already(response: httpx.Response) -> bool:
+    return _inter_says(response, "recebid") or _inter_says(response, "marcado_recebido")
 
 
 def get_adapter(

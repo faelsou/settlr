@@ -68,6 +68,7 @@ class ExceptionType(StrEnum):
     DIFERENCA_VALOR = "diferenca_valor"
     FILA_HUMANA = "fila_humana"
     SESSAO_CANAL = "sessao_canal"
+    COBRANCA_EMISSOR = "cobranca_emissor"
 
 
 class ExceptionStatus(StrEnum):

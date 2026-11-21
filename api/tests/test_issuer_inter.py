@@ -223,7 +223,7 @@ def test_inter_marca_paga_e_trata_cobranca_ja_recebida():
         visto["body"] = json.loads(request.content)
         return httpx.Response(200, json={"status": "PROCESSANDO"})
 
-    resultado = InterAdapter(CONFIG, client=_client(handler)).mark_paid(
+    resultado = InterAdapter({**CONFIG, "sandbox": True}, client=_client(handler)).mark_paid(
         CODIGO, date(2026, 11, 7), Decimal("150.00"),
     )
     assert resultado == "paid"
@@ -233,7 +233,7 @@ def test_inter_marca_paga_e_trata_cobranca_ja_recebida():
     def ja_recebida(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(400, json={"title": "Cobrança já recebida."})
 
-    de_novo = InterAdapter(CONFIG, client=_client(ja_recebida)).mark_paid(
+    de_novo = InterAdapter({**CONFIG, "sandbox": True}, client=_client(ja_recebida)).mark_paid(
         CODIGO, date(2026, 11, 7), Decimal("150.00"),
     )
     assert de_novo == "already_paid"
@@ -248,10 +248,47 @@ def test_inter_busca_token_antes_de_chamar_a_cobranca():
             return httpx.Response(200, json={"access_token": "novo"})
         return httpx.Response(202, json={})
 
-    config = {"client_id": "id", "client_secret": "sec", "billing_type": "BOLETO"}
+    config = {"client_id": "id", "client_secret": "sec", "billing_type": "BOLETO", "sandbox": True}
     resultado = InterAdapter(config, client=_client(handler)).mark_paid(
         CODIGO, date(2026, 11, 7), Decimal("10.00"),
     )
     assert resultado == "paid"
     assert vistos[0].startswith("Basic ")
     assert vistos[1] == "Bearer novo"
+
+
+def test_inter_em_producao_cancela_a_cobranca_paga_por_outro_canal():
+    """SETL-64: fora do sandbox não existe `/pagar`; a baixa cancela no Inter."""
+    vistos: list[tuple[str, dict]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        vistos.append((request.url.path, json.loads(request.content)))
+        return httpx.Response(202, json={})
+
+    adapter = InterAdapter(CONFIG, client=_client(handler))
+    assert adapter.sandbox is False
+    resultado = adapter.mark_paid(CODIGO, date(2026, 11, 7), Decimal("150.00"))
+    assert resultado == "cancelled"
+    assert vistos == [(
+        f"/cobranca/v3/cobrancas/{CODIGO}/cancelar",
+        {"motivoCancelamento": "Pago por outro canal"},
+    )]
+
+
+@pytest.mark.parametrize(
+    ("titulo", "esperado"),
+    [("Cobrança já cancelada.", "already_cancelled"), ("Cobrança já recebida.", "double_paid")],
+)
+def test_inter_em_producao_trata_cobranca_ja_fechada(titulo: str, esperado: str):
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(400, json={"title": titulo})
+
+    assert InterAdapter(CONFIG, client=_client(handler)).mark_paid(
+        CODIGO, date(2026, 11, 7), Decimal("150.00"),
+    ) == esperado
+
+
+def test_inter_reconhece_o_sandbox_pela_url():
+    sandbox = {**CONFIG, "base_url": "https://cdpj-sandbox.partners.uatinter.co"}
+    assert InterAdapter(sandbox).sandbox is True
+    assert InterAdapter(CONFIG).sandbox is False

@@ -1,6 +1,7 @@
 """Única porta pública da API. Auth fica aqui; o resto segue para o serviço dono."""
 
 from contextlib import asynccontextmanager
+from urllib.parse import urlencode
 
 import httpx
 from fastapi import FastAPI, Request
@@ -73,10 +74,17 @@ async def proxy(path: str, request: Request) -> Response:
     if owner is None:
         return JSONResponse({"detail": "não encontrado"}, status_code=404)
 
-    url = _base_url(owner) + request.url.path
-    if request.url.query:
-        url = f"{url}?{request.url.query}"
     headers = {k: v for k, v in request.headers.items() if k.lower() not in _DROP}
+    query = list(request.query_params.multi_items())
+    if owner == "cadastro" and request.url.path.startswith("/webhooks/emissor"):
+        # O token do Inter chega na URL; no salto interno ele vai no cabeçalho.
+        token = next((v for k, v in query if k == "token"), None)
+        query = [(k, v) for k, v in query if k != "token"]
+        if token and "x-webhook-token" not in {k.lower() for k in headers}:
+            headers["x-webhook-token"] = token
+    url = _base_url(owner) + request.url.path
+    if query:
+        url = f"{url}?{urlencode(query)}"
     body = await request.body()
     try:
         upstream = await request.app.state.http.request(

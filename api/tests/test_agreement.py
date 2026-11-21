@@ -415,3 +415,84 @@ def test_issuer_failure_asks_for_approval_and_sends_no_code():
     assert result["outcome"] == "aguardando_aprovacao"
     assert PIX not in reply
     assert "Código:" not in reply
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("123", True),
+        ("12345678900", True),
+        ("123.456.789-00", True),
+        ("124", False),
+        ("1234", False),
+        ("", False),
+    ],
+)
+def test_identidade_confere_com_documento_pontuado(texto: str, esperado: bool) -> None:
+    """SETL-47: o cadastro com pontuação aceita 3 dígitos e o CPF completo."""
+    from app.agent.graph import identity_matches
+
+    assert identity_matches(texto, "123.456.789-00") is esperado
+    assert identity_matches(texto, "12345678900") is esperado
+
+
+def test_asaas_marca_a_cobranca_orfa_quando_o_cancelamento_estoura():
+    """SETL-46: o DELETE estourou; o erro original sobe com o id da cobrança aberta."""
+    from app.ingest.issuers import orphans_of
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/customers") and request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "cus_1"}]})
+        if request.url.path.endswith("/payments") and request.method == "POST":
+            return httpx.Response(200, json={"id": "pay_z"})
+        if request.method == "DELETE":
+            raise httpx.ReadTimeout("asaas lento", request=request)
+        if request.url.path.endswith("/identificationField"):
+            return httpx.Response(200, json={"identificationField": ""})
+        return httpx.Response(404, json={"error": "sem pix"})
+
+    client = httpx.Client(
+        transport=httpx.MockTransport(handler), base_url="https://api.asaas.com/v3",
+    )
+    with pytest.raises(ValueError, match="PIX nem boleto") as caught:
+        AsaasAdapter({}, client=client).issue(
+            name="Maria", document="12345678901", phone=None, email=None,
+            amount=Decimal("10.00"), due_date=TODAY, description="parcela",
+        )
+    assert orphans_of(caught.value) == ["pay_z"]
+
+
+class _IssuerQueNaoCancela(_Issuer):
+    def cancel(self, payment_id: str) -> None:
+        self.cancelled.append(payment_id)
+        raise httpx.ConnectTimeout("asaas fora")
+
+
+def test_falha_na_emissao_e_no_cancelamento_vai_para_a_fila(monkeypatch):
+    """SETL-46: a parcela 1 ficou aberta no Asaas; vira exceção com o external_id."""
+    issuer = _IssuerQueNaoCancela(fail_on=2)
+    tenant_id, debtor_id, source, _added = _world(monkeypatch, issuer)
+    reportadas: list[tuple] = []
+    monkeypatch.setattr(
+        "app.agent.tools.report_orphan_charges",
+        lambda tid, provider, ids, **kw: reportadas.append((tid, provider, ids, kw)),
+    )
+    with pytest.raises(ValueError, match="PIX nem boleto"):
+        _accept(tenant_id, debtor_id, source)
+    assert issuer.cancelled == ["pay_1"]
+    assert len(reportadas) == 1
+    tid, provider, ids, kw = reportadas[0]
+    assert (tid, provider, ids) == (tenant_id, "asaas", ["pay_1"])
+    assert kw["source_invoice_ids"] == [source.id]
+
+
+def test_cancelamento_que_funciona_nao_abre_excecao(monkeypatch):
+    issuer = _Issuer(fail_on=2)
+    tenant_id, debtor_id, source, _added = _world(monkeypatch, issuer)
+    reportadas: list = []
+    monkeypatch.setattr(
+        "app.agent.tools.report_orphan_charges", lambda *a, **k: reportadas.append(a),
+    )
+    with pytest.raises(ValueError):
+        _accept(tenant_id, debtor_id, source)
+    assert reportadas == []

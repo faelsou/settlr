@@ -7,6 +7,7 @@ de painel); o HTTP prova que só o tenant dono lê as parcelas.
 
 from __future__ import annotations
 
+import hmac
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
@@ -258,7 +259,7 @@ def _banco_limpo(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> Iterator[None
         dbmod.SessionLocal = original
 
 
-def _token(tenant_id: UUID, email: str) -> str:
+def _token(tenant_id: UUID, email: str, role: str = "operador") -> str:
     settings = get_settings()
     now = datetime.now(UTC)
     encoded = jwt.encode(
@@ -268,7 +269,7 @@ def _token(tenant_id: UUID, email: str) -> str:
             "aud": settings.jwt_audience,
             "iat": int(now.timestamp()),
             "exp": int((now + timedelta(hours=1)).timestamp()),
-            "app_metadata": {"tenant_id": str(tenant_id), "role": "operador"},
+            "app_metadata": {"tenant_id": str(tenant_id), "role": role},
         },
         settings.jwt_secret,
         algorithm="HS256",
@@ -276,8 +277,8 @@ def _token(tenant_id: UUID, email: str) -> str:
     return encoded if isinstance(encoded, str) else encoded.decode()
 
 
-def _auth(caso: Caso) -> dict[str, str]:
-    return {"Authorization": f"Bearer {_token(caso.tenant_id, caso.email)}"}
+def _auth(caso: Caso, role: str = "operador") -> dict[str, str]:
+    return {"Authorization": f"Bearer {_token(caso.tenant_id, caso.email, role)}"}
 
 
 def _semear_pagamento(
@@ -1112,3 +1113,521 @@ def test_webhook_do_emissor_nao_marca_a_cobranca_de_novo(
 
 
 
+
+
+@dataclass(frozen=True)
+class Contestacao:
+    caso: Caso
+    outros: tuple[UUID, UUID]
+    conversation_id: UUID
+
+
+def _semear_contestacao(banco: Banco, *, abrir_excecao: bool = True) -> Contestacao:
+    """Devedor com três mensalidades em aberto; a conversa cita a segunda."""
+    from app.models import Conversation, Message
+
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Escola", slug="escola", active=True, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="João", document="12345678901", phone="11999999999",
+        )
+        session.add(debtor)
+        session.flush()
+        ids = []
+        for mes in (9, 10, 11):
+            invoice = Invoice(
+                tenant_id=tenant.id, debtor_id=debtor.id, external_id=f"NF-{mes}",
+                description=f"mensalidade {mes}", amount=Decimal("100.00"),
+                amount_paid=Decimal("0"), due_date=date(2026, mes, 1),
+                status=InvoiceStatus.EM_COBRANCA,
+            )
+            session.add(invoice)
+            session.flush()
+            ids.append(invoice.id)
+        conv = Conversation(
+            tenant_id=tenant.id, debtor_id=debtor.id, wa_jid="5511999999999@s.whatsapp.net",
+        )
+        session.add(conv)
+        session.flush()
+        session.add(Message(
+            tenant_id=tenant.id, conversation_id=conv.id, invoice_id=ids[1],
+            direction="out", author="regua", body="Lembrete da mensalidade 10",
+        ))
+        exc_id = None
+        if abrir_excecao:
+            session.get(Invoice, ids[1]).status = InvoiceStatus.CONTESTADO
+            exc = ReviewException(
+                tenant_id=tenant.id, type=ExceptionType.CONTESTACAO, status="aberta",
+                invoice_id=ids[1], conversation_id=conv.id,
+                details={"debtor_id": str(debtor.id)},
+            )
+            session.add(exc)
+            session.flush()
+            exc_id = exc.id
+        return Contestacao(
+            Caso(tenant.id, "financeiro@escola.test", debtor.id, ids[1], None, exc_id),
+            (ids[0], ids[2]),
+            conv.id,
+        )
+
+
+def test_contestacao_marca_so_o_titulo_citado(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> None:
+    """SETL-44: o devedor reclama de uma mensalidade; as outras duas seguem na régua."""
+    from app.agent.intent import Intent
+    from app.channels import tasks
+    from app.models import Conversation
+
+    monkeypatch.setattr(tasks, "send_to_debtor", lambda *_a, **_k: None)
+    semente = _semear_contestacao(banco, abrir_excecao=False)
+    caso = semente.caso
+    with banco.como_app(caso.tenant_id) as session:
+        tenant = session.get(Tenant, caso.tenant_id)
+        debtor = session.get(Debtor, caso.debtor_id)
+        conv = session.get(Conversation, semente.conversation_id)
+        assert tasks._route_deterministic(
+            session, tenant, debtor, conv, Intent.CONTESTACAO, None, HOJE,
+        ) == "contestacao"
+
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CONTESTADO
+    for outro in semente.outros:
+        assert _titulo(banco, outro)[0] == InvoiceStatus.EM_COBRANCA
+    with banco.admin() as session:
+        exc = session.scalars(
+            select(ReviewException).where(ReviewException.type == ExceptionType.CONTESTACAO)
+        ).one()
+    assert exc.invoice_id == caso.invoice_id
+
+
+def test_resolver_a_favor_do_devedor_cancela_so_o_titulo_contestado(banco: Banco) -> None:
+    semente = _semear_contestacao(banco)
+    caso = semente.caso
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"contestation": "devedor"},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CANCELADO
+    for outro in semente.outros:
+        assert _titulo(banco, outro)[0] == InvoiceStatus.EM_COBRANCA
+
+
+def test_rejeitar_contestacao_devolve_o_titulo_para_cobranca(banco: Banco) -> None:
+    semente = _semear_contestacao(banco)
+    caso = semente.caso
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "dono"),
+        json={"note": "valor correto"},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert resposta.json()["status"] == "rejeitada"
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.EM_COBRANCA
+
+
+def test_atendente_nao_resolve_contestacao(banco: Banco) -> None:
+    """SETL-45: atendente recebe 403 e o título continua contestado."""
+    caso = _semear_contestacao(banco).caso
+    for rota, corpo in (("confirm", {"contestation": "devedor"}), ("reject", {})):
+        resposta = banco.conc.post(
+            f"/exceptions/{caso.exception_id}/{rota}",
+            headers=_auth(caso, "atendente"),
+            json=corpo,
+        )
+        assert resposta.status_code == 403, resposta.text
+    assert _titulo(banco, caso.invoice_id)[0] == InvoiceStatus.CONTESTADO
+
+
+def test_atendente_nao_descarta_pagamento(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="atendente@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.PAGAMENTO_NAO_IDENTIFICADO,
+    )
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "atendente"),
+        json={"discard_payment": True},
+    )
+    assert resposta.status_code == 403, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.EM_EXCECAO
+        assert session.get(ReviewException, caso.exception_id).status == "aberta"
+
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/reject",
+        headers=_auth(caso, "financeiro"),
+        json={"discard_payment": True},
+    )
+    assert resposta.status_code == 200, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.DESCARTADO
+
+
+def test_baixa_manual_parcial_deixa_o_saldo_em_excecao(banco: Banco) -> None:
+    """SETL-41: PIX de 300 com 100 aplicados não fecha como conciliado."""
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="financeiro@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.DIFERENCA_VALOR,
+    )
+    with banco.admin() as session, session.begin():
+        session.get(Payment, caso.payment_id).amount = Decimal("300.00")
+
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "100.00"}]},
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert _titulo(banco, caso.invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+    with banco.admin() as session:
+        pagamento = session.get(Payment, caso.payment_id)
+        abertas = session.scalars(
+            select(ReviewException).where(
+                ReviewException.payment_id == caso.payment_id,
+                ReviewException.status == "aberta",
+            )
+        ).all()
+    assert pagamento.status == PaymentStatus.EM_EXCECAO
+    assert len(abertas) == 1
+    assert abertas[0].type == ExceptionType.DIFERENCA_VALOR
+    assert Decimal(abertas[0].details["remaining"]) == Decimal("200.00")
+
+    # O saldo não pode ser alocado de novo acima do que sobrou.
+    resposta = banco.conc.post(
+        f"/exceptions/{abertas[0].id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "250.00"}]},
+    )
+    assert resposta.status_code == 422
+
+
+def test_baixa_manual_integral_concilia_o_pagamento(banco: Banco) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="financeiro@clinica.test", nome="Clínica",
+        documento="12345678901", external_id="NF-1", bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH,
+    )
+    resposta = banco.conc.post(
+        f"/exceptions/{caso.exception_id}/confirm",
+        headers=_auth(caso, "financeiro"),
+        json={"allocations": [{"invoice_id": str(caso.invoice_id), "amount": "100.00"}]},
+    )
+    assert resposta.status_code == 200, resposta.text
+    with banco.admin() as session:
+        assert session.get(Payment, caso.payment_id).status == PaymentStatus.CONCILIADO
+        assert session.scalars(
+            select(ReviewException).where(ReviewException.status == "aberta")
+        ).first() is None
+
+
+def _semear_titulo_e_pagamentos(banco: Banco, valores: list[str], txid: str | None = None):
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Academia", slug="academia", active=True, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="Ana", document="12345678901", phone="11999999999",
+        )
+        session.add(debtor)
+        session.flush()
+        invoice = Invoice(
+            tenant_id=tenant.id, debtor_id=debtor.id, external_id="NF-1",
+            description="mensalidade", amount=Decimal("100.00"), amount_paid=Decimal("0"),
+            due_date=date(2026, 11, 1), status=InvoiceStatus.EM_COBRANCA, txid=txid,
+        )
+        session.add(invoice)
+        session.flush()
+        pagamentos = []
+        for valor in valores:
+            payment = Payment(
+                tenant_id=tenant.id, origin=PaymentOrigin.EXTRATO,
+                status=PaymentStatus.CONFIRMADO, amount=Decimal(valor), paid_at=PAGO_EM,
+                payer_name="Ana", payer_doc="12345678901", debtor_id=debtor.id, txid=txid,
+                raw={}, bank_confirmed_at=datetime.now(UTC),
+            )
+            session.add(payment)
+            session.flush()
+            pagamentos.append(payment.id)
+        return tenant.id, invoice.id, pagamentos
+
+
+def test_baixas_concorrentes_no_mesmo_titulo_somam(banco: Banco) -> None:
+    """SETL-43: PIX de 60 e de 40 ao mesmo tempo quitam o título de 100."""
+    import threading
+
+    from app.models.enums import MatchMethod
+    from app.reconciliation.matcher import Allocation
+    from app.reconciliation.service import apply_allocations
+
+    tenant_id, invoice_id, pagamentos = _semear_titulo_e_pagamentos(banco, ["60.00", "40.00"])
+    leram = threading.Barrier(2)
+    erros: list[BaseException] = []
+
+    def baixa(payment_id: UUID) -> None:
+        try:
+            with banco.como_app(tenant_id) as session:
+                payment = session.get(Payment, payment_id)
+                titulo = session.get(Invoice, invoice_id)  # na memória, ainda em 0
+                assert titulo.amount_paid == 0
+                leram.wait(timeout=10)
+                apply_allocations(
+                    session, payment, [Allocation(invoice_id, payment.amount)],
+                    MatchMethod.MANUAL, 1.0, "sistema",
+                )
+        except BaseException as exc:  # noqa: BLE001
+            erros.append(exc)
+
+    threads = [threading.Thread(target=baixa, args=(pid,)) for pid in pagamentos]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    assert not erros, erros
+    assert _titulo(banco, invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+
+
+def test_reconciliar_duas_vezes_gera_um_vinculo(banco: Banco) -> None:
+    """SETL-43: a segunda tarefa vê o pagamento já conciliado e não grava de novo."""
+    from app.reconciliation.service import reconcile_payment
+
+    tenant_id, invoice_id, (payment_id,) = _semear_titulo_e_pagamentos(
+        banco, ["100.00"], txid="TX-1",
+    )
+    with banco.como_app(tenant_id) as atrasada:
+        velho = atrasada.get(Payment, payment_id)
+        titulo_velho = atrasada.get(Invoice, invoice_id)
+        assert titulo_velho.amount_paid == 0
+        tenant_velho = atrasada.get(Tenant, tenant_id)
+
+        with banco.como_app(tenant_id) as primeira:
+            reconcile_payment(
+                primeira, primeira.get(Payment, payment_id), primeira.get(Tenant, tenant_id),
+            )
+
+        reconcile_payment(atrasada, velho, tenant_velho)
+
+    with banco.admin() as session:
+        vinculos = session.scalars(
+            select(Match).where(Match.payment_id == payment_id, Match.provisional.is_(False))
+        ).all()
+        assert session.get(Payment, payment_id).status == PaymentStatus.CONCILIADO
+    assert len(vinculos) == 1
+    assert _titulo(banco, invoice_id) == (InvoiceStatus.PAGO, Decimal("100.00"))
+
+
+def test_webhook_do_banco_assinado_para_uma_empresa_nao_vale_para_outra(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-42: o x-tenant-id entra na assinatura; replay em outra empresa dá 401."""
+    import json
+
+    from app.api.routes.webhooks import bank_signature
+
+    monkeypatch.setattr("app.api.routes.webhooks.reconcile.delay", lambda *_a, **_k: None)
+    with banco.admin() as session, session.begin():
+        a = Tenant(name="A", slug="empresa-a", active=True, timezone="America/Sao_Paulo")
+        b = Tenant(name="B", slug="empresa-b", active=True, timezone="America/Sao_Paulo")
+        session.add_all([a, b])
+        session.flush()
+        tenant_a, tenant_b = a.id, b.id
+
+    corpo = json.dumps({"transactions": [{
+        "amount": "250.00", "paid_at": PAGO_EM.isoformat(), "e2e_id": "E2E-REPLAY",
+        "source_id": "tx-1",
+    }]}).encode()
+    assinatura = bank_signature(tenant_a, corpo)
+
+    replay = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_b), "x-signature": assinatura,
+                 "content-type": "application/json"},
+    )
+    assert replay.status_code == 401, replay.text
+
+    antigo = hmac.new(get_settings().webhook_hmac.encode(), corpo, "sha256").hexdigest()
+    so_corpo = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_a), "x-signature": antigo,
+                 "content-type": "application/json"},
+    )
+    assert so_corpo.status_code == 401, so_corpo.text
+
+    valido = banco.conc.post(
+        "/webhooks/banco", content=corpo,
+        headers={"x-tenant-id": str(tenant_a), "x-signature": assinatura,
+                 "content-type": "application/json"},
+    )
+    assert valido.status_code == 202, valido.text
+    assert valido.json()["registered"] == 1
+    with banco.admin() as session:
+        donos = session.scalars(select(Payment.tenant_id)).all()
+    assert donos == [tenant_a]
+
+
+def test_cobranca_orfa_abre_excecao_e_o_reenvio_fecha(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-46: exceção com o external_id, cancelamento agendado e fechado no retry."""
+    from app.ingest import tasks as ingest_tasks
+    from app.ingest.orphans import report_orphan_charges
+
+    agendados: list[tuple] = []
+    monkeypatch.setattr(ingest_tasks.cancel_issuer_charge, "delay", lambda *a: agendados.append(a))
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Clínica", slug="clinica", active=True, timezone="America/Sao_Paulo",
+                        issuer_provider="asaas", issuer_config={"api_key": "k"})
+        session.add(tenant)
+        session.flush()
+        tenant_id = tenant.id
+
+    (exception_id,) = report_orphan_charges(
+        tenant_id, "asaas", ["pay_1"], reason="acordo não concluído",
+    )
+    with banco.admin() as session:
+        exc = session.get(ReviewException, exception_id)
+        assert exc.type == ExceptionType.COBRANCA_EMISSOR
+        assert exc.status == "aberta"
+        assert exc.details["external_id"] == "pay_1"
+    assert agendados == [(str(tenant_id), "pay_1", str(exception_id))]
+
+    class _Fora:
+        def cancel(self, _id: str) -> None:
+            raise httpx.ConnectTimeout("asaas fora")
+
+    cancelados: list[str] = []
+
+    class _Volta:
+        def cancel(self, external_id: str) -> None:
+            cancelados.append(external_id)
+
+    monkeypatch.setattr(ingest_tasks, "get_adapter", lambda *_a, **_k: _Fora())
+    with pytest.raises(httpx.HTTPError):
+        ingest_tasks.cancel_issuer_charge.run(str(tenant_id), "pay_1", str(exception_id))
+    with banco.admin() as session:
+        assert session.get(ReviewException, exception_id).status == "aberta"
+
+    monkeypatch.setattr(ingest_tasks, "get_adapter", lambda *_a, **_k: _Volta())
+    assert ingest_tasks.cancel_issuer_charge.run(
+        str(tenant_id), "pay_1", str(exception_id),
+    ) == "cancelada"
+    assert cancelados == ["pay_1"]
+    with banco.admin() as session:
+        assert session.get(ReviewException, exception_id).status == "resolvida"
+
+
+INTER_CODIGO = "183e982a-34e5-4bc0-9643-def5432abcde"
+
+
+def test_falha_na_baixa_do_inter_abre_excecao_com_o_codigo(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-64: o Inter recusou; a cobrança segue aberta lá e vai para a fila."""
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+    )
+    _confirmar(banco, caso)
+
+    class _InterRecusa:
+        def mark_paid(self, payment_id: str, *_a) -> str:
+            request = httpx.Request("POST", f"https://inter/{payment_id}/cancelar")
+            response = httpx.Response(500, json={"title": "erro"}, request=request)
+            raise httpx.HTTPStatusError("500", request=request, response=response)
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _InterRecusa())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "falhou"
+    with banco.admin() as session:
+        exc = session.scalars(
+            select(ReviewException).where(ReviewException.type == ExceptionType.COBRANCA_EMISSOR)
+        ).one()
+    assert exc.status == "aberta"
+    assert exc.invoice_id == caso.invoice_id
+    assert exc.details["external_id"] == INTER_CODIGO
+    assert exc.details["provider"] == "inter"
+
+
+def test_cobranca_que_o_inter_ja_quitou_nao_recebe_chamada(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.WEBHOOK, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+        raw={"provider": "inter", "situacao": "RECEBIDO"},
+    )
+    _confirmar(banco, caso)
+    chamadas: list = []
+
+    class _Inter:
+        def mark_paid(self, *args) -> str:
+            chamadas.append(args)
+            return "cancelled"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _Inter())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(str(caso.tenant_id), [str(caso.invoice_id)]) == "ja_no_emissor"
+    assert chamadas == []
+
+
+def test_inter_cancela_titulo_pago_por_outro_canal(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caso = _semear_pagamento(
+        banco, slug="clinica", email="operador@clinica.test", nome="Clínica",
+        documento="12345678901", external_id=INTER_CODIGO, bank=True,
+        origin=PaymentOrigin.EXTRATO, status=PaymentStatus.EM_EXCECAO,
+        exc_type=ExceptionType.SUGESTAO_MATCH, issuer="inter",
+    )
+    _confirmar(banco, caso)
+
+    class _Inter:
+        def mark_paid(self, *_args) -> str:
+            return "cancelled"
+
+    monkeypatch.setattr("app.ingest.tasks.get_adapter", lambda *_a, **_k: _Inter())
+    from app.ingest.tasks import settle_issuer_charges
+
+    assert settle_issuer_charges(
+        str(caso.tenant_id), [str(caso.invoice_id)],
+    ) == "cancelada_no_emissor"
+    with banco.admin() as session:
+        assert session.scalars(
+            select(ReviewException).where(ReviewException.status == "aberta")
+        ).first() is None
+
+
+def test_webhook_do_emissor_continua_aceitando_o_token_do_inter(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SETL-67: na URL ou no cabeçalho, token inválido 401 e válido 202."""
+    enfileirados: list[tuple] = []
+    monkeypatch.setattr(
+        "app.api.routes.webhooks.handle_issuer_event.delay", lambda *a: enfileirados.append(a),
+    )
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Clínica", slug="clinica", active=True, timezone="America/Sao_Paulo",
+                        issuer_provider="inter", issuer_webhook_token="tok-inter-valido")
+        session.add(tenant)
+        session.flush()
+        tenant_id = tenant.id
+
+    assert banco.cad.post("/webhooks/emissor?token=errado", json=[]).status_code == 401
+    assert banco.cad.post("/webhooks/emissor", json=[]).status_code == 401
+    assert banco.cad.post("/webhooks/emissor?token=tok-inter-valido", json=[]).status_code == 202
+    assert banco.cad.post(
+        "/webhooks/emissor", json=[], headers={"x-webhook-token": "tok-inter-valido"},
+    ).status_code == 202
+    assert enfileirados == [(str(tenant_id), []), (str(tenant_id), [])]

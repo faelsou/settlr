@@ -147,16 +147,24 @@ class BankWebhookIn(BaseModel):
     transactions: list[BankTransactionIn]
 
 
+def bank_signature(tenant_id: UUID, body: bytes) -> str:
+    message = str(tenant_id).encode() + b"." + body
+    return hmac.new(get_settings().webhook_hmac.encode(), message, hashlib.sha256).hexdigest()
+
+
 @bank_router.post("/banco", status_code=status.HTTP_202_ACCEPTED)
 async def bank_webhook(
     request: Request,
     x_tenant_id: UUID = Header(),
     x_signature: str = Header(),
 ) -> dict:
-    """Formato normalizado de extrato/PIX. Assinatura: HMAC-SHA256 do corpo, em hex."""
+    """Formato normalizado de extrato/PIX.
+
+    Assinatura: HMAC-SHA256, em hex, de `<x-tenant-id>.<corpo>`. A empresa entra na
+    assinatura: o mesmo corpo assinado para uma empresa não vale para outra.
+    """
     body = await request.body()
-    expected = hmac.new(get_settings().webhook_hmac.encode(), body, hashlib.sha256).hexdigest()
-    if not _same(x_signature, expected):
+    if not _same(x_signature, bank_signature(x_tenant_id, body)):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "assinatura inválida")
 
     data = BankWebhookIn.model_validate_json(body)

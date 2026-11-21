@@ -143,8 +143,9 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
     invoices.data?.items.forEach((inv) => map.set(inv.id, inv));
     return map;
   }, [catalog.data, invoices.data]);
+  // A contestação vale só para o título citado na conversa (item.invoice_id).
   const contested = catalog.data?.items.filter(
-    (inv) => inv.status === "contestado" && inv.debtor.id === item.details.debtor_id,
+    (inv) => inv.status === "contestado" && inv.id === item.invoice_id,
   ) ?? [];
 
   return (
@@ -300,16 +301,20 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
 
       {item.status === "aberta" ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {PAYMENT_TYPES.has(item.type) && me.data && !settles ? (
+          {item.type === "contestacao" && me.data && !settles ? (
+            <p className="w-full text-sm text-ink-700/70">O financeiro decide a contestação. O atendente acompanha a fila.</p>
+          ) : PAYMENT_TYPES.has(item.type) && me.data && !settles ? (
             <p className="w-full text-sm text-ink-700/70">O financeiro confirma a baixa. O atendente acompanha a fila.</p>
           ) : (
             <Button onClick={() => setAsk("confirm")} disabled={confirm.isPending}>
               Confirmar
             </Button>
           )}
-          <Button variant="outline" onClick={() => setAsk("reject")} disabled={reject.isPending}>
-            Rejeitar
-          </Button>
+          {item.type === "contestacao" && me.data && !settles ? null : (
+            <Button variant="outline" onClick={() => setAsk("reject")} disabled={reject.isPending}>
+              Rejeitar
+            </Button>
+          )}
         </div>
       ) : (
         <p className="mt-4 text-sm text-ink-700/70">

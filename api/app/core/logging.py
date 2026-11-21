@@ -31,6 +31,10 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
+    from app.core.redact import install_access_log_filter
+
+    install_access_log_filter()
+
     from app.core.observability import init_sentry
 
     init_sentry()

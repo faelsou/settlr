@@ -58,14 +58,29 @@ def handle_issuer_event(tenant_id: str, body: dict | list) -> str:
     return outcomes[0] if len(outcomes) == 1 else ",".join(outcomes)
 
 
+SETTLE_OUTCOMES = {
+    "paid": "paga",
+    "already_paid": "ja_recebida",
+    "cancelled": "cancelada_no_emissor",
+    "already_cancelled": "ja_cancelada",
+    "double_paid": "pago_em_dobro",
+}
+
+
 @celery_app.task(
+    bind=True,
     name="app.ingest.tasks.settle_issuer_charges",
-    autoretry_for=(httpx.TransportError,),
-    retry_backoff=True,
     max_retries=5,
 )
-def settle_issuer_charges(tenant_id: str, invoice_ids: list[str]) -> str:
-    """Depois da baixa no Settlr, marca a cobrança como paga no emissor do piloto."""
+def settle_issuer_charges(self, tenant_id: str, invoice_ids: list[str]) -> str:
+    """Depois da baixa no Settlr, fecha a cobrança no emissor.
+
+    Falha que não é de rede, ou de rede depois do último retry, vira exceção na
+    fila com o id da cobrança: o devedor ainda consegue pagar pelo emissor.
+    """
+    from app.models.enums import ExceptionType
+    from app.reconciliation.service import open_exception
+
     tid = UUID(tenant_id)
     ids = [UUID(invoice_id) for invoice_id in invoice_ids]
     with tenant_session(tid) as session:
@@ -87,9 +102,23 @@ def settle_issuer_charges(tenant_id: str, invoice_ids: list[str]) -> str:
 
     adapter = get_adapter(provider, config)
     done: list[tuple] = []
+    transient: list = []
+    failed: list[tuple] = []
     for item in work:
-        status = adapter.mark_paid(item.charge_id, item.paid_on, item.value)
-        done.append((item, "paga" if status == "paid" else "ja_recebida"))
+        try:
+            status = adapter.mark_paid(item.charge_id, item.paid_on, item.value)
+        except httpx.TransportError as exc:
+            transient.append((item, exc))
+            continue
+        except httpx.HTTPError as exc:
+            failed.append((item, exc))
+            continue
+        done.append((item, SETTLE_OUTCOMES.get(status, "ja_recebida")))
+
+    last_try = (self.request.retries or 0) >= self.max_retries
+    if transient and last_try:
+        failed.extend(transient)
+        transient = []
 
     with tenant_session(tid) as session:
         for item, status in done:
@@ -97,6 +126,58 @@ def settle_issuer_charges(tenant_id: str, invoice_ids: list[str]) -> str:
                 session, tid, item.invoice_id, charge_id=item.charge_id, result=status,
                 paid_on=item.paid_on, value=item.value,
             )
+            if status == "pago_em_dobro":
+                open_exception(
+                    session, tid, ExceptionType.COBRANCA_EMISSOR, invoice_id=item.invoice_id,
+                    details={"reason": "o emissor também recebeu: devedor pagou duas vezes",
+                             "external_id": item.charge_id, "provider": provider,
+                             "action": "devolver"},
+                )
+        for item, exc in failed:
+            log.warning("issuer.settle_failed", tenant_id=tenant_id, charge_id=item.charge_id,
+                        error=exc.__class__.__name__)
+            open_exception(
+                session, tid, ExceptionType.COBRANCA_EMISSOR, invoice_id=item.invoice_id,
+                details={"reason": "baixa não chegou ao emissor: a cobrança segue aberta lá",
+                         "external_id": item.charge_id, "provider": provider,
+                         "action": "fechar", "error": exc.__class__.__name__},
+            )
     outcomes.extend(status for _, status in done)
+    outcomes.extend("falhou" for _ in failed)
     log.info("issuer.settled", tenant_id=tenant_id, results=outcomes)
+    if transient:
+        retry_ids = [str(item.invoice_id) for item, _ in transient]
+        raise self.retry(
+            args=(tenant_id, retry_ids), countdown=min(600, 30 * 2 ** (self.request.retries or 0)),
+        )
     return ",".join(outcomes)
+
+
+@celery_app.task(
+    name="app.ingest.tasks.cancel_issuer_charge",
+    autoretry_for=(httpx.HTTPError,), retry_backoff=True, retry_backoff_max=600, max_retries=8,
+)
+def cancel_issuer_charge(tenant_id: str, external_id: str, exception_id: str) -> str:
+    """Tenta de novo cancelar a cobrança órfã. Conseguiu: fecha a exceção da fila."""
+    from datetime import UTC, datetime
+
+    from app.core.audit import audit
+    from app.models import ReviewException
+    from app.models.enums import ExceptionStatus
+
+    tid = UUID(tenant_id)
+    with tenant_session(tid) as session:
+        exc = session.get(ReviewException, UUID(exception_id))
+        if exc is None or exc.status != ExceptionStatus.ABERTA:
+            return "ja_tratada"
+        tenant = session.get(Tenant, tid)
+        adapter = get_adapter(tenant.issuer_provider, tenant.issuer_config or {})
+        adapter.cancel(external_id)
+        exc.status = ExceptionStatus.RESOLVIDA
+        exc.assignee = "sistema"
+        exc.resolution = "cobrança cancelada no emissor"
+        exc.resolved_at = datetime.now(UTC)
+        audit(session, tenant_id=tid, actor="sistema", action="cancela_cobranca_orfa",
+              entity="exception", entity_id=exc.id, after={"external_id": external_id})
+    log.info("issuer.orphan_cancelled", tenant_id=tenant_id, external_id=external_id)
+    return "cancelada"

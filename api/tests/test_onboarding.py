@@ -255,6 +255,8 @@ def test_atendente_nao_confirma_baixa_e_financeiro_confirma(monkeypatch):
         def get(self, model, key):
             if key == payment.id:
                 return payment
+            if key == tenant_id:
+                return SimpleNamespace(id=tenant_id, reconciliation_rules={})
             return None
 
         def add(self, _obj) -> None:
@@ -271,6 +273,7 @@ def test_atendente_nao_confirma_baixa_e_financeiro_confirma(monkeypatch):
     anterior = conciliacao_app.dependency_overrides.get(get_db)
     conciliacao_app.dependency_overrides[get_db] = _db
     monkeypatch.setattr("app.api.routes.exceptions.apply_allocations", lambda *_a, **_k: None)
+    monkeypatch.setattr("app.api.routes.exceptions.applied_amount", lambda *_a: Decimal("0"))
     monkeypatch.setattr("app.api.routes.exceptions.audit", lambda *_a, **_k: None)
     monkeypatch.setattr(
         "app.api.routes.exceptions._out",

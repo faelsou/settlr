@@ -185,7 +185,7 @@ Todo dinheiro que entra vira um `payment`. No caminho feliz isso acontece sem ar
 - **Diferença de valor:** juros/desconto dentro da regra do tenant aplica; parcial deixa o título `parcialmente_pago`; fora da regra vira exceção.
 - Um pagamento pode quitar vários títulos; vários pagamentos podem quitar um título (`matches` N:N).
 - Título que fica `pago` marca a cobrança como recebida no emissor (Asaas, id `pay_`; Inter, `codigoSolicitacao`). O devedor não recebe aviso novo do emissor. Cobrança que o próprio webhook do emissor já quitou não é marcada de novo. Referência de planilha não vai para o emissor.
-- Em `main` há dois adaptadores de emissor: Asaas e Inter. O Inter ainda não rodou em cliente vivo, e a marcação de recebido no Inter só funciona no sandbox. Efí, iugu e Sicoob ficam no roadmap; até lá a planilha cobre esses títulos.
+- Em `main` há dois adaptadores de emissor: Asaas e Inter. O Inter ainda não rodou em cliente vivo. Em produção, a baixa no Settlr cancela a cobrança no Inter; no sandbox ela simula o pagamento. Efí, iugu e Sicoob ficam no roadmap; até lá a planilha cobre esses títulos.
 - O Open Finance é cliente genérico da API de contas. A conta informa `base_url`, `token` e `account_id` em `bank_feed.open_finance`. O código não nomeia um banco.
 - Em Pagamentos, o arquivo do período traz título, valor, data e identificador bancário (o E2E; se o banco não mandou, o txid). Só entra baixa definitiva. Comprovante ainda sem banco fica de fora.
 

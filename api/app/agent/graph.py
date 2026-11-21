@@ -99,8 +99,12 @@ def numbered_choice(text: str, options: list[dict]) -> ChoiceResult | None:
 
 
 def identity_matches(text: str, document: str) -> bool:
+    """Só dígitos dos dois lados: o cadastro pode guardar `123.456.789-00`."""
     digits = re.sub(r"\D", "", text)
-    return bool(digits) and (digits == document or digits[:3] == document[:3] and len(digits) == 3)
+    stored = re.sub(r"\D", "", document or "")
+    if not digits or not stored:
+        return False
+    return digits == stored or (len(digits) == 3 and digits == stored[:3])
 
 
 def _reply(state: AgentState, *messages: str) -> list[str]:
