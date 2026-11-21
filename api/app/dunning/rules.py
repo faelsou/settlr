@@ -17,7 +17,12 @@ DEFAULT_DUNNING_RULES: dict = {
         {"key": "D+5", "offset": 5, "channels": ["whatsapp"], "template": "oferta_negociacao"},
         {"key": "D+7", "offset": 7, "channels": ["whatsapp"], "template": "convite_conversa"},
         {"key": "D+10", "offset": 10, "channels": ["whatsapp"], "template": "lembrete_aberto"},
-        {"key": "D+15", "offset": 15, "channels": ["whatsapp", "email"], "template": "ultima_tentativa"},
+        {
+            "key": "D+15",
+            "offset": 15,
+            "channels": ["whatsapp", "email"],
+            "template": "ultima_tentativa",
+        },
         {"key": "D+21", "offset": 21, "channels": ["whatsapp"], "template": "aviso_equipe"},
         {"key": "D+30", "offset": 30, "channels": [], "template": None, "handoff": True},
     ],
@@ -44,7 +49,8 @@ DEFAULT_DUNNING_RULES: dict = {
         ),
         "convite_conversa": (
             "Olá, {nome}. {descricao} ({valor}) segue em aberto desde {vencimento}. "
-            "Se quiser conversar sobre o pagamento, responda esta mensagem. O PIX para quitar é {pix}."
+            "Se quiser conversar sobre o pagamento, responda esta mensagem. "
+            "O PIX para quitar é {pix}."
         ),
         "lembrete_aberto": (
             "Olá, {nome}. {descricao} ({valor}) segue em aberto desde {vencimento}. "

@@ -69,7 +69,9 @@ def _get_open(db: Session, exception_id: UUID) -> ReviewException:
     return exc
 
 
-def _close(db: Session, exc: ReviewException, status: ExceptionStatus, user: CurrentUser, note: str | None):
+def _close(
+    db: Session, exc: ReviewException, status: ExceptionStatus, user: CurrentUser, note: str | None
+):
     exc.status = status
     exc.assignee = user.email
     exc.resolution = note
@@ -175,7 +177,9 @@ def confirm_exception(
         if body.contestation is None:
             raise HTTPException(422, "informe a favor de quem a contestação foi resolvida")
         new_status = (
-            InvoiceStatus.EM_COBRANCA if body.contestation == "cobranca" else InvoiceStatus.CANCELADO
+            InvoiceStatus.EM_COBRANCA
+            if body.contestation == "cobranca"
+            else InvoiceStatus.CANCELADO
         )
         invoice = _contested_invoice(db, exc)
         if invoice is None and body.contestation == "devedor":

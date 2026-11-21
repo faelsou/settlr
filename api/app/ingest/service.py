@@ -56,10 +56,14 @@ def upsert_debtor(session: Session, tenant_id: UUID, data: InvoiceIn) -> Debtor:
     return debtor
 
 
-def upsert_invoice(session: Session, tenant_id: UUID, data: InvoiceIn, actor: str) -> tuple[Invoice, bool]:
+def upsert_invoice(
+    session: Session, tenant_id: UUID, data: InvoiceIn, actor: str
+) -> tuple[Invoice, bool]:
     debtor = upsert_debtor(session, tenant_id, data)
     invoice = session.scalars(
-        select(Invoice).where(Invoice.tenant_id == tenant_id, Invoice.external_id == data.external_id)
+        select(Invoice).where(
+            Invoice.tenant_id == tenant_id, Invoice.external_id == data.external_id
+        )
     ).first()
     created = invoice is None
     fields = {
@@ -83,7 +87,11 @@ def upsert_invoice(session: Session, tenant_id: UUID, data: InvoiceIn, actor: st
               entity="invoice", entity_id=invoice.id, after=fields)
     else:
         before = {k: getattr(invoice, k) for k in fields}
-        if invoice.status in (InvoiceStatus.PAGO, InvoiceStatus.RENEGOCIADO, InvoiceStatus.CANCELADO):
+        if invoice.status in (
+            InvoiceStatus.PAGO,
+            InvoiceStatus.RENEGOCIADO,
+            InvoiceStatus.CANCELADO,
+        ):
             return invoice, False
         for key, value in fields.items():
             if value is not None:
@@ -127,7 +135,9 @@ def parse_invoice_csv(content: bytes) -> tuple[list[InvoiceIn], list[str]]:
     return rows, errors
 
 
-def import_invoices(session: Session, tenant_id: UUID, rows: list[InvoiceIn], actor: str) -> ImportResult:
+def import_invoices(
+    session: Session, tenant_id: UUID, rows: list[InvoiceIn], actor: str
+) -> ImportResult:
     result = ImportResult()
     for row in rows:
         _, created = upsert_invoice(session, tenant_id, row, actor)

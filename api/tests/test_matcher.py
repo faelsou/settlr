@@ -74,7 +74,9 @@ def test_layer3_name_similarity_becomes_suggestion():
 
 def test_layer3_sum_of_invoices_same_debtor():
     debtor_id = uuid4()
-    a = _invoice(debtor_id=debtor_id, amount_open=Decimal("200.00"), txid=None, due_date=date(2026, 10, 1))
+    a = _invoice(
+        debtor_id=debtor_id, amount_open=Decimal("200.00"), txid=None, due_date=date(2026, 10, 1)
+    )
     b = _invoice(
         debtor_id=debtor_id,
         debtor_doc=a.debtor_doc,

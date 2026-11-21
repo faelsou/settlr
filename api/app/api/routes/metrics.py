@@ -72,8 +72,11 @@ def get_metrics(
         select(func.count()).where(ReviewException.status == ExceptionStatus.ABERTA)
     ) or 0
     avg_resolution = db.scalar(
-        select(func.avg(func.extract("epoch", ReviewException.resolved_at - ReviewException.created_at)))
-        .where(ReviewException.resolved_at.between(start_dt, end_dt))
+        select(
+            func.avg(
+                func.extract("epoch", ReviewException.resolved_at - ReviewException.created_at)
+            )
+        ).where(ReviewException.resolved_at.between(start_dt, end_dt))
     )
 
     tenant = db.get(Tenant, user.tenant_id)
@@ -95,5 +98,7 @@ def get_metrics(
         auto_reconciled=reconciled[1],
         auto_reconciliation_rate=_ratio(reconciled[1], reconciled[0]),
         exceptions_open=exceptions_open,
-        avg_exception_resolution_hours=round(float(avg_resolution) / 3600, 2) if avg_resolution else None,
+        avg_exception_resolution_hours=round(float(avg_resolution) / 3600, 2)
+        if avg_resolution
+        else None,
     )

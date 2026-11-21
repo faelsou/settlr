@@ -114,13 +114,18 @@ def conversation_for_phone(session: Session, tenant_id: UUID, phone: str) -> Con
         return None
     convs = list(
         session.scalars(
-            select(Conversation).where(Conversation.tenant_id == tenant_id, Conversation.debtor_id.in_([d.id for d in debtors]))
+            select(Conversation).where(
+                Conversation.tenant_id == tenant_id,
+                Conversation.debtor_id.in_([d.id for d in debtors]),
+            )
         )
     )
     waiting = [c for c in convs if c.state in WAITING_FOR_REPLY]
     pool = waiting or [c for c in convs if c.state != ConversationState.ENCERRADA]
     if pool:
-        return max(pool, key=lambda c: (c.state == ConversationState.AGUARDANDO_IDENTIDADE, c.updated_at))
+        return max(
+            pool, key=lambda c: (c.state == ConversationState.AGUARDANDO_IDENTIDADE, c.updated_at)
+        )
     return None
 
 
@@ -215,7 +220,11 @@ def _route_buffered(tenant_id: str, tid: UUID, messages, first) -> str:
             if conv is None:
                 conv = conversation_for_phone(session, tid, first.phone)
                 quoted = None
-            debtor = session.get(Debtor, conv.debtor_id) if conv is not None else find_debtor(session, tid, first.phone)
+            debtor = (
+                session.get(Debtor, conv.debtor_id)
+                if conv is not None
+                else find_debtor(session, tid, first.phone)
+            )
             if debtor is None:
                 log.info("inbound.unknown_contact", tenant_id=tenant_id)
                 for msg in pending:
@@ -444,7 +453,9 @@ def _route_deterministic(
         except PromiseRejected as exc:
             reply(f"Não consigo registrar essa data: {exc}. Qual outra data?")
             return "promessa_recusada"
-        reply(f"Anotado! Fica combinado para {promised_date:%d/%m}. Se precisar de algo, é só chamar.")
+        reply(
+            f"Anotado! Fica combinado para {promised_date:%d/%m}. Se precisar de algo, é só chamar."
+        )
         return "promessa"
 
     return None

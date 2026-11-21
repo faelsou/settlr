@@ -24,7 +24,9 @@ def register_promise(
     session: Session, tenant: Tenant, debtor_id: UUID, promised: date, today: date, actor: str
 ) -> list[Promise]:
     """Registra a promessa para os títulos vencidos do devedor e pausa a régua."""
-    reason = validate_promise_date(promised, today, NegotiationPolicy.from_json(tenant.negotiation_policy))
+    reason = validate_promise_date(
+        promised, today, NegotiationPolicy.from_json(tenant.negotiation_policy)
+    )
     if reason:
         raise PromiseRejected(reason)
 

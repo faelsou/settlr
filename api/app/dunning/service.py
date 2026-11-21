@@ -89,7 +89,9 @@ def process_invoice(
     today: date,
     client: EvolutionClient | None = None,
 ) -> StepOutcome:
-    invoice = session.scalars(select(Invoice).where(Invoice.id == invoice_id).with_for_update()).one()
+    invoice = session.scalars(
+        select(Invoice).where(Invoice.id == invoice_id).with_for_update()
+    ).one()
     debtor = session.get(Debtor, invoice.debtor_id)
 
     recorded = session.execute(

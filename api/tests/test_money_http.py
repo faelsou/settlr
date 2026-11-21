@@ -901,7 +901,9 @@ def test_lista_separa_titulo_sem_pix_ou_boleto(banco: Banco) -> None:
 
     hoje = date(2026, 11, 7)
     with banco.admin() as session, session.begin():
-        tenant = Tenant(name="Clínica", slug="clinica-regua", active=False, timezone="America/Sao_Paulo")
+        tenant = Tenant(
+            name="Clínica", slug="clinica-regua", active=False, timezone="America/Sao_Paulo"
+        )
         session.add(tenant)
         session.flush()
         debtor = Debtor(
@@ -928,7 +930,7 @@ def test_lista_separa_titulo_sem_pix_ou_boleto(banco: Banco) -> None:
             return row
 
         sem = titulo("SEM", link="https://pagar.exemplo/sem-codigo")
-        branco = titulo("BRANCO", pix="   ")
+        titulo("BRANCO", pix="   ")
         pago = titulo("PAGO")
         pago.status = InvoiceStatus.PAGO
         com_pix = titulo("PIX", pix="00020126PIX")
@@ -963,7 +965,9 @@ def test_lista_separa_titulo_sem_pix_ou_boleto(banco: Banco) -> None:
         row.due_date = hoje - timedelta(days=5)
         session.flush()
         outcome = process_invoice(session, tenant, row.id, hoje)
-        eventos = session.scalars(select(DunningEvent).where(DunningEvent.invoice_id == row.id)).all()
+        eventos = session.scalars(
+            select(DunningEvent).where(DunningEvent.invoice_id == row.id)
+        ).all()
     assert outcome.action == "send"
     assert outcome.reason == "D+5"
     assert eventos == []
@@ -1014,7 +1018,10 @@ def test_exportacao_do_periodo_traz_titulo_valor_data_e_identificador(banco: Ban
     )
     assert arquivo.status_code == 200, arquivo.text
     assert "text/csv" in arquivo.headers["content-type"]
-    assert arquivo.headers["content-disposition"] == 'attachment; filename="baixas-2026-11-01-2026-11-30.csv"'
+    assert (
+        arquivo.headers["content-disposition"]
+        == 'attachment; filename="baixas-2026-11-01-2026-11-30.csv"'
+    )
     assert arquivo.content.decode("utf-8-sig").splitlines() == [
         "titulo;valor;data;identificador_bancario",
         "NF-1;100.00;2026-11-07;E2E-PIX-001",
@@ -1026,7 +1033,9 @@ def test_exportacao_do_periodo_traz_titulo_valor_data_e_identificador(banco: Ban
         params={"start": "2026-10-01", "end": "2026-10-31"},
     )
     assert fora.status_code == 200
-    assert fora.content.decode("utf-8-sig").splitlines() == ["titulo;valor;data;identificador_bancario"]
+    assert fora.content.decode("utf-8-sig").splitlines() == [
+        "titulo;valor;data;identificador_bancario"
+    ]
 
     invertido = banco.conc.get(
         "/payments/export",
@@ -1037,7 +1046,9 @@ def test_exportacao_do_periodo_traz_titulo_valor_data_e_identificador(banco: Ban
     assert invertido.json()["detail"] == "o fim do período é anterior ao início"
 
 
-def test_titulo_conciliado_marca_cobranca_no_emissor(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_titulo_conciliado_marca_cobranca_no_emissor(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch
+) -> None:
     caso = _semear_pagamento(
         banco,
         slug="clinica",
@@ -1173,7 +1184,9 @@ def _semear_contestacao(banco: Banco, *, abrir_excecao: bool = True) -> Contesta
         )
 
 
-def test_contestacao_marca_so_o_titulo_citado(banco: Banco, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_contestacao_marca_so_o_titulo_citado(
+    banco: Banco, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """SETL-44: o devedor reclama de uma mensalidade; as outras duas seguem na régua."""
     from app.agent.intent import Intent
     from app.channels import tasks

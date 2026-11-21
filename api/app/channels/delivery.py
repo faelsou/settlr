@@ -69,7 +69,7 @@ def advance_status(current: str | None, new: str) -> str | None:
     """Próximo status, ou None quando o evento repete ou tenta regredir um terminal."""
     if new == current:
         return None
-    if current == FALHOU or current == LIDO:
+    if current in (FALHOU, LIDO):
         return None
     if new == FALHOU:
         if current in (ENTREGUE, LIDO):
@@ -116,11 +116,7 @@ def _one_update(item: dict[str, Any]) -> DeliveryUpdate | None:
 def parse_delivery_updates(payload: EvolutionWebhook) -> list[DeliveryUpdate]:
     if not is_delivery_event(payload):
         return []
-    raw_items: list[Any]
-    if isinstance(payload.data, list):
-        raw_items = payload.data
-    else:
-        raw_items = [payload.data]
+    raw_items: list[Any] = payload.data if isinstance(payload.data, list) else [payload.data]
     updates: list[DeliveryUpdate] = []
     for item in raw_items:
         if not isinstance(item, dict):
