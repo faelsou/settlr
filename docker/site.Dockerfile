@@ -1,6 +1,17 @@
 # Site público: landing (/) e login da área do cliente (/entrar). Só arquivos estáticos e nginx.
 # A configuração é de runtime (ambiente), então a mesma imagem serve Minikube e produção.
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
+
+# A base atrasa correções do Alpine e do próprio nginx, e o Trivy do CI barra CVE crítica com
+# correção publicada. A imagem trava o nginx na versão dela (/etc/apk/world); o `apk add` sem versão
+# solta a trava e puxa o nginx mais novo do repositório do nginx.org, cuja chave já vem na imagem.
+USER root
+# hadolint ignore=DL3017,DL3018
+RUN NGINX_REPO="https://nginx.org/packages/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main" \
+ && apk upgrade --no-cache \
+ && apk add --no-cache --upgrade --repository "$NGINX_REPO" \
+      nginx nginx-module-geoip nginx-module-image-filter nginx-module-njs nginx-module-xslt
+USER 101
 
 # Valores padrão do ambiente local. Em produção o stack sobrescreve.
 # SUPABASE_URL vazio = login local pelo /auth/dev-login da API.
