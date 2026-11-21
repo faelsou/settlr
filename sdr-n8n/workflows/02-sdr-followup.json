@@ -1,0 +1,549 @@
+{
+  "name": "Settlr SDR · 02 Follow-up",
+  "nodes": [
+    {
+      "id": "6a4542bb-2aaf-5240-b3f6-4b18b248088c",
+      "name": "A cada 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4e729913-0d36-5f0b-8c4f-5f0c0e62b700",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5a7425f-5d69-5003-a77d-7550ae2519a5",
+              "name": "sdr_nome",
+              "value": "Lia",
+              "type": "string"
+            },
+            {
+              "id": "9c8698b6-9cf3-5ca3-bd9d-fe20773a79d1",
+              "name": "closer_nome",
+              "value": "Rafael",
+              "type": "string"
+            },
+            {
+              "id": "dcf34fcc-db90-56c5-9b7e-03aab1238677",
+              "name": "closer_email",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "d7ca7f4d-2fad-587f-b76f-2516a0a1d627",
+              "name": "closer_whatsapp",
+              "value": "5511900000000",
+              "type": "string"
+            },
+            {
+              "id": "35c12b0a-2113-59b6-9524-4f87cb774d5a",
+              "name": "evolution_url",
+              "value": "https://evolution.exemplo.com.br",
+              "type": "string"
+            },
+            {
+              "id": "857d3995-a270-51c5-ae6f-7172c7e7b1db",
+              "name": "evolution_instance",
+              "value": "settlr-sdr",
+              "type": "string"
+            },
+            {
+              "id": "93f331e1-7f8c-5d76-a62b-9616997172dd",
+              "name": "calendar_id",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "44c5ab8b-97bf-5973-91f9-ec714dda0cb4",
+              "name": "timezone",
+              "value": "America/Sao_Paulo",
+              "type": "string"
+            },
+            {
+              "id": "6acb1fe2-3d6d-5624-b1dd-26a0ebe514ce",
+              "name": "duracao_reuniao_min",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "d23db206-b48c-5d33-bdff-b6ba748d633f",
+              "name": "horario_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "29b831f4-4e15-571c-9589-58f610c47bfe",
+              "name": "horario_fim",
+              "value": 18,
+              "type": "number"
+            },
+            {
+              "id": "75a08397-9ebf-5f74-afde-9cbea25f61ef",
+              "name": "almoco_inicio",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "a77d8474-726d-5b75-bd94-b14391417c0f",
+              "name": "almoco_fim",
+              "value": 13,
+              "type": "number"
+            },
+            {
+              "id": "d886664c-f14e-5af3-b3fb-ce301c04286f",
+              "name": "antecedencia_min_horas",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "2ee3fbf6-f307-5255-9e50-d3907262ee28",
+              "name": "dias_busca",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "7be24b6c-b3b2-57e7-9492-ce24e0b945e4",
+              "name": "debounce_segundos",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "0a498d27-794f-559a-9c3b-1258c500e5d0",
+              "name": "pausa_humano_horas",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "38af81c2-f8e2-5550-9277-8144cb54fe84",
+              "name": "max_followups",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "117f7f1b-b251-59f7-9628-ae4253b4a96c",
+              "name": "followup_hora_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "6ce50e2c-1a34-539b-b0a3-dd44b4590ec7",
+              "name": "followup_hora_fim",
+              "value": 18,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "9ec6dd20-ce1a-5a16-9d74-84c94161bd13",
+      "name": "Horário comercial?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst agora = DateTime.now().setZone(cfg.timezone);\nif (agora.weekday > 5) return [];\nif (agora.hour < cfg.followup_hora_inicio || agora.hour >= cfg.followup_hora_fim) return [];\nreturn [{ json: { ok: true } }];\n"
+      }
+    },
+    {
+      "id": "9c41d9fa-eda8-5147-962b-aa75d338849d",
+      "name": "Leads devidos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_leads l\n   set next_followup_at = now() + interval '3 hours'   -- reserva: evita envio duplo se o fluxo cair no meio\n where l.id in (\n   select id from sdr_leads\n    where next_followup_at <= now()\n      and opted_out_at is null\n      and stage in ('novo','conversando','qualificado')\n      and (bot_paused_until is null or bot_paused_until < now())\n      and followup_count < $1::int\n    order by next_followup_at\n    limit 15\n    for update skip locked)\nreturning l.*",
+        "options": {
+          "queryReplacement": "={{ [ $('Config').first().json.max_followups ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "6f7fd4ef-744e-517f-b398-1857ecbfb22f",
+      "name": "Histórico",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select coalesce(string_agg(linha, E'\\n' order by id), '(sem histórico)') as historico\n  from (select id,\n               case when message->>'type' = 'human' then 'Lead: ' else 'Nós: ' end\n               || left(coalesce(message->>'content', message->'data'->>'content', ''), 400) as linha\n          from sdr_chat_memory\n         where session_id = $1\n         order by id desc\n         limit 16) t",
+        "options": {
+          "queryReplacement": "={{ [ $json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "06213b0d-b23e-513d-9978-8a9de5d0eb9d",
+      "name": "Escrever follow-up",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é Lia, assistente virtual do time comercial do Settlr. Escreva UMA mensagem de follow-up de WhatsApp para um lead que parou de responder.\n\nO Settlr é um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que confere cada PIX e boleto que entrou contra o que foi vendido. A primeira entrega é a conciliação: o dinheiro que entrou e a planilha não fechou, mais o arquivo do período para o contador. O título só quita quando o banco confirma. O piloto começa com 5 a 10 faturas reais. Não invente nada além disso. Não passe preço.\n\nEste é o follow-up número {{ $('Leads devidos').item.json.followup_count + 1 }} de 4.\n\n- 1: retome de onde a conversa parou, com uma pergunta simples e fácil de responder. Nada de \"só passando para saber\".\n- 2: traga um ponto de valor ligado ao que o lead contou (segmento, emissor ou dor). Por exemplo, o PIX que entrou sem dono, ou as horas do financeiro batendo planilha. Termine com uma pergunta.\n- 3: convide direto para 30 minutos com Rafael, que mostra na tela com um caso parecido. Pergunte se prefere manhã ou tarde.\n- 4: despedida leve. Diga que não vai mais insistir e que a porta fica aberta. Sem culpa, sem pressão.\n\nRegras:\n- Uma mensagem, até 280 caracteres, sem markdown, sem lista, no máximo um emoji.\n- Use o primeiro nome, se souber. Não comece com \"Oi, tudo bem?\" se a conversa já começou.\n- Não repita frase que já está no histórico.\n- Sem urgência falsa, sem desconto, sem promessa.\n\nSe o histórico mostra que o lead disse que não tem interesse, pediu para parar, ou pediu para falar só numa data futura, responda apenas PULAR.\n\nDados do lead:\nNome: {{ $('Leads devidos').item.json.name || '?' }} | Empresa: {{ $('Leads devidos').item.json.company || '?' }}\nSegmento: {{ $('Leads devidos').item.json.segment || '?' }} | cobranças/mês: {{ $('Leads devidos').item.json.monthly_charges || '?' }} | emissor: {{ $('Leads devidos').item.json.issuer || '?' }}\nDor: {{ $('Leads devidos').item.json.pain || '?' }}\nResumo: {{ $('Leads devidos').item.json.summary || '?' }}\n\nÚltimas mensagens (a mais recente por último):\n{{ $json.historico }}\n\nResponda só com o texto da mensagem, ou PULAR.\n"
+      }
+    },
+    {
+      "id": "a820eaea-8524-5f17-bc40-6e3bf57e32b5",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1100,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-opus-5-5"
+        },
+        "options": {
+          "maxTokensToSample": 1024
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "SDR_CRED_ANTHROPIC",
+          "name": "Anthropic"
+        }
+      }
+    },
+    {
+      "id": "59ed3b0e-1a5c-5dc9-9e26-cc044a433c5f",
+      "name": "Preparar envio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const leads = $('Leads devidos').all();\nreturn $input.all().map((item, i) => {\n  const l = leads[i].json;\n  const text = String(item.json.text || '').trim().replace(/^\"|\"$/g, '');\n  const pular = !text || /^PULAR\\b/i.test(text);\n  return { json: { lead_id: l.id, phone: l.phone, text, pular, delay: Math.min(1500 + text.length * 35, 7000) } };\n});\n"
+      }
+    },
+    {
+      "id": "e4ca41e2-a17c-57ca-88cf-3a7cf418837f",
+      "name": "Pular?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bef3c2cf-f3d3-5d97-b883-cd97957741e4",
+              "leftValue": "={{ $json.pular }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "81f66d23-a96d-5e2c-85b5-55568e8a3059",
+      "name": "Encerrar cadência",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        180
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_leads set next_followup_at = null, updated_at = now() where id = $1::bigint",
+        "options": {
+          "queryReplacement": "={{ [ $json.lead_id ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "33e2b548-06f6-59e5-b209-86eba89592b9",
+      "name": "Enviar follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evolution_url }}/message/sendText/{{ $('Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.text, delay: $json.delay }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_EVOLUTION",
+          "name": "Evolution SDR (apikey)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d6923362-e1b6-5bc2-a467-353cccc01ec7",
+      "name": "Marcar como do bot",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        420
+      ],
+      "parameters": {
+        "operation": "set",
+        "key": "=sdr:sent:{{ $json.key.id }}",
+        "value": "1",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 86400
+      },
+      "credentials": {
+        "redis": {
+          "id": "SDR_CRED_REDIS",
+          "name": "Settlr SDR Redis"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "0f59a106-1586-5226-b4ad-8acf9fa12b8d",
+      "name": "Avançar cadência",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2200,
+        420
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with u as (\n  update sdr_leads\n     set followup_count   = followup_count + 1,\n         last_outbound_at = now(),\n         next_followup_at = case followup_count + 1\n                              when 1 then now() + interval '2 days'   -- D+3\n                              when 2 then now() + interval '4 days'   -- D+7\n                              when 3 then now() + interval '7 days'   -- D+14\n                              else null end,\n         stage            = case when followup_count + 1 >= $3::int then 'perdido' else stage end,\n         updated_at       = now()\n   where id = $1::bigint\n  returning phone\n)\ninsert into sdr_chat_memory (session_id, message)\nselect phone, jsonb_build_object('type', 'ai', 'content', $2::text,\n       'additional_kwargs', '{}'::jsonb, 'response_metadata', '{}'::jsonb, 'tool_calls', '[]'::jsonb,\n       'invalid_tool_calls', '[]'::jsonb)\n  from u",
+        "options": {
+          "queryReplacement": "={{ [ $('Preparar envio').item.json.lead_id, $('Preparar envio').item.json.text, $('Config').first().json.max_followups ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Escrever follow-up",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A cada 30 min": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Horário comercial?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Horário comercial?": {
+      "main": [
+        [
+          {
+            "node": "Leads devidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leads devidos": {
+      "main": [
+        [
+          {
+            "node": "Histórico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Histórico": {
+      "main": [
+        [
+          {
+            "node": "Escrever follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escrever follow-up": {
+      "main": [
+        [
+          {
+            "node": "Preparar envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar envio": {
+      "main": [
+        [
+          {
+            "node": "Pular?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pular?": {
+      "main": [
+        [
+          {
+            "node": "Encerrar cadência",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar follow-up": {
+      "main": [
+        [
+          {
+            "node": "Marcar como do bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como do bot": {
+      "main": [
+        [
+          {
+            "node": "Avançar cadência",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  }
+}

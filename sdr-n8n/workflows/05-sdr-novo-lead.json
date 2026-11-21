@@ -1,0 +1,522 @@
+{
+  "name": "Settlr SDR · 05 Novo lead (formulário)",
+  "nodes": [
+    {
+      "id": "de3913b8-7ffb-5e0a-a931-8feeb6c9e75f",
+      "name": "Webhook formulário",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "settlr-sdr/lead",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_FORM",
+          "name": "SDR Formulário (segredo)"
+        }
+      },
+      "webhookId": "1af5512f-7a04-5856-aab8-7be0154a39a5"
+    },
+    {
+      "id": "3b541271-0aca-5d9e-8b5b-d730ae7f55f8",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e40a5be6-dad7-5c47-b206-2c120679944d",
+              "name": "sdr_nome",
+              "value": "Lia",
+              "type": "string"
+            },
+            {
+              "id": "0cd2ffe5-10a9-5ab4-af2a-73928e6a231d",
+              "name": "closer_nome",
+              "value": "Rafael",
+              "type": "string"
+            },
+            {
+              "id": "700315e6-0c46-5b4a-9a25-a98303003805",
+              "name": "closer_email",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "8ca171ac-23ff-5058-a4f9-8ffce03aba7d",
+              "name": "closer_whatsapp",
+              "value": "5511900000000",
+              "type": "string"
+            },
+            {
+              "id": "8d7a0727-2c2a-5d48-ad33-b25587a25360",
+              "name": "evolution_url",
+              "value": "https://evolution.exemplo.com.br",
+              "type": "string"
+            },
+            {
+              "id": "dd192357-653f-52aa-ac49-14b3b64fbd10",
+              "name": "evolution_instance",
+              "value": "settlr-sdr",
+              "type": "string"
+            },
+            {
+              "id": "16a23892-2782-566a-aa4e-489718ea50f2",
+              "name": "calendar_id",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "b639045e-135b-5e7d-890e-9e1a6020683f",
+              "name": "timezone",
+              "value": "America/Sao_Paulo",
+              "type": "string"
+            },
+            {
+              "id": "a1c72bd8-338e-59ef-8b2f-46e3d5eaf7f5",
+              "name": "duracao_reuniao_min",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "3c993c3c-ddab-5585-8ee6-e21bbcebf99a",
+              "name": "horario_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "922bf251-15cf-5d89-b5bf-667c982297d9",
+              "name": "horario_fim",
+              "value": 18,
+              "type": "number"
+            },
+            {
+              "id": "21ecb9a4-a946-5556-b6de-26b122a97c51",
+              "name": "almoco_inicio",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "c649b2b0-4f09-516b-87bf-3fae1b7b4e8c",
+              "name": "almoco_fim",
+              "value": 13,
+              "type": "number"
+            },
+            {
+              "id": "f332eb9c-26f2-5f07-8d36-9935d256c98f",
+              "name": "antecedencia_min_horas",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "3c3e47ce-112b-5290-82f7-02e63441ecee",
+              "name": "dias_busca",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "34f8353a-46bc-519d-957c-587ce249f4f9",
+              "name": "debounce_segundos",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "566171b6-1fe7-51df-8a8e-67d2adaefd49",
+              "name": "pausa_humano_horas",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "2b61fb6a-3c8d-5805-bf34-3f0f8046f7aa",
+              "name": "max_followups",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "3a8556b4-2a75-50d4-ac73-68b3ea2d44df",
+              "name": "followup_hora_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "407eb9b9-ec03-5e57-a6f3-6812d8e89758",
+              "name": "followup_hora_fim",
+              "value": 18,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "ffcb41b6-16e5-551d-9a92-7f9269c9c018",
+      "name": "Normalizar lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const b = $json.body ?? $json;\nlet tel = String(b.telefone || b.phone || b.whatsapp || '').replace(/\\D/g, '');\nif (tel.length === 10 || tel.length === 11) tel = '55' + tel;\nif (tel.length < 12) return [];\nreturn [{ json: {\n  phone: tel,\n  nome: String(b.nome || b.name || '').trim(),\n  empresa: String(b.empresa || b.company || '').trim(),\n  email: String(b.email || '').trim(),\n  segmento: String(b.segmento || '').trim().toLowerCase(),\n  origem: String(b.origem || b.utm_source || 'formulario').trim(),\n  mensagem: String(b.mensagem || b.message || '').trim().slice(0, 500),\n} }];\n"
+      }
+    },
+    {
+      "id": "be03989e-50b5-593b-8d16-e6beaab64aa4",
+      "name": "Checar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evolution_url }}/chat/whatsappNumbers/{{ $('Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ numbers: [ $json.phone ] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_EVOLUTION",
+          "name": "Evolution SDR (apikey)"
+        }
+      }
+    },
+    {
+      "id": "ef58fd3b-c582-5e20-90bd-23c37a4d9480",
+      "name": "Resolver número",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Usa o JID que o WhatsApp devolve: evita lead duplicado por causa do nono dígito.\nconst r = Array.isArray($json) ? $json[0] : ($json[0] ?? $json);\nconst lead = $('Normalizar lead').first().json;\nif (!r || r.exists === false || !r.jid) return [];\nreturn [{ json: { ...lead, phone: r.jid.split('@')[0] } }];\n"
+      }
+    },
+    {
+      "id": "f4200f78-44c2-5e41-86d5-b566c9e57d1c",
+      "name": "Criar lead",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into sdr_leads (phone, name, company, email, segment, source, stage, summary)\nvalues ($1, nullif($2,''), nullif($3,''), nullif($4,''),\n        case when $5 in ('clinica','escola','academia','condominio','software','servicos','bpo','banco','outro') then $5 end,\n        $6, 'novo', nullif('Mensagem do formulário: ' || $7, 'Mensagem do formulário: '))\non conflict (phone) do update set\n  name = coalesce(sdr_leads.name, excluded.name),\n  company = coalesce(sdr_leads.company, excluded.company),\n  email = coalesce(sdr_leads.email, excluded.email),\n  updated_at = now()\nreturning id, phone, name, (xmax = 0) as novo, last_outbound_at, opted_out_at",
+        "options": {
+          "queryReplacement": "={{ [ $json.phone, $json.nome, $json.empresa, $json.email, $json.segmento, $json.origem, $json.mensagem ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "85d1eabf-df2f-58cc-aca4-b6fe3a3a036b",
+      "name": "Primeiro contato?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "41660c7a-200f-5a08-a617-a225b68dc80f",
+              "leftValue": "={{ $json.novo || (!$json.last_outbound_at && !$json.opted_out_at) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "78d2d936-f158-507d-ad08-f967756e0e81",
+      "name": "Mensagem de abertura",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst l = $('Resolver número').first().json;\nconst nome = (l.nome || '').split(' ')[0];\nconst oi = nome ? `Oi, ${nome}! ` : 'Oi! ';\nconst empresa = l.empresa ? ` da ${l.empresa}` : '';\nconst abertura = `${oi}Aqui é a ${cfg.sdr_nome}, assistente virtual do time do Settlr. Vi que você deixou seu contato${empresa} no nosso site.`;\nconst pergunta = l.mensagem\n  ? `Li a sua mensagem por aqui. Pra eu entender melhor: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`\n  : `Pra eu te direcionar do jeito certo: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`;\nreturn [\n  { json: { phone: l.phone, text: abertura, delay: 2500 } },\n  { json: { phone: l.phone, text: pergunta, delay: 4000 } },\n];\n"
+      }
+    },
+    {
+      "id": "bca429b3-2191-5912-8129-1b069c0d562e",
+      "name": "Enviar abertura",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evolution_url }}/message/sendText/{{ $('Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.text, delay: $json.delay }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_EVOLUTION",
+          "name": "Evolution SDR (apikey)"
+        }
+      }
+    },
+    {
+      "id": "d52ff3c1-b605-5788-9d75-1a52d3c17461",
+      "name": "Marcar como do bot",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        300
+      ],
+      "parameters": {
+        "operation": "set",
+        "key": "=sdr:sent:{{ $json.key.id }}",
+        "value": "1",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 86400
+      },
+      "credentials": {
+        "redis": {
+          "id": "SDR_CRED_REDIS",
+          "name": "Settlr SDR Redis"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "a706363f-522a-5878-9b77-3c5a7d9c0e6f",
+      "name": "Guardar na memória",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2200,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into sdr_chat_memory (session_id, message)\nvalues ($1, jsonb_build_object('type', 'ai', 'content', $2::text,\n        'additional_kwargs', '{}'::jsonb, 'response_metadata', '{}'::jsonb, 'tool_calls', '[]'::jsonb,\n        'invalid_tool_calls', '[]'::jsonb))",
+        "options": {
+          "queryReplacement": "={{ [ $('Mensagem de abertura').item.json.phone, $('Mensagem de abertura').item.json.text ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "02595b0a-eef9-51e6-8a96-8fe5eeb675a5",
+      "name": "Registrar abertura",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2420,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_leads set last_outbound_at = now(), stage = 'conversando',\n       next_followup_at = now() + interval '1 day', updated_at = now()\n where phone = $1",
+        "options": {
+          "queryReplacement": "={{ [ $('Resolver número').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      },
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Webhook formulário": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Normalizar lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar lead": {
+      "main": [
+        [
+          {
+            "node": "Checar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Resolver número",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver número": {
+      "main": [
+        [
+          {
+            "node": "Criar lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar lead": {
+      "main": [
+        [
+          {
+            "node": "Primeiro contato?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Primeiro contato?": {
+      "main": [
+        [
+          {
+            "node": "Mensagem de abertura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem de abertura": {
+      "main": [
+        [
+          {
+            "node": "Enviar abertura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar abertura": {
+      "main": [
+        [
+          {
+            "node": "Marcar como do bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como do bot": {
+      "main": [
+        [
+          {
+            "node": "Guardar na memória",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar na memória": {
+      "main": [
+        [
+          {
+            "node": "Registrar abertura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  }
+}
