@@ -18,9 +18,9 @@ from app.dunning.official import (
 )
 from app.dunning.payment import has_payment_code
 from app.dunning.rules import (
+    DEFAULT_DUNNING_RULES,
     TEXT_VERSION,
     AllowedHours,
-    DEFAULT_DUNNING_RULES,
     Step,
     decide,
     parse_steps,
@@ -175,7 +175,9 @@ class _Sessao:
         return None
 
 
-def _titulo(*, pix: str | None = None, boleto: str | None = None, link: str | None = None) -> SimpleNamespace:
+def _titulo(
+    *, pix: str | None = None, boleto: str | None = None, link: str | None = None
+) -> SimpleNamespace:
     return SimpleNamespace(
         id=uuid4(),
         debtor_id=uuid4(),
@@ -256,9 +258,13 @@ def test_canonical_texts_match_the_versioned_dossier():
 
 def test_old_unversioned_rules_adopt_the_canonical_texts():
     old = {
-        "steps": [{"key": "D+3", "offset": 3, "channels": ["whatsapp"], "template": "desconto_vista"}],
+        "steps": [
+            {"key": "D+3", "offset": 3, "channels": ["whatsapp"], "template": "desconto_vista"}
+        ],
         "templates": {"desconto_vista": "15% de desconto", "aviso_restricao": "restrição do nome"},
-        "whatsapp_templates": {"aviso_restricao": {"name": "aviso_meta", "language": "pt_BR", "params": []}},
+        "whatsapp_templates": {
+            "aviso_restricao": {"name": "aviso_meta", "language": "pt_BR", "params": []}
+        },
         "rate_per_minute": 12,
     }
     adopted = adopt_canonical_texts(old)
@@ -269,7 +275,10 @@ def test_old_unversioned_rules_adopt_the_canonical_texts():
     assert adopted["whatsapp_templates"]["aviso_equipe"]["name"] == "aviso_meta"
     assert adopted["rate_per_minute"] == 12
     assert adopt_canonical_texts(adopted) is None
-    assert adopt_canonical_texts({"templates": {"lembrete": "texto da clínica"}, "text_version": ""}) is None
+    assert (
+        adopt_canonical_texts({"templates": {"lembrete": "texto da clínica"}, "text_version": ""})
+        is None
+    )
 
 
 def test_production_activation_waits_for_the_legal_opinion(monkeypatch):
@@ -374,7 +383,9 @@ def test_activate_http_refuses_production_until_the_opinion_is_recorded(monkeypa
 
     tenant = _conta_pronta()
     monkeypatch.setattr("app.api.routes.admin.SessionLocal", lambda: _SessaoAdmin(tenant))
-    monkeypatch.setattr("app.api.routes.admin.read_evolution", lambda *_args, **_kwargs: ("close", []))
+    monkeypatch.setattr(
+        "app.api.routes.admin.read_evolution", lambda *_args, **_kwargs: ("close", [])
+    )
     monkeypatch.setattr("app.api.routes.admin.audit", lambda *_args, **_kwargs: None)
     monkeypatch.setattr("app.api.routes.admin.set_tenant", lambda *_args, **_kwargs: None)
     client = TestClient(app)

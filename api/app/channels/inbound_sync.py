@@ -256,7 +256,11 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
     added = 0
     for tenant_id, instance in tenants:
         with tenant_session(tenant_id) as session:
-            known = list(session.scalars(select(Conversation.wa_jid).where(Conversation.tenant_id == tenant_id)))
+            known = list(
+                session.scalars(
+                    select(Conversation.wa_jid).where(Conversation.tenant_id == tenant_id)
+                )
+            )
         try:
             chats = client.find_chats(instance)
         except Exception:
@@ -288,7 +292,9 @@ def pull_unseen_replies(client: EvolutionClient | None = None) -> int:
             with tenant_session(tenant_id) as session:
                 tenant = session.get(Tenant, tenant_id)
                 conv = session.scalars(
-                    select(Conversation).where(Conversation.tenant_id == tenant_id, Conversation.wa_jid == jid)
+                    select(Conversation).where(
+                        Conversation.tenant_id == tenant_id, Conversation.wa_jid == jid
+                    )
                 ).first()
                 stored: list[tuple[str, str]] = []
                 reply_voice = False

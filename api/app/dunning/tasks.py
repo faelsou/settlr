@@ -37,7 +37,9 @@ def run_dunning_tenant(self, tenant_id: str) -> dict:
 
     with tenant_session(tid) as session:
         tenant = session.get(Tenant, tid)
-        if not within_allowed_hours(now, AllowedHours.from_json(tenant.allowed_hours), tenant.timezone):
+        if not within_allowed_hours(
+            now, AllowedHours.from_json(tenant.allowed_hours), tenant.timezone
+        ):
             return {"skipped": "fora_do_horario"}
         today = now.astimezone(ZoneInfo(tenant.timezone)).date()
         invoice_ids = eligible_invoice_ids(session, tenant, today)

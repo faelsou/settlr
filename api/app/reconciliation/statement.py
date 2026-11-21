@@ -36,7 +36,7 @@ def parse_csv(content: bytes) -> list[BankPaymentIn]:
     dialect = csv.Sniffer().sniff(text.splitlines()[0], delimiters=",;")
     reader = csv.DictReader(io.StringIO(text), dialect=dialect)
     headers = {h.strip().lower() for h in reader.fieldnames or []}
-    if not CSV_COLUMNS <= headers:
+    if not headers >= CSV_COLUMNS:
         raise ValueError(f"CSV precisa das colunas {sorted(CSV_COLUMNS)}")
 
     payments: list[BankPaymentIn] = []

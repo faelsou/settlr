@@ -107,6 +107,8 @@ As duas etapas novas não dependem de PIX copia-e-cola. A trava de “título se
 
 No piloto, a mesma carteira compara a régua de dez etapas com quatro (D0, D+1, D+5, D+15) e mede a recuperação marginal de cada etapa. O custo que pesa é o template da Meta por disparo.
 
+O piloto liga em `dunning_rules.piloto_regua.quatro_etapas_pct` (padrão 50). O título cai numa variante pelo hash do id e não troca entre execuções. Na variante curta o D+30 continua passando o título para a fila humana. A tela de Métricas mostra recuperação e disparos por variante.
+
 ### Regras duras
 
 - Nunca envia fora do **horário permitido** do tenant (padrão: 08:00–20:00, seg–sáb).

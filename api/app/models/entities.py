@@ -200,7 +200,9 @@ class Agreement(IdMixin, TenantMixin, Base):
     debtor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("debtors.id"))
     source_invoice_ids: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID(as_uuid=True)))
     conditions: Mapped[Json]
-    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class Approval(IdMixin, TenantMixin, TimestampMixin, Base):
