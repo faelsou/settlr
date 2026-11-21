@@ -1,0 +1,1514 @@
+{
+  "name": "Settlr SDR · 04 Ferramentas do agente",
+  "nodes": [
+    {
+      "id": "0c6653d3-a1cc-520d-bbd0-9d4fd9781e68",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "acao"
+            },
+            {
+              "name": "phone"
+            },
+            {
+              "name": "inicio"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "campos"
+            },
+            {
+              "name": "motivo"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "69c70d5f-8208-5e30-9e06-7692b8bd9fb1",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        600
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5843bcdf-d039-5e20-a5f0-f4120724d482",
+              "name": "sdr_nome",
+              "value": "Lia",
+              "type": "string"
+            },
+            {
+              "id": "6d749198-d788-56c4-8a0e-5a7156b7ad4a",
+              "name": "closer_nome",
+              "value": "Rafael",
+              "type": "string"
+            },
+            {
+              "id": "2d4e470d-cb44-5b5d-aaa5-13dcd3aa4d26",
+              "name": "closer_email",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "ad46fd49-11e6-5fb7-a70c-ca8f62b5f95b",
+              "name": "closer_whatsapp",
+              "value": "5511900000000",
+              "type": "string"
+            },
+            {
+              "id": "5afdef0f-f78e-5499-8c48-4b3810d5d3e7",
+              "name": "evolution_url",
+              "value": "https://evolution.exemplo.com.br",
+              "type": "string"
+            },
+            {
+              "id": "4cea8b22-2dbc-5bab-9bd0-fef0fa845533",
+              "name": "evolution_instance",
+              "value": "settlr-sdr",
+              "type": "string"
+            },
+            {
+              "id": "b6b49279-939e-5d74-be9b-622e7aebbb1a",
+              "name": "calendar_id",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "f9aa2eaa-4965-5a20-b680-54f3e924f3fe",
+              "name": "timezone",
+              "value": "America/Sao_Paulo",
+              "type": "string"
+            },
+            {
+              "id": "496df518-4c4e-5a77-bca6-4b4608c6c6c8",
+              "name": "duracao_reuniao_min",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "a79dedb5-d11e-521e-902b-f6a1eef97aad",
+              "name": "horario_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "c842fe7a-4792-512a-a92b-e6aea0f75427",
+              "name": "horario_fim",
+              "value": 18,
+              "type": "number"
+            },
+            {
+              "id": "68bf6818-8624-592c-8b99-f3328ba4cc0c",
+              "name": "almoco_inicio",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "87e25922-967e-53de-a223-5130b8e9355b",
+              "name": "almoco_fim",
+              "value": 13,
+              "type": "number"
+            },
+            {
+              "id": "701c8fd2-639c-5cd4-a795-52cbdcee9851",
+              "name": "antecedencia_min_horas",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "b385f93b-f059-5782-b803-6317e52b0e85",
+              "name": "dias_busca",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "a34e65fa-14f1-5821-af05-89781a5a55cb",
+              "name": "debounce_segundos",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "84dc829f-3467-5bc7-8ec8-e5528a3195d8",
+              "name": "pausa_humano_horas",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "6b654a2c-97f5-543f-b46e-b2d5d5506248",
+              "name": "max_followups",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "fe4c6551-61a3-5aab-a9f2-156d09576ccc",
+              "name": "followup_hora_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "36c0b5c3-9eaf-5077-9044-053d3d79be6b",
+              "name": "followup_hora_fim",
+              "value": 18,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "f12b5dd5-54b9-52ea-8c59-f2a300e8ad3f",
+      "name": "Ação",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        600
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6b171e87-aba1-54a3-b753-b7964c7f1e45",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "horarios",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "horarios"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "087b86b2-2d75-5445-bf02-95a2dc7bc59d",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "agendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "agendar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "02c3cb5d-167b-53b6-bdf5-01b3ae9aa399",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "cancelar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancelar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b64d5af4-c523-5ade-85ec-e3325d6d7d88",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "confirmar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2c3481bf-f399-5cec-b911-0132c5025150",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "atualizar_lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "atualizar_lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5f3e1496-b789-53ad-bc3f-943a5f68a6a3",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "transferir_humano",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "transferir_humano"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b1c25d55-ce13-505e-aac0-cde25830fc8e",
+                    "leftValue": "={{ $('Entrada').first().json.acao }}",
+                    "rightValue": "opt_out",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "opt_out"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "ff6b540c-4fc9-5bd4-ab0e-e7035e963ea9",
+      "name": "Ação desconhecida",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        1500
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8347cb00-1fb1-56c2-9a11-114515ab9520",
+              "name": "resposta",
+              "value": "Ação desconhecida. Siga a conversa sem esta ferramenta.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e5c1fced-1ceb-569b-a74a-ba62ecb124ab",
+      "name": "Janela de busca",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst agora = DateTime.now().setZone(cfg.timezone);\nreturn [{ json: {\n  timeMin: agora.toISO(),\n  timeMax: agora.plus({ days: cfg.dias_busca + 1 }).endOf('day').toISO(),\n} }];\n"
+      }
+    },
+    {
+      "id": "b6ccad2c-4641-55a2-b5b4-552a1fb061c3",
+      "name": "FreeBusy (semana)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/calendar/v3/freeBusy",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ timeMin: $json.timeMin, timeMax: $json.timeMax, timeZone: $('Config').first().json.timezone, items: [{ id: $('Config').first().json.calendar_id }] }) }}"
+      },
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "SDR_CRED_GCAL",
+          "name": "Google Calendar SDR"
+        }
+      }
+    },
+    {
+      "id": "9eabcb09-6f15-59d2-8564-0c41e5b820b0",
+      "name": "Calcular horários livres",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst tz = cfg.timezone;\nconst cal = $json.calendars?.[cfg.calendar_id];\nif (!cal || cal.errors) {\n  return [{ json: { resposta: 'Não consegui ler a agenda agora. Diga ao lead que você confirma o horário em instantes e chame transferir_humano com o motivo \"agenda indisponível\".' } }];\n}\nconst busy = (cal.busy || []).map(b => [DateTime.fromISO(b.start).toMillis(), DateTime.fromISO(b.end).toMillis()]);\nconst dur = cfg.duracao_reuniao_min;\nconst minStart = DateTime.now().setZone(tz).plus({ hours: cfg.antecedencia_min_horas });\nconst livres = [];\nlet dia = DateTime.now().setZone(tz).startOf('day');\nfor (let d = 0; d <= cfg.dias_busca; d++, dia = dia.plus({ days: 1 })) {\n  if (dia.weekday > 5) continue;\n  for (let m = cfg.horario_inicio * 60; m + dur <= cfg.horario_fim * 60; m += 30) {\n    if (m < cfg.almoco_fim * 60 && m + dur > cfg.almoco_inicio * 60) continue;\n    const s = dia.plus({ minutes: m });\n    if (s < minStart) continue;\n    const sm = s.toMillis(), em = s.plus({ minutes: dur }).toMillis();\n    if (busy.some(([bs, be]) => sm < be && em > bs)) continue;\n    livres.push(s);\n  }\n}\n// No máximo uma de manhã e uma à tarde por dia, até 6 opções.\nconst vistos = new Set();\nconst sugestoes = [];\nfor (const s of livres) {\n  const k = s.toISODate() + (s.hour < 12 ? 'm' : 't');\n  if (vistos.has(k)) continue;\n  vistos.add(k);\n  sugestoes.push(s);\n  if (sugestoes.length >= 6) break;\n}\nif (!sugestoes.length) {\n  return [{ json: { resposta: 'Sem horário livre nos próximos dias. Diga que o especialista vai propor um horário e chame transferir_humano com o motivo \"agenda cheia\".' } }];\n}\nconst hoje = DateTime.now().setZone(tz).startOf('day');\nconst rotulo = (s) => {\n  const diff = Math.round(s.startOf('day').diff(hoje, 'days').days);\n  const dia = diff === 0 ? 'hoje' : diff === 1 ? 'amanhã' : s.setLocale('pt-BR').toFormat('cccc (dd/LL)');\n  const hora = s.minute ? s.toFormat(\"HH'h'mm\") : s.toFormat(\"HH'h'\");\n  return `${dia} às ${hora}`;\n};\nconst linhas = sugestoes.map(s => `${rotulo(s)} | inicio=${s.toISO({ suppressMilliseconds: true })}`);\nreturn [{ json: { resposta: `Horários livres para ${dur} min (Brasília). Ofereça duas opções em dias diferentes:\\n${linhas.join('\\n')}` } }];\n"
+      }
+    },
+    {
+      "id": "5151ccc4-9b51-5524-8f27-de4fdcb79759",
+      "name": "Validar horário",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst ent = $('Entrada').first().json;\nconst tz = cfg.timezone;\nconst s = DateTime.fromISO(String(ent.inicio || ''), { setZone: true }).setZone(tz);\nconst fail = (motivo) => [{ json: { ok: false, resposta: motivo } }];\nif (!s.isValid) return fail('Horário inválido. Chame ver_horarios e use o campo inicio de lá.');\nconst e = s.plus({ minutes: cfg.duracao_reuniao_min });\nconst min = s.hour * 60 + s.minute;\nif (s < DateTime.now().setZone(tz).plus({ hours: cfg.antecedencia_min_horas }))\n  return fail(`Esse horário está muito em cima. Ofereça horários a partir de ${cfg.antecedencia_min_horas}h daqui (chame ver_horarios).`);\nif (s.weekday > 5) return fail('O especialista atende de segunda a sexta. Chame ver_horarios e ofereça outro dia.');\nif (min < cfg.horario_inicio * 60 || min + cfg.duracao_reuniao_min > cfg.horario_fim * 60)\n  return fail(`O especialista atende das ${cfg.horario_inicio}h às ${cfg.horario_fim}h. Chame ver_horarios.`);\nreturn [{ json: { ok: true, start: s.toISO(), end: e.toISO(), email: String(ent.email || '').trim() } }];\n"
+      }
+    },
+    {
+      "id": "6fcecebf-5060-5806-afa1-6a103a1da9d6",
+      "name": "Horário válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "227fd797-9adb-5931-9d8f-990a696fa227",
+              "leftValue": "={{ $json.ok }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dbe43866-681b-5ab6-91d1-94d934abab17",
+      "name": "Dados do lead",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select l.id, l.name, l.company, l.email, l.phone, l.segment, l.monthly_charges, l.issuer, l.pain, l.summary, l.fit,\n       (select to_char(start_at at time zone 'America/Sao_Paulo', 'DD/MM \"às\" HH24:MI')\n          from sdr_meetings where lead_id = l.id and status in ('agendada','confirmada') and start_at > now()\n          order by start_at limit 1) as ja_marcada\n  from sdr_leads l where l.phone = $1",
+        "options": {
+          "queryReplacement": "={{ [ $('Entrada').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "a41d1238-f54a-5469-bd9e-f2c158add177",
+      "name": "Já tem reunião?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b300c01f-cef0-546f-a9c0-160c59abbfc2",
+              "leftValue": "={{ $json.ja_marcada }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "187f9224-0d78-5cf6-aced-d48f15d31158",
+      "name": "Resposta: já marcada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        200
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52dab453-fdb8-5b15-88d1-9a65a4a92721",
+              "name": "resposta",
+              "value": "=O lead já tem reunião em {{ $json.ja_marcada }}. Se ele quer mudar, chame cancelar_reuniao e depois agende de novo.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "865177a7-9c3c-584a-b19e-dfbf37bc415a",
+      "name": "FreeBusy (slot)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        360
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/calendar/v3/freeBusy",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ timeMin: $('Validar horário').first().json.start, timeMax: $('Validar horário').first().json.end, timeZone: $('Config').first().json.timezone, items: [{ id: $('Config').first().json.calendar_id }] }) }}"
+      },
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "SDR_CRED_GCAL",
+          "name": "Google Calendar SDR"
+        }
+      }
+    },
+    {
+      "id": "a8a0d331-a6c3-59dd-a1b2-f2678b0e2a9b",
+      "name": "Slot livre?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a2416b51-5d0e-566e-b574-97a4edb0fa9a",
+              "leftValue": "={{ ((($json.calendars || {})[$('Config').first().json.calendar_id] || {}).busy ?? [null]).length === 0 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "55dffdde-3b5d-52e3-932a-17d27e892309",
+      "name": "Resposta: ocupado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1980,
+        460
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb8f1b19-1b4c-5415-8643-f460d8aa689e",
+              "name": "resposta",
+              "value": "Esse horário acabou de ser ocupado. Chame ver_horarios e ofereça os mais próximos.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1c8c873b-d844-57f9-ba4b-7b7295045ea3",
+      "name": "Montar evento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst v = $('Validar horário').first().json;\nconst l = $('Dados do lead').first().json;\nconst email = v.email || l.email || '';\nconst quem = l.company || l.name || ('+' + l.phone);\nconst descr = [\n  `Conversa de ${cfg.duracao_reuniao_min} min com ${cfg.closer_nome}, do Settlr.`,\n  '',\n  'Pré-atendimento (SDR):',\n  `Contato: ${l.name || '?'} | WhatsApp +${l.phone}`,\n  `Segmento: ${l.segment || '?'} | cobranças/mês: ${l.monthly_charges ?? '?'} | emissor: ${l.issuer || '?'} | fit: ${l.fit}`,\n  `Dor: ${l.pain || '?'}`,\n  `Resumo: ${l.summary || '?'}`,\n].join('\\n');\nconst attendees = [{ email: cfg.closer_email }];\nif (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) attendees.push({ email, displayName: l.name || undefined });\nreturn [{ json: {\n  email_valido: attendees.length > 1 ? email : '',\n  evento: {\n    summary: `Settlr × ${quem}: cobrança e conciliação`,\n    description: descr,\n    start: { dateTime: v.start, timeZone: cfg.timezone },\n    end: { dateTime: v.end, timeZone: cfg.timezone },\n    attendees,\n    conferenceData: { createRequest: { requestId: `sdr-${l.phone}-${Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } } },\n    reminders: { useDefault: true },\n  },\n} }];\n"
+      }
+    },
+    {
+      "id": "71d9fc44-809c-5130-b3a8-3ef25991d121",
+      "name": "Criar evento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/{{ encodeURIComponent($('Config').first().json.calendar_id) }}/events?conferenceDataVersion=1&sendUpdates=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.evento) }}"
+      },
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "SDR_CRED_GCAL",
+          "name": "Google Calendar SDR"
+        }
+      }
+    },
+    {
+      "id": "397c1839-d1ef-573e-886c-0220033a926c",
+      "name": "Salvar reunião",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2420,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with m as (\n  insert into sdr_meetings (lead_id, google_event_id, start_at, end_at, meet_link)\n  values ($1::bigint, $2, $3::timestamptz, $4::timestamptz, $5)\n  returning id\n)\nupdate sdr_leads\n   set stage = 'agendado',\n       next_followup_at = null,\n       email = coalesce(nullif($6, ''), email),\n       updated_at = now()\n where id = $1::bigint\nreturning (select id from m) as reuniao_id",
+        "options": {
+          "queryReplacement": "={{ [ $('Dados do lead').first().json.id, $json.id, $('Validar horário').first().json.start, $('Validar horário').first().json.end, $json.hangoutLink || $json.htmlLink || '', $('Montar evento').first().json.email_valido ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "2a697a51-fc16-5ba1-aad9-aae6eb6db19b",
+      "name": "Resposta: agendado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2640,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "674aaae6-1a44-556a-a464-04a9698814c8",
+              "name": "resposta",
+              "value": "=Reunião marcada para {{ DateTime.fromISO($('Validar horário').first().json.start).setZone($('Config').first().json.timezone).setLocale('pt-BR').toFormat(\"cccc, dd/LL 'às' HH'h'mm\") }} (Brasília) com {{ $('Config').first().json.closer_nome }}. Link: {{ $('Criar evento').first().json.hangoutLink || 'vai no convite' }}. {{ $('Montar evento').first().json.email_valido ? 'Convite enviado para ' + $('Montar evento').first().json.email_valido + '.' : 'O lead não passou e-mail: o link fica só aqui no WhatsApp.' }} Confirme ao lead dia, hora e link, e diga que você manda um lembrete antes.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "44397ad1-6c74-5c86-ab9a-62bc8fd6dab2",
+      "name": "Resposta: horário inválido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        460
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ce65190f-5407-53c2-b51b-c3f9e6d4fb8a",
+              "name": "resposta",
+              "value": "={{ $json.resposta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "efd5214b-df2f-5489-97d5-1c8ff4602de9",
+      "name": "Reunião ativa",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        650
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select m.id, m.google_event_id\n  from sdr_meetings m join sdr_leads l on l.id = m.lead_id\n where l.phone = $1 and m.status in ('agendada','confirmada') and m.start_at > now()\n order by m.start_at limit 1",
+        "options": {
+          "queryReplacement": "={{ [ $('Entrada').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "010891c7-77f8-5c39-aeb9-9991b4ae6704",
+      "name": "Tem reunião?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        650
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fdab08a8-f420-59ef-80f8-3ba39d1f58a4",
+              "leftValue": "={{ !!$json.id }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e38936d0-60db-5bab-a6d0-ffd01f7ed056",
+      "name": "Cancelar no Google",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        590
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/{{ encodeURIComponent($('Config').first().json.calendar_id) }}/events/{{ $json.google_event_id }}?sendUpdates=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "SDR_CRED_GCAL",
+          "name": "Google Calendar SDR"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "095d86d0-5ee6-5beb-8fb6-976003d9fdba",
+      "name": "Marcar cancelada",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1320,
+        590
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with m as (update sdr_meetings set status = 'cancelada' where id = $1::bigint returning lead_id)\nupdate sdr_leads set stage = 'qualificado', updated_at = now(),\n       summary = concat_ws(' | ', summary, 'Cancelou reunião: ' || nullif($2, ''))\n where id = (select lead_id from m)",
+        "options": {
+          "queryReplacement": "={{ [ $('Reunião ativa').first().json.id, $('Entrada').first().json.motivo ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "50f94a65-77a8-529c-8dc6-5e0fda0a1ef7",
+      "name": "Resposta: cancelada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        590
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "58ec1214-521e-5736-9e02-385427e79ed7",
+              "name": "resposta",
+              "value": "Reunião cancelada e convite retirado. Se o lead quer remarcar, chame ver_horarios.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "48de62bc-b6af-5e2e-ad4e-c64ea4e20a20",
+      "name": "Resposta: sem reunião",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        750
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a7e4fb17-c314-510e-9e9b-9196d42ba68e",
+              "name": "resposta",
+              "value": "Não há reunião futura marcada para este lead.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c75d8886-ce8e-5df3-89ac-ee295a0aa19f",
+      "name": "Confirmar presença",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        900
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_meetings m set status = 'confirmada'\n  from sdr_leads l\n where l.id = m.lead_id and l.phone = $1 and m.status = 'agendada' and m.start_at > now()\nreturning m.id",
+        "options": {
+          "queryReplacement": "={{ [ $('Entrada').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "fb3f05df-1397-5f39-a17f-1154f340d118",
+      "name": "Resposta: confirmada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        900
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6ac1b331-69f8-5fed-85eb-b0a2d7a5a2b7",
+              "name": "resposta",
+              "value": "={{ $json.id ? 'Presença confirmada. Agradeça em uma frase curta.' : 'Não havia reunião pendente de confirmação.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "aec2d8cb-6aff-5e8c-9d8b-7dcf96fdc3ce",
+      "name": "Filtrar campos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        1080
+      ],
+      "parameters": {
+        "jsCode": "// Só colunas da lista entram no UPDATE. Nome de coluna nunca vem do modelo.\nconst ent = $('Entrada').first().json;\nlet c = {};\ntry { c = typeof ent.campos === 'string' ? JSON.parse(ent.campos || '{}') : (ent.campos || {}); }\ncatch (e) { return [{ json: { sql: 'select 1', params: [], resposta: 'O campo campos precisa ser um JSON válido. Tente de novo.' } }]; }\nconst texto = (x) => String(x).trim().slice(0, 500);\nconst inteiro = (x) => { const n = parseInt(String(x).replace(/\\D/g, ''), 10); return Number.isFinite(n) ? n : null; };\nconst enumOf = (...ok) => (x) => ok.includes(String(x).toLowerCase()) ? String(x).toLowerCase() : null;\nconst mapa = {\n  nome: ['name', texto], empresa: ['company', texto], cargo: ['role', texto], email: ['email', texto],\n  segmento: ['segment', enumOf('clinica','escola','academia','condominio','software','servicos','bpo','banco','outro')],\n  quem_paga: ['payer_type', enumOf('pf','pj','ambos')],\n  cobrancas_mes: ['monthly_charges', inteiro], meios: ['channels', texto],\n  emissor: ['issuer', enumOf('asaas','inter','efi','iugu','sicoob','planilha','outro')],\n  idade_cnpj_meses: ['cnpj_age_months', inteiro],\n  tem_pix_automatico: ['has_pix_automatico', (x) => x === true || String(x).toLowerCase() === 'true'],\n  dor: ['pain', texto], decisor: ['decision_maker', texto],\n  fit: ['fit', enumOf('alto','medio','baixo','fora')],\n  etapa: ['stage', enumOf('conversando','qualificado','perdido')],\n  resumo: ['summary', (x) => String(x).trim().slice(0, 1200)],\n};\nconst sets = [], params = [ent.phone], gravados = [];\nfor (const [k, val] of Object.entries(c)) {\n  if (val === null || val === undefined || val === '') continue;\n  if (k === 'retomar_em') {\n    const d = DateTime.fromISO(String(val), { zone: 'America/Sao_Paulo' });\n    if (!d.isValid) continue;\n    params.push(d.set({ hour: 10, minute: 0 }).toISO());\n    sets.push(`next_followup_at = $${params.length}::timestamptz, followup_count = 0`);\n    gravados.push('retomar_em');\n    continue;\n  }\n  const m = mapa[k];\n  if (!m) continue;\n  const v = m[1](val);\n  if (v === null) continue;\n  params.push(v);\n  sets.push(`${m[0]} = $${params.length}`);\n  gravados.push(k);\n}\nif (!sets.length) return [{ json: { sql: 'select 1', params: [], resposta: 'Nenhum campo reconhecido. Use as chaves da descrição da ferramenta.' } }];\nreturn [{ json: {\n  sql: `update sdr_leads set ${sets.join(', ')}, updated_at = now() where phone = $1`,\n  params,\n  resposta: `Registrado: ${gravados.join(', ')}. Siga a conversa.`,\n} }];\n"
+      }
+    },
+    {
+      "id": "80ed36e9-e9bb-590c-9c63-51e660b184ec",
+      "name": "Gravar campos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        880,
+        1080
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {
+          "queryReplacement": "={{ $json.params }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "2b176171-874e-5b53-9573-acd5e4eb4fd2",
+      "name": "Resposta: lead atualizado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        1080
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3ec641dd-8e2d-590c-8179-a8dca4a08737",
+              "name": "resposta",
+              "value": "={{ $('Filtrar campos').first().json.resposta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f6f7fa53-7ea1-5fe3-814e-15d75003716c",
+      "name": "Pausar e marcar humano",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        1260
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_leads\n   set stage = 'humano',\n       bot_paused_until = now() + interval '24 hours',\n       next_followup_at = null,\n       updated_at = now()\n where phone = $1\nreturning name, company, phone, segment, monthly_charges, issuer, pain, summary, fit",
+        "options": {
+          "queryReplacement": "={{ [ $('Entrada').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "b50bd1f8-623d-509d-9eb5-c9c3d8fc4930",
+      "name": "Aviso ao especialista",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        1260
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Config').first().json;\nconst l = $json;\nconst motivo = $('Entrada').first().json.motivo || 'não informado';\nconst text = [\n  `🔔 Lead para você assumir no WhatsApp do SDR`,\n  `${l.name || 'Sem nome'}${l.company ? ' · ' + l.company : ''} · +${l.phone}`,\n  `Motivo: ${motivo}`,\n  `Segmento: ${l.segment || '?'} | cobranças/mês: ${l.monthly_charges ?? '?'} | emissor: ${l.issuer || '?'} | fit: ${l.fit}`,\n  `Dor: ${l.pain || '?'}`,\n  `Resumo: ${l.summary || '?'}`,\n  `O bot fica pausado 24h para este lead. Responda pelo mesmo número.`,\n].join('\\n');\nreturn [{ json: { phone: cfg.closer_whatsapp, text } }];\n"
+      }
+    },
+    {
+      "id": "2ce2a8d1-4653-565b-9f49-896b006f629b",
+      "name": "Avisar especialista",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        1260
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evolution_url }}/message/sendText/{{ $('Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.text, delay: 0 }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_EVOLUTION",
+          "name": "Evolution SDR (apikey)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ccd7af9c-007d-5243-90a5-bef30b49f86f",
+      "name": "Resposta: transferido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        1260
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db5df247-6540-5458-9c2c-50b2bce9d1ec",
+              "name": "resposta",
+              "value": "=Transferido. Diga ao lead, em uma frase, que Rafael segue a conversa por aqui no horário comercial. Depois disso não faça mais perguntas.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "db81a1ab-aa7a-5a57-8547-8c5b28540014",
+      "name": "Registrar opt-out",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        1420
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update sdr_leads\n   set opted_out_at = now(), stage = 'opt_out', next_followup_at = null, updated_at = now()\n where phone = $1",
+        "options": {
+          "queryReplacement": "={{ [ $('Entrada').first().json.phone ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "f5085c19-3d55-5b7b-97ed-3b6ff93770da",
+      "name": "Resposta: opt-out",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        1420
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f9472eb-38a8-54f0-b8a3-9e6918b13bb3",
+              "name": "resposta",
+              "value": "Registrado. Responda uma frase curta e educada confirmando que não vai mais mandar mensagem. Não tente reverter.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Ação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ação": {
+      "main": [
+        [
+          {
+            "node": "Janela de busca",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar horário",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reunião ativa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmar presença",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filtrar campos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pausar e marcar humano",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar opt-out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ação desconhecida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Janela de busca": {
+      "main": [
+        [
+          {
+            "node": "FreeBusy (semana)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeBusy (semana)": {
+      "main": [
+        [
+          {
+            "node": "Calcular horários livres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar horário": {
+      "main": [
+        [
+          {
+            "node": "Horário válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Horário válido?": {
+      "main": [
+        [
+          {
+            "node": "Dados do lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta: horário inválido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados do lead": {
+      "main": [
+        [
+          {
+            "node": "Já tem reunião?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Já tem reunião?": {
+      "main": [
+        [
+          {
+            "node": "Resposta: já marcada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FreeBusy (slot)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FreeBusy (slot)": {
+      "main": [
+        [
+          {
+            "node": "Slot livre?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot livre?": {
+      "main": [
+        [
+          {
+            "node": "Montar evento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta: ocupado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar evento": {
+      "main": [
+        [
+          {
+            "node": "Criar evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar evento": {
+      "main": [
+        [
+          {
+            "node": "Salvar reunião",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar reunião": {
+      "main": [
+        [
+          {
+            "node": "Resposta: agendado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reunião ativa": {
+      "main": [
+        [
+          {
+            "node": "Tem reunião?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem reunião?": {
+      "main": [
+        [
+          {
+            "node": "Cancelar no Google",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta: sem reunião",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancelar no Google": {
+      "main": [
+        [
+          {
+            "node": "Marcar cancelada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar cancelada": {
+      "main": [
+        [
+          {
+            "node": "Resposta: cancelada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar presença": {
+      "main": [
+        [
+          {
+            "node": "Resposta: confirmada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar campos": {
+      "main": [
+        [
+          {
+            "node": "Gravar campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar campos": {
+      "main": [
+        [
+          {
+            "node": "Resposta: lead atualizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pausar e marcar humano": {
+      "main": [
+        [
+          {
+            "node": "Aviso ao especialista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso ao especialista": {
+      "main": [
+        [
+          {
+            "node": "Avisar especialista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar especialista": {
+      "main": [
+        [
+          {
+            "node": "Resposta: transferido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar opt-out": {
+      "main": [
+        [
+          {
+            "node": "Resposta: opt-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  }
+}

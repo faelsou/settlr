@@ -1,0 +1,378 @@
+{
+  "name": "Settlr SDR · 03 Lembretes de reunião",
+  "nodes": [
+    {
+      "id": "0ee55cbd-d727-5f9e-8427-df6f9f327319",
+      "name": "A cada 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c1c3df08-0fd1-52f8-8fff-6f681072d99a",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e6ffd85-e2e2-5dd0-99c0-a2c8267cbb42",
+              "name": "sdr_nome",
+              "value": "Lia",
+              "type": "string"
+            },
+            {
+              "id": "c41a2fea-4445-5cc2-83a2-b705ba85abfc",
+              "name": "closer_nome",
+              "value": "Rafael",
+              "type": "string"
+            },
+            {
+              "id": "b3f4d959-be8c-58f4-8bc7-ce656bec162a",
+              "name": "closer_email",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "2b19a9ea-76b1-5eb2-8a7f-8f072866c1d8",
+              "name": "closer_whatsapp",
+              "value": "5511900000000",
+              "type": "string"
+            },
+            {
+              "id": "b2cdece2-9e0b-5d3d-888f-8b21e0467da8",
+              "name": "evolution_url",
+              "value": "https://evolution.exemplo.com.br",
+              "type": "string"
+            },
+            {
+              "id": "c2440dd1-613b-5e77-aa58-f24673707776",
+              "name": "evolution_instance",
+              "value": "settlr-sdr",
+              "type": "string"
+            },
+            {
+              "id": "2dc3a25d-370e-5d72-b629-38b4df4d514d",
+              "name": "calendar_id",
+              "value": "comercial@settlr.com.br",
+              "type": "string"
+            },
+            {
+              "id": "3c96ea10-37c9-5235-96d3-5793c660b163",
+              "name": "timezone",
+              "value": "America/Sao_Paulo",
+              "type": "string"
+            },
+            {
+              "id": "b5d498ca-91a9-50a8-87b3-2aae88478d4a",
+              "name": "duracao_reuniao_min",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "edfbcbb0-cc52-546f-95e3-ee3eb45e0475",
+              "name": "horario_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "d58a494b-7014-53ff-9cf5-4fabe9b530e9",
+              "name": "horario_fim",
+              "value": 18,
+              "type": "number"
+            },
+            {
+              "id": "7774636d-0790-5486-8943-66800b3930a0",
+              "name": "almoco_inicio",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "b8e45445-a87e-5772-a861-b6372e636b67",
+              "name": "almoco_fim",
+              "value": 13,
+              "type": "number"
+            },
+            {
+              "id": "c2a9e05f-d295-5398-870c-8bdbdcb8b598",
+              "name": "antecedencia_min_horas",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "6321cba0-3c04-560a-80d0-dd9bb5e49878",
+              "name": "dias_busca",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "fe1b18ee-902f-5a88-8596-788b3340ccd4",
+              "name": "debounce_segundos",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "0e513c2d-8f19-5811-8cf5-9bc5e2c61db9",
+              "name": "pausa_humano_horas",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "95cf4e86-6535-5ab4-86f0-4dca5d57019b",
+              "name": "max_followups",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "fa9bb400-e035-5422-8add-696de7b8c598",
+              "name": "followup_hora_inicio",
+              "value": 9,
+              "type": "number"
+            },
+            {
+              "id": "ae4994d4-8431-5720-99c3-1781712cd7d1",
+              "name": "followup_hora_fim",
+              "value": 18,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "cf7836a8-041b-536b-928a-14c21de5b978",
+      "name": "Lembretes devidos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with due as (\n  select m.id,\n         case\n           when m.reminder_15m_at is null\n                and m.start_at <= now() + interval '15 minutes'\n             then '15m'\n           when m.reminder_2h_at is null\n                and m.start_at <= now() + interval '2 hours' and m.start_at > now() + interval '20 minutes'\n                and now() >= m.created_at + interval '1 hour'\n             then '2h'\n           when m.reminder_24h_at is null\n                and m.start_at <= now() + interval '24 hours' and m.start_at > now() + interval '3 hours'\n                and now() >= m.created_at + interval '2 hours'\n             then '24h'\n         end as tipo\n    from sdr_meetings m\n    join sdr_leads l on l.id = m.lead_id\n   where m.status in ('agendada','confirmada')\n     and m.start_at > now()\n     and l.opted_out_at is null\n   for update of m skip locked\n), marcados as (\n  update sdr_meetings m\n     set reminder_15m_at = case when d.tipo = '15m' then now() else m.reminder_15m_at end,\n         reminder_2h_at  = case when d.tipo in ('15m','2h') then coalesce(m.reminder_2h_at, now()) else m.reminder_2h_at end,\n         reminder_24h_at = coalesce(m.reminder_24h_at, now())\n    from due d\n   where d.id = m.id and d.tipo is not null\n  returning m.id, m.lead_id, m.start_at, m.meet_link, m.status, d.tipo\n)\nselect k.*, l.phone, l.name\n  from marcados k join sdr_leads l on l.id = k.lead_id",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "80645186-ea85-53ec-be5c-a1e20e426283",
+      "name": "Escrever lembrete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Texto fixo com variações: lembrete não precisa de LLM e não pode inventar nada.\nconst cfg = $('Config').first().json;\nconst tz = cfg.timezone;\nconst pick = (arr, seed) => arr[Math.abs(seed) % arr.length];\nconst hoje = DateTime.now().setZone(tz).startOf('day');\nreturn $input.all().map(({ json: r }) => {\n  const s = DateTime.fromISO(new Date(r.start_at).toISOString()).setZone(tz).setLocale('pt-BR');\n  const diff = Math.round(s.startOf('day').diff(hoje, 'days').days);\n  const dia = diff === 0 ? 'hoje' : diff === 1 ? 'amanhã' : s.toFormat('cccc (dd/LL)');\n  const hora = s.minute ? s.toFormat(\"HH'h'mm\") : s.toFormat(\"HH'h'\");\n  const nome = (r.name || '').split(' ')[0];\n  const oi = nome ? `${nome}, ` : '';\n  const link = r.meet_link || 'o link está no convite';\n  let text;\n  if (r.tipo === '24h') {\n    text = r.status === 'confirmada'\n      ? pick([\n          `Oi ${oi}passando só pra lembrar: ${dia} às ${hora} você conversa com ${cfg.closer_nome}. Até lá!`,\n          `${oi}lembrete rápido da nossa conversa ${dia} às ${hora} com ${cfg.closer_nome}. Qualquer coisa me chama por aqui.`,\n        ], r.id)\n      : pick([\n          `Oi ${oi}tudo bem? Passando pra lembrar da conversa com ${cfg.closer_nome} ${dia} às ${hora}.\\n\\nSegue de pé? Se precisar mudar, me fala que eu ajusto.`,\n          `${oi}a sua conversa com ${cfg.closer_nome} está marcada pra ${dia} às ${hora}.\\n\\nConsegue confirmar pra mim? Se o horário apertou, a gente remarca sem problema.`,\n        ], r.id);\n  } else if (r.tipo === '2h') {\n    text = pick([\n      `${oi}daqui a pouco, às ${hora}, é a conversa com ${cfg.closer_nome}. Deixo o link aqui pra facilitar: ${link}`,\n      `Oi ${oi}hoje às ${hora} tem a conversa com ${cfg.closer_nome}. O link é este: ${link}`,\n    ], r.id);\n  } else {\n    text = pick([\n      `Começa em 15 minutos! ${cfg.closer_nome} entra por aqui: ${link}`,\n      `${oi}em 15 min ${cfg.closer_nome} abre a sala: ${link}`,\n    ], r.id);\n  }\n  return { json: { phone: r.phone, text, delay: 1500, tipo: r.tipo } };\n});\n"
+      }
+    },
+    {
+      "id": "1a20b31d-cb03-5fde-b2d5-17f0d19ba0cb",
+      "name": "Enviar lembrete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.evolution_url }}/message/sendText/{{ $('Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.text, delay: $json.delay }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SDR_CRED_EVOLUTION",
+          "name": "Evolution SDR (apikey)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "371cf45c-d6af-5ec4-a77a-e291d38acd03",
+      "name": "Marcar como do bot",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "operation": "set",
+        "key": "=sdr:sent:{{ $json.key.id }}",
+        "value": "1",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 86400
+      },
+      "credentials": {
+        "redis": {
+          "id": "SDR_CRED_REDIS",
+          "name": "Settlr SDR Redis"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "66352d3b-d95c-5568-b83d-bee669ca2f25",
+      "name": "Guardar na memória",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into sdr_chat_memory (session_id, message)\nvalues ($1, jsonb_build_object('type', 'ai', 'content', $2::text,\n        'additional_kwargs', '{}'::jsonb, 'response_metadata', '{}'::jsonb, 'tool_calls', '[]'::jsonb,\n        'invalid_tool_calls', '[]'::jsonb))",
+        "options": {
+          "queryReplacement": "={{ [ $('Escrever lembrete').item.json.phone, $('Escrever lembrete').item.json.text ] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    },
+    {
+      "id": "42f4b93c-f229-534d-b6f3-d64e804a036b",
+      "name": "Fechar reuniões passadas",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        520
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with r as (\n  update sdr_meetings set status = 'realizada'\n   where status in ('agendada','confirmada') and end_at < now() - interval '1 hour'\n  returning lead_id\n)\nupdate sdr_leads set stage = 'realizado', updated_at = now()\n where id in (select lead_id from r) and stage = 'agendado'",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "SDR_CRED_PG",
+          "name": "Settlr SDR Postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "A cada 5 min": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Lembretes devidos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fechar reuniões passadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lembretes devidos": {
+      "main": [
+        [
+          {
+            "node": "Escrever lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escrever lembrete": {
+      "main": [
+        [
+          {
+            "node": "Enviar lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar lembrete": {
+      "main": [
+        [
+          {
+            "node": "Marcar como do bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como do bot": {
+      "main": [
+        [
+          {
+            "node": "Guardar na memória",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  }
+}

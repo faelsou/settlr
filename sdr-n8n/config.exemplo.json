@@ -1,0 +1,23 @@
+{
+  "sdr_nome": "Lia",
+  "closer_nome": "Rafael",
+  "closer_email": "comercial@settlr.com.br",
+  "closer_whatsapp": "5511900000000",
+  "evolution_url": "https://evolution.exemplo.com.br",
+  "evolution_instance": "settlr-sdr",
+  "calendar_id": "comercial@settlr.com.br",
+  "timezone": "America/Sao_Paulo",
+  "duracao_reuniao_min": 30,
+  "horario_inicio": 9,
+  "horario_fim": 18,
+  "almoco_inicio": 12,
+  "almoco_fim": 13,
+  "antecedencia_min_horas": 2,
+  "dias_busca": 7,
+  "debounce_segundos": 12,
+  "pausa_humano_horas": 12,
+  "max_followups": 4,
+  "followup_hora_inicio": 9,
+  "followup_hora_fim": 18,
+  "anthropic_model": "claude-opus-5-5"
+}
