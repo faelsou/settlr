@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: site-env
+data:
+  # Painel para onde o login entrega a sessão. No Minikube é o port-forward do frontend-web.
+  APP_URL: http://127.0.0.1:3000
+  # O resolver do nginx não usa os domínios de busca: nome completo do Service.
+  API_UPSTREAM: http://webhook-api.cobranca.svc.cluster.local:8000
+  # WhatsApp comercial, só dígitos com 55 e DDD. Vazio = os botões levam ao bloco do piloto.
+  WHATSAPP_NUMBER: ""
+  # Vazios = login local pelo /auth/dev-login. A anon key do Supabase é pública por desenho.
+  SUPABASE_URL: ""
+  SUPABASE_ANON_KEY: ""

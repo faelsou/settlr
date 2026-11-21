@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entrar · Settlr</title>
+<meta name="description" content="Área do cliente do Settlr: exceções, pagamentos e conversas da sua empresa.">
+<meta name="theme-color" content="#09080f">
+<meta property="og:title" content="Entrar · Settlr">
+<meta property="og:description" content="Área do cliente do Settlr: exceções, pagamentos e conversas da sua empresa.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Sora:wght@700&display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+img, svg { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* Layout: duas metades. À esquerda o formulário, sóbrio e centrado; à direita a luz da marca com a fila do dia em cartões
+   flutuando, o que o operador vai encontrar ao entrar. No celular, só o formulário, com a luz no topo. */
+:root {
+  color-scheme: dark;
+  --bg: #09080f; --bg-2: #0e0c18; --card: #12101f; --card-2: #171429; --field: #0d0b17;
+  --line: rgba(255,255,255,.08); --line-2: rgba(255,255,255,.15);
+  --fg: #f4f2ff; --muted: #9b96b6; --dim: #6c6789;
+  --violet: #7c5cff; --violet-deep: #5b3df5; --lime: #c6f432; --lime-ink: #1a2100; --amber: #ffb35c; --rose: #ff7a90;
+  --f-sans: "Geist", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --f-mark: "Sora", "Geist", ui-sans-serif, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-sans); font-size: 1rem; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; } }
+h1, h2 { margin: 0; font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+[data-i18n] { transition: opacity .2s; }
+html.swapping [data-i18n] { opacity: .15; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); min-height: 100%; }
+@media (max-width: 960px) { .split { grid-template-columns: 1fr; } .art { display: none; } }
+
+/* Lado do formulário */
+.side { position: relative; display: grid; grid-template-rows: auto 1fr auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px; isolation: isolate; overflow: hidden; }
+@media (max-width: 960px) { .side::before { content: ""; position: absolute; inset: -30% -20% auto; height: 55%; z-index: -1; background: radial-gradient(50% 60% at 40% 40%, rgba(91,61,245,.45), transparent 70%); filter: blur(30px); } }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 440px; width: 100%; margin-inline: auto; }
+.logo { display: inline-flex; align-items: center; gap: 9px; font-family: var(--f-mark); font-weight: 700; font-size: 1.15rem; letter-spacing: -0.03em; text-decoration: none; }
+.logo svg { width: 26px; height: 26px; }
+.box { align-self: center; width: 100%; max-width: 440px; margin-inline: auto; padding-block: 48px; display: grid; gap: 30px; }
+.box .eyebrow { font-family: var(--f-mono); font-size: .76rem; color: var(--violet); letter-spacing: .04em; }
+.box h1 { font-size: clamp(2.1rem, 5vw, 2.8rem); }
+.box .sub { color: var(--muted); }
+.view { display: none; gap: 30px; }
+.view.on { display: grid; animation: enter .4s cubic-bezier(.2,.8,.2,1); }
+@keyframes enter { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+form { display: grid; gap: 16px; }
+.field { display: grid; gap: 7px; }
+.field-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.field label { font-size: .86rem; font-weight: 500; }
+.linkish { background: none; border: 0; padding: 0; font: inherit; font-size: .84rem; color: #b7a8ff; cursor: pointer; text-decoration: none; }
+.linkish:hover { color: var(--fg); }
+.ctl { display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 6px 0 15px; border-radius: 14px; background: var(--field); border: 1px solid var(--line-2); transition: border-color .2s, box-shadow .2s; }
+.ctl:focus-within { border-color: var(--violet); box-shadow: 0 0 0 4px rgba(124,92,255,.18); }
+.ctl input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: 0; color: var(--fg); font: inherit; font-size: .98rem; }
+.ctl input::placeholder { color: var(--dim); }
+.eye { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.eye:hover { color: var(--fg); background: rgba(255,255,255,.05); }
+.eye svg { width: 18px; height: 18px; }
+.field.bad .ctl { border-color: rgba(255,122,144,.6); }
+.err { display: none; font-size: .8rem; color: var(--rose); }
+.field.bad .err { display: block; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); }
+.check { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+.check input { appearance: none; width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid var(--line-2); background: var(--field); margin: 0; display: grid; place-items: center; cursor: pointer; }
+.check input:checked { background: var(--violet); border-color: var(--violet); }
+.check input:checked::after { content: ""; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px,-1px); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 50px; padding: 0 22px; border-radius: 999px; font: inherit; font-weight: 600; font-size: .98rem; border: 0; cursor: pointer; transition: transform .2s, opacity .2s; text-decoration: none; white-space: nowrap; }
+.btn:hover { transform: translateY(-1px); }
+.btn:disabled { opacity: .6; cursor: progress; transform: none; }
+.btn svg { width: 17px; height: 17px; }
+.btn-light { background: var(--fg); color: #0b0a12; box-shadow: 0 10px 30px -10px rgba(124,92,255,.7); width: 100%; }
+.btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-2); width: 100%; }
+.btn-ghost:hover { background: rgba(255,255,255,.04); }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(11,10,18,.25); border-top-color: #0b0a12; animation: rot .7s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.note { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 12px; padding: 14px 16px; border-radius: 16px; font-size: .88rem; background: rgba(124,92,255,.08); border: 1px solid rgba(124,92,255,.25); color: #d3caff; }
+.note.bad { background: rgba(255,122,144,.07); border-color: rgba(255,122,144,.3); color: #ffc2cc; }
+.note.ok { background: rgba(198,244,50,.06); border-color: rgba(198,244,50,.25); color: #e4f9a8; }
+.note svg { width: 18px; height: 18px; margin-top: 2px; }
+.divider { display: flex; align-items: center; gap: 14px; font-family: var(--f-mono); font-size: .72rem; color: var(--dim); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.new { display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
+.new p { font-size: .92rem; color: var(--muted); }
+.new b { color: var(--fg); font-weight: 500; }
+.wa svg { color: var(--lime); }
+.foot { max-width: 440px; width: 100%; margin-inline: auto; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--f-mono); font-size: .72rem; color: var(--dim); }
+
+/* Seletor de idioma */
+.lang { position: relative; }
+.lang-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; border-radius: 999px; background: transparent; border: 1px solid var(--line-2); color: var(--fg); font: inherit; font-family: var(--f-mono); font-size: .76rem; cursor: pointer; }
+.lang-btn:hover, .lang-btn[aria-expanded="true"] { background: rgba(255,255,255,.06); border-color: rgba(124,92,255,.5); }
+.lang-btn svg { width: 15px; height: 15px; }
+.lang-btn .chev { width: 10px; height: 10px; transition: transform .2s; }
+.lang-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.lang-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; min-width: 210px; padding: 6px; border-radius: 16px; background: rgba(23,20,41,.97); border: 1px solid var(--line-2); box-shadow: 0 24px 60px -20px rgba(0,0,0,.9); display: grid; gap: 2px; animation: pop .18s ease; }
+@keyframes pop { from { opacity: 0; transform: scale(.96) translateY(-4px); } }
+.lang-menu button { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: .9rem; text-align: left; cursor: pointer; }
+.lang-menu button small { display: block; font-family: var(--f-mono); font-size: .68rem; color: var(--dim); }
+.lang-menu button:hover, .lang-menu button:focus-visible { background: rgba(255,255,255,.06); outline: none; }
+.lang-menu button[aria-checked="true"]::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 3px rgba(198,244,50,.18); }
+
+/* Lado da arte */
+.art { position: relative; overflow: hidden; margin: 12px; border-radius: 30px; background: #0c0a19; border: 1px solid var(--line); display: grid; align-content: space-between; padding: 48px; isolation: isolate; }
+.art canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; filter: blur(60px) saturate(130%); }
+.art .grid { position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 80% 70% at 60% 40%, #000 20%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 80% 70% at 60% 40%, #000 20%, transparent 75%); opacity: .5; }
+.art h2 { font-size: clamp(2.4rem, 4vw, 3.6rem); max-width: 12ch; }
+.art .lead { color: rgba(244,242,255,.72); max-width: 40ch; margin-top: 16px; }
+.cards { position: relative; height: 330px; }
+.card { position: absolute; width: min(340px, 80%); padding: 16px 18px; border-radius: 18px; background: rgba(18,16,31,.72); border: 1px solid var(--line-2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 24px 60px -28px rgba(0,0,0,.9); display: grid; gap: 8px; animation: float 7s ease-in-out infinite; }
+.card:nth-child(1) { left: 0; top: 0; }
+.card:nth-child(2) { right: 0; top: 104px; animation-delay: -2.3s; }
+.card:nth-child(3) { left: 8%; top: 214px; animation-delay: -4.6s; }
+@keyframes float { 50% { transform: translateY(-10px); } }
+.card .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.card b { font-weight: 500; font-size: .95rem; }
+.card span.v { font-family: var(--f-mono); font-size: .86rem; }
+.card small { font-family: var(--f-mono); font-size: .72rem; color: var(--dim); }
+.tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-family: var(--f-mono); font-size: .68rem; white-space: nowrap; border: 1px solid var(--line); color: var(--muted); }
+.tag.ok { color: var(--lime); border-color: rgba(198,244,50,.25); background: rgba(198,244,50,.07); }
+.tag.wait { color: var(--amber); border-color: rgba(255,179,92,.25); background: rgba(255,179,92,.07); }
+.tag.vi { color: #b7a8ff; border-color: rgba(124,92,255,.3); background: rgba(124,92,255,.1); }
+.art-foot { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); font-size: .72rem; color: rgba(244,242,255,.5); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#c6f432"/><path d="M21 9.5h-7a3.6 3.6 0 0 0 0 7.2h4a3.6 3.6 0 0 1 0 7.2H11" fill="none" stroke="#5b3df5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="23.6" r="1.8" fill="#12101f"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 20 20"><path d="M1.8 10S5 4 10 4s8.2 6 8.2 6-3.2 6-8.2 6-8.2-6-8.2-6z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 20 20"><path d="M3 3l14 14M8.3 4.3A8 8 0 0 1 10 4c5 0 8.2 6 8.2 6a14 14 0 0 1-2.6 3.3M5.4 5.9A14 14 0 0 0 1.8 10S5 16 10 16a7.6 7.6 0 0 0 3.3-.8M8.2 8.3a2.6 2.6 0 0 0 3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v5M10 6.2v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 20 20"><path d="M10 2.5a7.5 7.5 0 0 0-6.5 11.2L2.5 17.5l3.9-1A7.5 7.5 0 1 0 10 2.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.2 7.4c.2-.5.5-.5.8-.5.6 0 .9 1.2.9 1.4s-.5.6-.5.8.9 1.7 2.4 2.3c.2.1.5-.3.7-.5s.4-.2.6-.1 1.2.6 1.2.9c0 .7-.8 1.2-1.4 1.2-1.3 0-4.9-2.4-4.9-4.6 0-.4.1-.7.2-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M1.7 8h12.6M8 1.7c1.8 1.9 2.6 4 2.6 6.3S9.8 12.4 8 14.3M8 1.7C6.2 3.6 5.4 5.7 5.4 8s.8 4.4 2.6 6.3" fill="none" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="split">
+  <section class="side">
+    <div class="bar">
+      <a class="logo" href="/"><svg><use href="#i-logo"/></svg>Settlr</a>
+      <div class="lang" id="lang">
+        <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="lang-menu" aria-label="Idioma: Português (Brasil)"><svg><use href="#i-globe"/></svg><span id="lang-code">PT-BR</span><svg class="chev"><use href="#i-chev"/></svg></button>
+        <div class="lang-menu" id="lang-menu" role="menu" hidden>
+          <button type="button" role="menuitemradio" data-lang="pt-BR" aria-checked="true"><span>Português<small>Brasil</small></span></button>
+          <button type="button" role="menuitemradio" data-lang="en-US" aria-checked="false"><span>English<small>United States</small></span></button>
+          <button type="button" role="menuitemradio" data-lang="es" aria-checked="false"><span>Español<small>Latinoamérica</small></span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <!-- Entrar -->
+      <div class="view on" id="v-login">
+        <div style="display:grid;gap:12px">
+          <span class="eyebrow" data-i18n="l.eyebrow">ÁREA DO CLIENTE</span>
+          <h1 data-i18n="l.h1">Entrar no painel</h1>
+          <p class="sub" data-i18n="l.sub">Exceções, pagamentos e conversas da sua empresa.</p>
+        </div>
+        <form id="f-login" novalidate>
+          <div class="field" id="fl-email"><label for="email" data-i18n="l.email">E-mail</label><div class="ctl"><input id="email" type="email" autocomplete="username" inputmode="email" placeholder="voce@empresa.com.br" data-i18n-ph="l.emailPh"></div><span class="err" data-i18n="l.emailErr">Informe um e-mail válido.</span></div>
+          <div class="field" id="fl-tenant" hidden><label for="tenant" data-i18n="l.tenant">Empresa</label><div class="ctl"><input id="tenant" autocomplete="organization" spellcheck="false" placeholder="demo"></div><span class="err" data-i18n="l.tenantErr">Informe o apelido da empresa.</span></div>
+          <div class="field" id="fl-pass">
+            <div class="field-top"><label for="pass" data-i18n="l.pass">Senha</label><button type="button" class="linkish" id="to-reset" data-i18n="l.forgot">Esqueci a senha</button></div>
+            <div class="ctl"><input id="pass" type="password" autocomplete="current-password"><button type="button" class="eye" id="eye" aria-label="Mostrar senha" data-i18n-aria="l.show"><svg><use href="#i-eye"/></svg></button></div>
+            <span class="err" data-i18n="l.passErr">Informe a senha.</span>
+          </div>
+          <div class="note" id="login-msg" hidden><svg><use href="#i-info"/></svg><span id="login-msg-t"></span></div>
+          <button type="submit" class="btn btn-light" id="go"><span data-i18n="l.submit">Entrar</span><svg><use href="#i-arrow"/></svg></button>
+        </form>
+        <p class="sub" style="font-size:.88rem" data-i18n="l.invite">Recebeu um convite da sua empresa? Abra o link do e-mail para criar a sua senha.</p>
+        <div class="divider" data-i18n="l.or">AINDA NÃO É CLIENTE</div>
+        <div class="new">
+          <p data-i18n="l.newP"><b>Quer o Settlr na sua empresa?</b> A conta é aberta com a nossa equipe, numa conversa pelo WhatsApp.</p>
+          <a class="btn btn-ghost wa" id="wa-new" href="https://wa.me/5511900000000" target="_blank" rel="noopener"><svg><use href="#i-chat"/></svg><span data-i18n="l.wa">Falar no WhatsApp</span></a>
+        </div>
+      </div>
+
+      <!-- Recuperar senha -->
+      <div class="view" id="v-reset">
+        <div style="display:grid;gap:12px">
+          <span class="eyebrow" data-i18n="r.eyebrow">RECUPERAR ACESSO</span>
+          <h1 data-i18n="r.h1">Esqueceu a senha?</h1>
+          <p class="sub" data-i18n="r.sub">Mandamos um link para o seu e-mail. Ele vale por uma hora.</p>
+        </div>
+        <form id="f-reset" novalidate>
+          <div class="field" id="fr-email"><label for="remail" data-i18n="l.email">E-mail</label><div class="ctl"><input id="remail" type="email" autocomplete="email" inputmode="email" placeholder="voce@empresa.com.br" data-i18n-ph="l.emailPh"></div><span class="err" data-i18n="l.emailErr">Informe um e-mail válido.</span></div>
+          <div class="note ok" id="reset-msg" hidden><svg><use href="#i-info"/></svg><span data-i18n="r.sent">Se esse e-mail tiver uma conta, o link chega em alguns minutos. Confira também a caixa de spam.</span></div>
+          <button type="submit" class="btn btn-light" id="rgo"><span data-i18n="r.submit">Enviar o link</span><svg><use href="#i-arrow"/></svg></button>
+          <button type="button" class="btn btn-ghost" id="to-login" data-i18n="r.back">Voltar para entrar</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="foot"><span id="dev-note" data-i18n="l.dev" hidden>ambiente local · entrada sem senha</span><span data-i18n="l.help">Problema para entrar? Fale com o dono da conta da sua empresa.</span></div>
+  </section>
+
+  <aside class="art" aria-hidden="true">
+    <canvas id="aurora"></canvas><div class="grid"></div>
+    <div>
+      <h2 data-i18n="a.h2">Cobrou, recebeu, conciliou.</h2>
+      <p class="lead" data-i18n="a.lead">Ao entrar, você vê só o que precisa de uma decisão. O resto o sistema já baixou com o banco.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="top"><b>PIX · Marina Souza</b><span class="v" data-brl="480">R$ 480,00</span></div><div class="top"><small data-i18n="a.c1s">E2E igual ao do título</small><span class="tag ok" data-i18n="a.c1t">conciliado</span></div></div>
+      <div class="card"><div class="top"><b>PIX · F. Almeida</b><span class="v" data-brl="520">R$ 520,00</span></div><div class="top"><small data-i18n="a.c2s">2 títulos possíveis</small><span class="tag wait" data-i18n="a.c2t">para confirmar</span></div></div>
+      <div class="card"><div class="top"><b data-i18n="a.c3b">Pedido de 8 parcelas</b><span class="v" data-brl="1150">R$ 1.150,00</span></div><div class="top"><small data-i18n="a.c3s">acima do teto de 6</small><span class="tag vi" data-i18n="a.c3t">aprovação</span></div></div>
+    </div>
+    <div class="art-foot"><span data-i18n="a.f1">Dados de exemplo</span><span>PIX · boleto · Open Finance</span></div>
+  </aside>
+</div>
+<script src="/config.js"></script>
+<script src="/assets/login.js"></script>
+</body>
+</html>
