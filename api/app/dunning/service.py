@@ -7,16 +7,18 @@ from decimal import Decimal
 from uuid import UUID
 
 import httpx
+from sqlalchemy import event as sa_event
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.agent.policy import brl
 from app.channels.delivery import ACEITO, ENVIADO, PENDENTE, counts_as_dispatched
-from app.channels.email import send_email
+from app.channels.email import smtp_configured
 from app.channels.metrics import record_message
 from app.channels.outbound import get_or_create_conversation, log_message
 from app.channels.whatsapp import EvolutionClient
 from app.core.audit import audit
+from app.core.logging import get_logger
 from app.core.phones import contact_phones
 from app.core.redis import get_redis
 from app.dunning.official import approved_for
@@ -27,6 +29,8 @@ from app.models.enums import DUNNING_STATUSES, ExceptionType, InvoiceStatus, Mes
 from app.reconciliation.service import open_exception, set_invoice_status
 
 DEFAULT_RATE_PER_MINUTE = 20
+
+log = get_logger(__name__)
 
 
 class RateLimited(RuntimeError):
@@ -76,10 +80,12 @@ class StepOutcome:
 
 @dataclass
 class Dispatch:
-    """`sent` grava etapa. `blocked_template` é WhatsApp recusado por falta de template oficial."""
+    """`sent` grava etapa. `blocked_template` é WhatsApp recusado por falta de template oficial.
+    `email_deferred` é e-mail que ficou para o próximo ciclo porque não há SMTP."""
 
     sent: bool = False
     blocked_template: bool = False
+    email_deferred: bool = False
 
 
 def process_invoice(
@@ -97,7 +103,12 @@ def process_invoice(
             DunningEvent.invoice_id == invoice.id
         )
     ).tuples()
-    sent = {(step, channel) for step, channel, status in recorded if counts_as_dispatched(status)}
+    sent = {
+        (step, channel)
+        for step, channel, status in recorded
+        # E-mail é tentado uma vez por etapa: o retry fica na task, não no ciclo da régua.
+        if counts_as_dispatched(status) or channel == "email"
+    }
     active_promise = session.scalar(
         select(func.max(Promise.promised_date)).where(
             Promise.invoice_id == invoice.id, Promise.fulfilled.is_(None)
@@ -127,6 +138,8 @@ def process_invoice(
     )
     if dispatch.blocked_template and not dispatch.sent:
         return StepOutcome("skip", "sem_template_oficial")
+    if dispatch.email_deferred and not dispatch.sent:
+        return StepOutcome("skip", "email_sem_smtp")
     if invoice.status == InvoiceStatus.ABERTO:
         set_invoice_status(invoice, InvoiceStatus.EM_COBRANCA)
     return StepOutcome("send", decision.step.key)
@@ -196,15 +209,23 @@ def _send_step(
         elif channel == "email":
             if not debtor.email:
                 continue
-            send_email(debtor.email, f"Aviso sobre {invoice.description or 'seu pagamento'}", text)
-            delivery_status = ENVIADO
+            if not smtp_configured():
+                # Sem SMTP a etapa não quebra nem grava: o e-mail sai num próximo ciclo.
+                dispatch.email_deferred = True
+                continue
+            # O envio é da task: falha de SMTP não desfaz o WhatsApp desta mesma etapa.
+            delivery_status = PENDENTE
         else:
             continue
 
-        session.add(DunningEvent(
+        dunning_event = DunningEvent(
             tenant_id=tenant.id, invoice_id=invoice.id, step=step.key,
             channel=channel, message_id=message_id, delivery_status=delivery_status,
-        ))
+        )
+        session.add(dunning_event)
+        if channel == "email":
+            session.flush()
+            enqueue_email(session, tenant.id, dunning_event.id)
         sent_to = contact_phones(debtor.phone, debtor.phones) if channel == "whatsapp" else []
         audit(
             session, tenant_id=tenant.id, actor="regua", action="disparo",
@@ -219,3 +240,40 @@ def _send_step(
         )
         dispatch.sent = True
     return dispatch
+
+
+def email_subject(invoice: Invoice) -> str:
+    return f"Aviso sobre {invoice.description or 'seu pagamento'}"
+
+
+def step_text(tenant: Tenant, invoice: Invoice, debtor: Debtor, step_key: str) -> str | None:
+    """Texto da etapa, renderizado de novo na hora do envio (o broker não leva o texto)."""
+    step = next((s for s in parse_steps(tenant.dunning_rules) if s.key == step_key), None)
+    if step is None or not step.template:
+        return None
+    rules = tenant.dunning_rules or DEFAULT_DUNNING_RULES
+    templates = {**DEFAULT_DUNNING_RULES["templates"], **rules.get("templates", {})}
+    return render(templates[step.template], invoice, debtor)
+
+
+def enqueue_email(session: Session, tenant_id: UUID, event_id: UUID) -> None:
+    """Agenda o envio só depois do commit: sem evento gravado, a task não tem o que enviar."""
+    pending = session.info.setdefault("dunning_emails", [])
+    pending.append((str(tenant_id), str(event_id)))
+    if session.info.get("dunning_emails_hook"):
+        return
+    session.info["dunning_emails_hook"] = True
+
+    def _after_commit(sess: Session) -> None:
+        from app.dunning.tasks import claim_email, send_dunning_email
+
+        for tid, eid in sess.info.pop("dunning_emails", []):
+            try:
+                if claim_email(eid):
+                    send_dunning_email.delay(tid, eid)
+            except Exception:
+                # A varredura de pendentes reagenda no próximo ciclo da régua.
+                log.exception("dunning.email_enqueue_failed", event_id=eid)
+        sess.info.pop("dunning_emails_hook", None)
+
+    sa_event.listen(session, "after_commit", _after_commit, once=True)

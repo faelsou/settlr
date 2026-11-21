@@ -617,3 +617,129 @@ def test_allowed_hours_respects_timezone_and_weekday():
     assert within_allowed_hours(monday_morning, hours, tz)
     assert not within_allowed_hours(monday_night, hours, tz)
     assert not within_allowed_hours(sunday, hours, tz)
+
+
+# --- SETL-24: e-mail do D+15 -------------------------------------------------
+
+D15 = Step("D+15", 15, ("whatsapp", "email"), "ultima_tentativa")
+
+
+def _tenant_com_template() -> SimpleNamespace:
+    return SimpleNamespace(
+        id=uuid4(),
+        whatsapp_instance="cobranca",
+        dunning_rules={
+            "approved_templates": {
+                "ultima_tentativa": {"name": "ultima_oficial", "language": "pt_BR",
+                                     "params": ["{nome}"]},
+            },
+        },
+    )
+
+
+def _envio_whatsapp_ok(monkeypatch, tenant) -> MagicMock:  # noqa: ANN001
+    monkeypatch.setattr("app.dunning.service.record_message", lambda *_a, **_k: None)
+    monkeypatch.setattr("app.dunning.service.take_rate_slot", lambda *_a, **_k: True)
+    monkeypatch.setattr("app.dunning.service.audit", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        "app.dunning.service.get_or_create_conversation",
+        lambda *_a, **_k: SimpleNamespace(id=uuid4(), tenant_id=tenant.id),
+    )
+    client = MagicMock()
+    client.send_template.return_value = "WA15"
+    return client
+
+
+def test_d15_sem_smtp_nao_derruba_o_whatsapp_da_mesma_etapa(monkeypatch):
+    """Antes, o RuntimeError do SMTP desfazia a transação e o WhatsApp saía de novo."""
+    tenant = _tenant_com_template()
+    debtor = _devedor_com_telefone()
+    debtor.email = "maria@exemplo.test"
+    client = _envio_whatsapp_ok(monkeypatch, tenant)
+    monkeypatch.setattr("app.dunning.service.smtp_configured", lambda: False)
+    agendados: list = []
+    monkeypatch.setattr("app.dunning.service.enqueue_email", lambda *a: agendados.append(a))
+    added: list[object] = []
+    session = MagicMock()
+    session.add.side_effect = added.append
+
+    dispatch = _send_step(session, tenant, _titulo_com_pix(), debtor, D15, D15.channels, client)
+
+    eventos = [item for item in added if isinstance(item, DunningEvent)]
+    assert [e.channel for e in eventos] == ["whatsapp"]
+    assert dispatch.sent is True
+    assert dispatch.email_deferred is True
+    assert agendados == []
+
+
+def test_d15_com_smtp_grava_pendente_e_agenda_sem_enviar_na_transacao(monkeypatch):
+    tenant = _tenant_com_template()
+    debtor = _devedor_com_telefone()
+    debtor.email = "maria@exemplo.test"
+    client = _envio_whatsapp_ok(monkeypatch, tenant)
+    monkeypatch.setattr("app.dunning.service.smtp_configured", lambda: True)
+    agendados: list = []
+    monkeypatch.setattr("app.dunning.service.enqueue_email", lambda *a: agendados.append(a))
+    added: list[object] = []
+    session = MagicMock()
+    session.add.side_effect = added.append
+
+    _send_step(session, tenant, _titulo_com_pix(), debtor, D15, D15.channels, client)
+
+    email = next(e for e in added if isinstance(e, DunningEvent) and e.channel == "email")
+    assert email.delivery_status == "pendente"
+    assert len(agendados) == 1
+
+
+def test_d15_so_com_email_pendente_e_sem_smtp_fica_para_depois(monkeypatch):
+    invoice = _titulo_com_pix()
+    debtor = SimpleNamespace(opt_out=False)
+    tenant = SimpleNamespace(id=uuid4(), dunning_rules=None)
+    monkeypatch.setattr(
+        "app.dunning.service._send_step",
+        lambda *_a, **_k: Dispatch(sent=False, email_deferred=True),
+    )
+
+    outcome = process_invoice(_Sessao(invoice, debtor), tenant, invoice.id, date(2026, 11, 1))
+
+    assert (outcome.action, outcome.reason) == ("skip", "email_sem_smtp")
+    assert invoice.status == InvoiceStatus.ABERTO
+
+
+class _SessaoComEventos(_Sessao):
+    def __init__(self, invoice, debtor, eventos):  # noqa: ANN001
+        super().__init__(invoice, debtor)
+        self.eventos = eventos
+
+    def tuples(self) -> list[tuple[object, ...]]:
+        return self.eventos
+
+
+def test_email_que_falhou_nao_volta_a_ser_disparado_pela_regua(monkeypatch):
+    """O retry do e-mail é da task. Falhou de vez: a régua não manda a mesma etapa de novo."""
+    invoice = _titulo_com_pix()
+    debtor = SimpleNamespace(opt_out=False)
+    tenant = SimpleNamespace(id=uuid4(), dunning_rules=None)
+    enviados: list = []
+    monkeypatch.setattr("app.dunning.service._send_step", lambda *a, **k: enviados.append(a))
+    eventos = [("D+15", "whatsapp", "entregue"), ("D+15", "email", "falhou")]
+
+    outcome = process_invoice(
+        _SessaoComEventos(invoice, debtor, eventos), tenant, invoice.id, date(2026, 11, 1),
+    )
+
+    assert (outcome.action, outcome.reason) == ("skip", "etapa_ja_enviada")
+    assert enviados == []
+
+
+def test_recusa_5xx_e_definitiva_e_login_nao():
+    import smtplib
+
+    from app.channels.email import is_permanent
+
+    assert is_permanent(smtplib.SMTPRecipientsRefused({"x@y": (550, b"no")})) is True
+    assert is_permanent(smtplib.SMTPDataError(554, b"spam")) is True
+    assert is_permanent(smtplib.SMTPDataError(451, b"tente depois")) is False
+    assert is_permanent(smtplib.SMTPAuthenticationError(535, b"login")) is False
+    assert is_permanent(smtplib.SMTPServerDisconnected("caiu")) is False
+    assert is_permanent(TimeoutError()) is False

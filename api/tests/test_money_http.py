@@ -1112,3 +1112,209 @@ def test_webhook_do_emissor_nao_marca_a_cobranca_de_novo(
 
 
 
+
+
+# --- SETL-24: e-mail do D+15 com retry e status de entrega -------------------
+
+
+def _semear_email_d15(banco: Banco, *, status: str = "pendente", minutos: int = 0):
+    from app.models import DunningEvent
+
+    with banco.admin() as session, session.begin():
+        tenant = Tenant(name="Escola", slug="escola", active=True, timezone="America/Sao_Paulo")
+        session.add(tenant)
+        session.flush()
+        debtor = Debtor(
+            tenant_id=tenant.id, name="Maria Souza", document="12345678901",
+            phone="11999999999", email="maria@exemplo.test",
+        )
+        session.add(debtor)
+        session.flush()
+        invoice = Invoice(
+            tenant_id=tenant.id, debtor_id=debtor.id, external_id="NF-15",
+            description="mensalidade", amount=Decimal("100.00"), amount_paid=Decimal("0"),
+            due_date=date(2026, 10, 17), status=InvoiceStatus.EM_COBRANCA,
+            pix_copy_paste="00020126PIX",
+        )
+        session.add(invoice)
+        session.flush()
+        event = DunningEvent(
+            tenant_id=tenant.id, invoice_id=invoice.id, step="D+15", channel="email",
+            delivery_status=status,
+        )
+        session.add(event)
+        session.flush()
+        if minutos:
+            event.sent_at = datetime.now(UTC) - timedelta(minutes=minutos)
+        return tenant.id, invoice.id, event.id
+
+
+@pytest.fixture
+def smtp(monkeypatch: pytest.MonkeyPatch) -> list[tuple]:
+    """SMTP ligado, Redis fora do caminho. Devolve os e-mails "enviados"."""
+    enviados: list[tuple] = []
+
+    def enviar(to, subject, body, **_kw):  # noqa: ANN001
+        enviados.append((to, subject, body))
+        return "<id-1@settlr.test>"
+
+    monkeypatch.setattr("app.channels.email.smtp_configured", lambda: True)
+    monkeypatch.setattr("app.channels.email.send_email", enviar)
+    monkeypatch.setattr("app.dunning.tasks.claim_email", lambda _eid: True)
+    monkeypatch.setattr("app.dunning.tasks.release_email", lambda _eid: None)
+    return enviados
+
+
+def _evento(banco: Banco, event_id: UUID):
+    from app.models import DunningEvent
+
+    with banco.admin() as session:
+        return session.get(DunningEvent, event_id)
+
+
+def test_email_d15_aceito_pelo_smtp_e_nao_reenvia(banco: Banco, smtp: list) -> None:
+    from app.dunning.tasks import send_dunning_email
+
+    tenant_id, _invoice_id, event_id = _semear_email_d15(banco)
+
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "aceito"
+    evento = _evento(banco, event_id)
+    assert evento.delivery_status == "aceito"
+    assert evento.message_id == "<id-1@settlr.test>"
+    assert smtp[0][0] == "maria@exemplo.test"
+    assert "última mensagem automática" in smtp[0][2]
+
+    # Task duplicada (varredura, redelivery do broker) não manda de novo.
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "ja_tratado"
+    assert len(smtp) == 1
+
+
+def test_email_d15_recusa_definitiva_vira_falhou(
+    banco: Banco, smtp: list, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import smtplib
+
+    from app.dunning.tasks import send_dunning_email
+
+    def recusa(*_a, **_k):  # noqa: ANN001
+        raise smtplib.SMTPRecipientsRefused({"maria@exemplo.test": (550, b"nao existe")})
+
+    monkeypatch.setattr("app.channels.email.send_email", recusa)
+    tenant_id, _invoice_id, event_id = _semear_email_d15(banco)
+
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "falhou"
+    assert _evento(banco, event_id).delivery_status == "falhou"
+    with banco.admin() as session:
+        trilha = session.scalars(select(AuditLog).where(AuditLog.action == "entrega_email")).one()
+    assert trilha.after["reason"] == "recusa:SMTPRecipientsRefused"
+
+
+def test_email_d15_erro_de_rede_tenta_de_novo_e_depois_falha(
+    banco: Banco, smtp: list, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from celery.exceptions import Retry
+
+    from app.dunning.tasks import send_dunning_email
+
+    def caiu(*_a, **_k):  # noqa: ANN001
+        raise TimeoutError("smtp lento")
+
+    monkeypatch.setattr("app.channels.email.send_email", caiu)
+    retries: list[int] = []
+
+    def retry(**kwargs):  # noqa: ANN003
+        retries.append(kwargs["countdown"])
+        return Retry()
+
+    monkeypatch.setattr(send_dunning_email, "retry", retry)
+    tenant_id, _invoice_id, event_id = _semear_email_d15(banco)
+
+    with pytest.raises(Retry):
+        send_dunning_email.run(str(tenant_id), str(event_id))
+    assert retries == [60]
+    assert _evento(banco, event_id).delivery_status == "pendente"
+
+    monkeypatch.setattr(send_dunning_email, "max_retries", 0)
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "falhou"
+    assert _evento(banco, event_id).delivery_status == "falhou"
+
+
+def test_email_d15_sem_smtp_fica_pendente(
+    banco: Banco, smtp: list, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.dunning.tasks import send_dunning_email
+
+    monkeypatch.setattr("app.channels.email.smtp_configured", lambda: False)
+    tenant_id, _invoice_id, event_id = _semear_email_d15(banco)
+
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "adiado"
+    assert _evento(banco, event_id).delivery_status == "pendente"
+    assert smtp == []
+
+
+def test_email_d15_de_titulo_pago_nao_sai(banco: Banco, smtp: list) -> None:
+    from app.dunning.tasks import send_dunning_email
+
+    tenant_id, invoice_id, event_id = _semear_email_d15(banco)
+    with banco.admin() as session, session.begin():
+        session.get(Invoice, invoice_id).status = InvoiceStatus.PAGO
+
+    assert send_dunning_email.run(str(tenant_id), str(event_id)) == "falhou"
+    assert smtp == []
+
+
+def test_varredura_reagenda_so_o_pendente_antigo(
+    banco: Banco, smtp: list, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.dunning import tasks
+
+    agendados: list[tuple] = []
+    monkeypatch.setattr(tasks.send_dunning_email, "delay", lambda *a: agendados.append(a))
+    tenant_id, _invoice_id, antigo = _semear_email_d15(banco, minutos=30)
+    with banco.admin() as session, session.begin():
+        from app.models import DunningEvent
+
+        recente = DunningEvent(tenant_id=tenant_id, invoice_id=_invoice_id, step="D+21",
+                               channel="email", delivery_status="pendente")
+        session.add(recente)
+
+    with banco.como_app(tenant_id) as session:
+        assert tasks.requeue_pending_emails(session, datetime.now(UTC)) == 1
+    assert agendados == [(str(tenant_id), str(antigo))]
+
+    claims: set[str] = set()
+    monkeypatch.setattr(tasks, "claim_email", lambda eid: eid not in claims and not claims.add(eid))
+    agendados.clear()
+    with banco.como_app(tenant_id) as session:
+        tasks.requeue_pending_emails(session, datetime.now(UTC))
+        tasks.requeue_pending_emails(session, datetime.now(UTC))
+    assert len(agendados) == 1
+
+
+def test_regua_d15_grava_o_email_e_agenda_depois_do_commit(
+    banco: Banco, smtp: list, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fluxo inteiro: process_invoice no D+15 grava `pendente` e a task só sai no commit."""
+    from app.dunning import tasks
+    from app.dunning.service import process_invoice
+    from app.models import DunningEvent
+
+    agendados: list[tuple] = []
+    monkeypatch.setattr(tasks.send_dunning_email, "delay", lambda *a: agendados.append(a))
+    monkeypatch.setattr("app.dunning.service.smtp_configured", lambda: True)
+    monkeypatch.setattr("app.dunning.service.audit", lambda *_a, **_k: None)
+    tenant_id, invoice_id, event_id = _semear_email_d15(banco)
+    with banco.admin() as session, session.begin():
+        session.delete(session.get(DunningEvent, event_id))
+
+    with banco.como_app(tenant_id) as session:
+        tenant = session.get(Tenant, tenant_id)
+        outcome = process_invoice(session, tenant, invoice_id, date(2026, 11, 1))
+        assert agendados == []  # ainda dentro da transação
+    assert (outcome.action, outcome.reason) == ("send", "D+15")
+    with banco.admin() as session:
+        email = session.scalars(
+            select(DunningEvent).where(DunningEvent.channel == "email")
+        ).one()
+    assert email.delivery_status == "pendente"
+    assert agendados == [(str(tenant_id), str(email.id))]
