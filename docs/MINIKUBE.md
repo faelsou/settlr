@@ -118,6 +118,14 @@ kubectl -n cobranca port-forward svc/frontend-web 3000:3000 >/tmp/pf-web.log 2>&
 
 Encerre com `kill` no PID, ou `fg` e Ctrl+C se ainda estiver no mesmo shell.
 
+## Site público
+
+O serviço `site` serve a landing e o login em `/entrar`. Imagem, port-forward e o login que entrega a sessão ao painel estão em [SITE.md](./SITE.md).
+
+```bash
+kubectl -n cobranca port-forward svc/site 8080:8080
+```
+
 ## Port-forward da API
 
 Só quando for chamar o gateway direto do host (curl, cliente HTTP). O painel não precisa disso.

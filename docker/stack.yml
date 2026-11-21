@@ -4,6 +4,7 @@
 # Piloto em um nó: remova os blocos `placement`.
 # A rede `edge` é externa:  docker network create --driver overlay --attachable edge
 # Variáveis pedidas no deploy: IMAGE_TAG, REGISTRY, DOMAIN, ACME_EMAIL.
+# Opcionais do site público: WHATSAPP_NUMBER, SUPABASE_URL, SUPABASE_ANON_KEY.
 # Opcionais (vazias = desligado; Sentry e Langfuse não são serviço desta stack):
 # SENTRY_DSN, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST.
 # LEGAL_OPINION_REF vazio bloqueia a ativação do tenant até o parecer do SETL-15.
@@ -108,6 +109,36 @@ services:
         - traefik.http.services.frontend-web.loadbalancer.server.port=3000
         - traefik.http.services.frontend-web.loadbalancer.healthcheck.path=/
         - traefik.http.services.frontend-web.loadbalancer.healthcheck.interval=10s
+
+  # Site público: landing em DOMAIN e login da área do cliente em DOMAIN/entrar.
+  # O login entrega a sessão ao painel em app.DOMAIN. Ver docs/SITE.md.
+  site:
+    image: ${REGISTRY}/cobranca-site:${IMAGE_TAG}
+    environment:
+      APP_URL: https://app.${DOMAIN}
+      API_UPSTREAM: http://webhook-api:8000
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    networks: [edge]
+    logging: *logging
+    deploy:
+      replicas: 2
+      update_config: { parallelism: 1, order: start-first, failure_action: rollback }
+      placement:
+        constraints: [node.labels.role == app]
+      resources:
+        limits: { memory: 64M }
+        reservations: { memory: 16M }
+      labels:
+        - traefik.enable=true
+        - traefik.swarm.network=edge
+        - traefik.http.routers.site.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)
+        - traefik.http.routers.site.entrypoints=websecure
+        - traefik.http.routers.site.tls.certresolver=le
+        - traefik.http.services.site.loadbalancer.server.port=8080
+        - traefik.http.services.site.loadbalancer.healthcheck.path=/healthz
+        - traefik.http.services.site.loadbalancer.healthcheck.interval=10s
 
   webhook-api:
     image: ${REGISTRY}/cobranca-api:${IMAGE_TAG}

@@ -67,7 +67,7 @@ jobs:
           shellcheck scripts/deploy-minikube.sh
       - name: Dockerfiles
         run: |
-          for f in docker/api.Dockerfile docker/web.Dockerfile; do
+          for f in docker/api.Dockerfile docker/web.Dockerfile docker/site.Dockerfile; do
             docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --failure-threshold error - < "$f"
           done
       - name: Manifestos Kubernetes
@@ -187,6 +187,10 @@ jobs:
             build_args: |
               NEXT_PUBLIC_API_BASE_URL=
               API_UPSTREAM=http://webhook-api:8000
+          # Landing e login. Configuração de runtime: a mesma imagem serve Minikube e produção.
+          - name: cobranca-site
+            dockerfile: docker/site.Dockerfile
+            build_args: ""
     env:
       IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME || 'faelsouz' }}/${{ matrix.name }}
       PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}

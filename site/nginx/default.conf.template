@@ -1,0 +1,77 @@
+# Site público do Settlr: landing em / e login em /entrar.
+# As variáveis ${...} vêm do ambiente do container (envsubst da imagem oficial do nginx).
+# Variáveis do próprio nginx, como $uri, não são do ambiente e ficam como estão.
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+    # Redireciona com caminho relativo: atrás do Traefik a porta 8080 não existe para o browser.
+    absolute_redirect off;
+    charset utf-8;
+
+    gzip on;
+    gzip_types text/css application/javascript image/svg+xml;
+    gzip_min_length 1024;
+
+    # A CSP libera só o que as páginas usam: Google Fonts, o supabase-js do jsDelivr no login
+    # e o Supabase Auth do projeto. Script inline não roda.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ${SUPABASE_URL}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Configuração lida pelas páginas. Nada aqui é segredo: a anon key do Supabase é pública por desenho.
+    location = /config.js {
+        default_type application/javascript;
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        return 200 'window.SETTLR_CONFIG={"appUrl":"${APP_URL}","whatsappNumber":"${WHATSAPP_NUMBER}","supabaseUrl":"${SUPABASE_URL}","supabaseAnonKey":"${SUPABASE_ANON_KEY}"};\n';
+    }
+
+    # Login local (sem Supabase): o form chama a mesma origem e o nginx repassa ao gateway.
+    # Só esta rota passa. Em produção a API recusa o dev-login.
+    location = /auth/dev-login {
+        limit_except POST { deny all; }
+        # Resolve na hora da chamada: o site sobe mesmo sem a API no ar. O resolver do nginx não usa os
+        # domínios de busca do resolv.conf, então no Kubernetes API_UPSTREAM leva o nome completo do Service.
+        resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream/auth/dev-login;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 15s;
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=3600" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
+    location = /login {
+        return 302 /entrar;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ${SUPABASE_URL}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+        try_files $uri $uri/ =404;
+    }
+
+    error_page 404 /index.html;
+}
