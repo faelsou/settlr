@@ -6,7 +6,19 @@ import { api, errorText } from "@/lib/api";
 import { setToken, supabase, supabaseEnabled } from "@/lib/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+/**
+ * Sessão entregue pelo site público (/entrar): #access_token=…&refresh_token=….
+ * O fragmento não vai ao servidor; aqui ele é lido e apagado da barra antes de qualquer outra coisa.
+ */
+function takeHandoff(): { access: string; refresh: string | null } | null {
+  if (typeof window === "undefined" || !window.location.hash.includes("access_token=")) return null;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  const access = params.get("access_token");
+  return access ? { access, refresh: params.get("refresh_token") } : null;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +28,29 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const hasSupabase = supabaseEnabled();
+
+  useEffect(() => {
+    const handoff = takeHandoff();
+    if (!handoff) return;
+    setBusy(true);
+    (async () => {
+      try {
+        // Com refresh token, a sessão do Supabase se renova sozinha no painel.
+        if (hasSupabase && handoff.refresh) {
+          const { error: sessionError } = await supabase().auth.setSession({
+            access_token: handoff.access,
+            refresh_token: handoff.refresh,
+          });
+          if (sessionError) throw sessionError;
+        }
+        setToken(handoff.access);
+        router.replace("/inicio");
+      } catch (err) {
+        setError(errorText(err));
+        setBusy(false);
+      }
+    })();
+  }, [hasSupabase, router]);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();

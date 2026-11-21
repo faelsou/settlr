@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: site
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: site }
+  template:
+    metadata:
+      labels: { app: site }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: site
+          image: faelsouz/cobranca-site
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: site-env
+          ports:
+            - containerPort: 8080
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          # Com a raiz só leitura, o nginx escreve a config gerada, o pid e o cache nestes três.
+          volumeMounts:
+            - { name: conf, mountPath: /etc/nginx/conf.d }
+            - { name: tmp, mountPath: /tmp }
+            - { name: cache, mountPath: /var/cache/nginx }
+      volumes:
+        - { name: conf, emptyDir: { sizeLimit: 1Mi } }
+        - { name: tmp, emptyDir: { sizeLimit: 8Mi } }
+        - { name: cache, emptyDir: { sizeLimit: 16Mi } }

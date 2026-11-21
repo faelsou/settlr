@@ -58,14 +58,18 @@ def get_invoice(invoice_id: UUID, db: Session = Depends(get_db)) -> InvoiceDetai
         raise HTTPException(404, "título não encontrado")
 
     events = db.scalars(
-        select(DunningEvent).where(DunningEvent.invoice_id == invoice_id).order_by(DunningEvent.sent_at)
+        select(DunningEvent)
+        .where(DunningEvent.invoice_id == invoice_id)
+        .order_by(DunningEvent.sent_at)
     ).all()
     conversation = db.scalars(
         select(Conversation).where(Conversation.debtor_id == invoice.debtor_id)
     ).first()
     if conversation is not None:
         messages = db.scalars(
-            select(Message).where(Message.conversation_id == conversation.id).order_by(Message.created_at)
+            select(Message)
+            .where(Message.conversation_id == conversation.id)
+            .order_by(Message.created_at)
         ).all()
     else:
         messages = db.scalars(
@@ -75,7 +79,9 @@ def get_invoice(invoice_id: UUID, db: Session = Depends(get_db)) -> InvoiceDetai
     matches = db.scalars(select(Match).where(Match.invoice_id == invoice_id)).all()
     if invoice.agreement_id:
         installments = db.scalars(
-            select(Invoice).where(Invoice.agreement_id == invoice.agreement_id).order_by(Invoice.due_date)
+            select(Invoice)
+            .where(Invoice.agreement_id == invoice.agreement_id)
+            .order_by(Invoice.due_date)
         ).all()
     else:
         installments = db.scalars(

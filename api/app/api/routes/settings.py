@@ -66,12 +66,19 @@ class WhatsappTemplateIn(BaseModel):
     params: list[str] = []
 
 
+class PilotoReguaIn(BaseModel):
+    """Piloto da régua curta: este percentual dos títulos roda D0, D+1, D+5 e D+15."""
+
+    quatro_etapas_pct: int = Field(50, ge=0, le=100)
+
+
 class DunningRulesIn(BaseModel):
     steps: list[StepIn]
     templates: dict[str, str] = {}
     whatsapp_templates: dict[str, WhatsappTemplateIn] = {}
     rate_per_minute: int = Field(20, ge=1, le=120)
     text_version: str = ""
+    piloto_regua: PilotoReguaIn | None = None
 
     @model_validator(mode="after")
     def _check(self) -> "DunningRulesIn":

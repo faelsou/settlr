@@ -93,7 +93,9 @@ def deliver_invite(to: str, subject: str, body: str) -> bool:
     return True
 
 
-def create_invite(session: Session, tenant: Tenant, email: str, role: str) -> tuple[TenantMember, bool]:
+def create_invite(
+    session: Session, tenant: Tenant, email: str, role: str
+) -> tuple[TenantMember, bool]:
     if role not in COMPANY_ROLES:
         raise ValueError("papel inválido")
     email = email.strip().lower()

@@ -102,7 +102,7 @@ flowchart TD
     A[Empresa em /comecar ou agência em /admin/tenants] --> B[Define política de negociação jsonb]
     B --> C[Define régua jsonb: etapas e canais]
     C --> D[Cadastra número WhatsApp + horário permitido]
-    D --> E[Configura o emissor Asaas]
+    D --> E[Configura o emissor: Asaas ou Inter]
     E --> F[Importa base de devedores e títulos]
     F --> G[Tenant ativo]
 ```

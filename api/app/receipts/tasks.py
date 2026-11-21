@@ -117,6 +117,8 @@ def _store_receipt(
             if conv.state == ConversationState.AGUARDANDO_COMPROVANTE:
                 conv.state = ConversationState.AGENTE
             if conv.state != ConversationState.HUMANO:
-                send_to_debtor(session, tenant, conv, REPLIES.get(status, REPLIES["aguardando_banco"]))
+                send_to_debtor(
+                    session, tenant, conv, REPLIES.get(status, REPLIES["aguardando_banco"])
+                )
     record_file("recebido", status)
     return status

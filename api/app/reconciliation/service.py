@@ -185,7 +185,9 @@ def apply_allocations(
     if payment.bank_confirmed_at is None:
         raise ValueError("baixa definitiva exige confirmação do banco")
 
-    session.execute(delete(Match).where(Match.payment_id == payment.id, Match.provisional.is_(True)))
+    session.execute(
+        delete(Match).where(Match.payment_id == payment.id, Match.provisional.is_(True))
+    )
     applied_before = applied_amount(session, payment.id)
     remaining = payment.amount - applied_before
     today = datetime.now(UTC).date()
@@ -279,7 +281,9 @@ def open_exception(
 
 
 def _provisional(session: Session, payment: Payment, result: MatchResult) -> None:
-    session.execute(delete(Match).where(Match.payment_id == payment.id, Match.provisional.is_(True)))
+    session.execute(
+        delete(Match).where(Match.payment_id == payment.id, Match.provisional.is_(True))
+    )
     for alloc in result.allocations:
         session.add(
             Match(
@@ -296,7 +300,9 @@ def _provisional(session: Session, payment: Payment, result: MatchResult) -> Non
 
 def reconcile_payment(session: Session, payment: Payment, tenant: Tenant) -> MatchResult:
     rules = ReconciliationRules.from_json(tenant.reconciliation_rules)
-    result = match_payment(to_payment_data(payment), load_candidates(session, payment, rules), rules)
+    result = match_payment(
+        to_payment_data(payment), load_candidates(session, payment, rules), rules
+    )
 
     if payment.status == PaymentStatus.AGUARDANDO_BANCO:
         # Comprovante sem banco nunca baixa: só indica o título provável no painel.
@@ -354,7 +360,9 @@ def _find_receipt_twin(session: Session, tenant_id: UUID, data: BankPaymentIn) -
             Payment.status == PaymentStatus.AGUARDANDO_BANCO,
             Payment.e2e_id.is_(None),
             Payment.amount == data.amount,
-            Payment.paid_at.between(data.paid_at - timedelta(days=1), data.paid_at + timedelta(days=1)),
+            Payment.paid_at.between(
+                data.paid_at - timedelta(days=1), data.paid_at + timedelta(days=1)
+            ),
         )
     ).all()
     candidates = [

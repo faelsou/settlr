@@ -1,7 +1,9 @@
 """Régua de cobrança (FLUXOS.md §5). Funções puras: nada aqui fala com banco ou rede."""
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 # Versão dos textos canônicos. O dossiê é docs/TEXTOS-REGUA.md. O parecer fica no SETL-15.
@@ -17,7 +19,12 @@ DEFAULT_DUNNING_RULES: dict = {
         {"key": "D+5", "offset": 5, "channels": ["whatsapp"], "template": "oferta_negociacao"},
         {"key": "D+7", "offset": 7, "channels": ["whatsapp"], "template": "convite_conversa"},
         {"key": "D+10", "offset": 10, "channels": ["whatsapp"], "template": "lembrete_aberto"},
-        {"key": "D+15", "offset": 15, "channels": ["whatsapp", "email"], "template": "ultima_tentativa"},
+        {
+            "key": "D+15",
+            "offset": 15,
+            "channels": ["whatsapp", "email"],
+            "template": "ultima_tentativa",
+        },
         {"key": "D+21", "offset": 21, "channels": ["whatsapp"], "template": "aviso_equipe"},
         {"key": "D+30", "offset": 30, "channels": [], "template": None, "handoff": True},
     ],
@@ -44,7 +51,8 @@ DEFAULT_DUNNING_RULES: dict = {
         ),
         "convite_conversa": (
             "Olá, {nome}. {descricao} ({valor}) segue em aberto desde {vencimento}. "
-            "Se quiser conversar sobre o pagamento, responda esta mensagem. O PIX para quitar é {pix}."
+            "Se quiser conversar sobre o pagamento, responda esta mensagem. "
+            "O PIX para quitar é {pix}."
         ),
         "lembrete_aberto": (
             "Olá, {nome}. {descricao} ({valor}) segue em aberto desde {vencimento}. "
@@ -103,6 +111,49 @@ def parse_steps(rules: dict | None) -> list[Step]:
         for s in raw
     ]
     return sorted(steps, key=lambda s: s.offset)
+
+
+# Piloto da régua curta (PRODUTO.md §5, SETL-65). Liga em `dunning_rules.piloto_regua`.
+VARIANT_FULL = "dez_etapas"
+VARIANT_SHORT = "quatro_etapas"
+SHORT_STEP_KEYS = frozenset({"D0", "D+1", "D+5", "D+15"})
+# Sal próprio do piloto: o grupo de controle (SETL-50) sorteia com outro sal, então os
+# dois cortes são independentes e o controle sai antes de qualquer variante.
+_VARIANT_SALT = "regua-piloto:"
+
+
+def variant_bucket(invoice_id: UUID | str) -> int:
+    """0 a 99, fixo para o mesmo título."""
+    digest = hashlib.sha256(f"{_VARIANT_SALT}{invoice_id}".encode()).digest()
+    return int.from_bytes(digest[:8], "big") % 100
+
+
+def short_share(rules: dict | None) -> int | None:
+    """Percentual de títulos na régua de quatro etapas, ou None sem piloto."""
+    pilot = (rules or {}).get("piloto_regua")
+    if not isinstance(pilot, dict):
+        return None
+    try:
+        share = int(pilot.get("quatro_etapas_pct", 50))
+    except (TypeError, ValueError):
+        return None
+    return max(0, min(100, share))
+
+
+def regua_variant(rules: dict | None, invoice_id: UUID | str) -> str | None:
+    share = short_share(rules)
+    if share is None:
+        return None
+    return VARIANT_SHORT if variant_bucket(invoice_id) < share else VARIANT_FULL
+
+
+def steps_for_invoice(rules: dict | None, invoice_id: UUID | str) -> list[Step]:
+    """Etapas do título. Na variante curta só disparam D0, D+1, D+5 e D+15; a passagem
+    para a fila humana continua no fim da régua."""
+    steps = parse_steps(rules)
+    if regua_variant(rules, invoice_id) != VARIANT_SHORT:
+        return steps
+    return [s for s in steps if s.key in SHORT_STEP_KEYS or s.handoff]
 
 
 def within_allowed_hours(now: datetime, hours: AllowedHours, tz: str) -> bool:

@@ -6,7 +6,6 @@ from decimal import Decimal
 from app.receipts.schemas import ReceiptExtraction
 from app.receipts.validation import validate_extraction
 
-
 NOW = datetime(2026, 10, 17, 15, 0, tzinfo=UTC)
 
 

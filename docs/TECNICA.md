@@ -30,7 +30,7 @@ k8s/          minikube e observability (kustomize)
 observability/ coletor OTLP, Prometheus, Thanos, Loki, Tempo, Grafana
 ```
 
-Processos em produção: `frontend-web`, `webhook-api` (gateway), `cobranca`, `conci-pgto`, `cadastro`, `worker-cobranca`, `worker-conciliacao`, `worker-cadastro`, `relo-disp`, mais `postgres`, `redis`, `minio`, `evolution`, `traefik`. O `aiops` roda só no Kubernetes (`k8s/aiops`) e não está no `docker/stack.yml`.
+Processos em produção: `site` (landing e login, ver [SITE.md](./SITE.md)), `frontend-web`, `webhook-api` (gateway), `cobranca`, `conci-pgto`, `cadastro`, `worker-cobranca`, `worker-conciliacao`, `worker-cadastro`, `relo-disp`, mais `postgres`, `redis`, `minio`, `evolution`, `traefik`. O `aiops` roda só no Kubernetes (`k8s/aiops`) e não está no `docker/stack.yml`.
 
 O banco continua um só. O serviço não chama o outro por HTTP para dar baixa ou mudar status: isso precisa da mesma transação. O gateway é quem recebe o painel e os webhooks e encaminha. Task de outro serviço entra na fila do dono (`app/services/queues.py`).
 

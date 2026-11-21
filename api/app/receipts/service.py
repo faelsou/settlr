@@ -14,13 +14,18 @@ from app.core.audit import audit
 from app.core.config import get_settings
 from app.models import Payment, Tenant
 from app.models.enums import ExceptionType, PaymentOrigin, PaymentStatus
-from app.reconciliation.matcher import Decision, document_matches
-from app.reconciliation.service import open_exception, reconcile_payment
 from app.receipts.extractor import extract_receipt
 from app.receipts.schemas import ReceiptExtraction
 from app.receipts.validation import validate_extraction
+from app.reconciliation.matcher import Decision, document_matches
+from app.reconciliation.service import open_exception, reconcile_payment
 
-EXTENSIONS = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+EXTENSIONS = {
+    "application/pdf": "pdf",
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+}
 _BY_EXT = {ext: mime for mime, ext in EXTENSIONS.items()}
 
 
@@ -51,7 +56,9 @@ def _find_bank_twin(session: Session, tenant_id: UUID, data: ReceiptExtraction) 
     """Pagamento que o banco já informou antes do comprovante chegar."""
     if data.e2e_id:
         found = session.scalars(
-            select(Payment).where(Payment.tenant_id == tenant_id, Payment.e2e_id == data.e2e_id.strip())
+            select(Payment).where(
+                Payment.tenant_id == tenant_id, Payment.e2e_id == data.e2e_id.strip()
+            )
         ).first()
         if found:
             return found
@@ -63,11 +70,15 @@ def _find_bank_twin(session: Session, tenant_id: UUID, data: ReceiptExtraction) 
             Payment.bank_confirmed_at.is_not(None),
             Payment.file_hash.is_(None),
             Payment.amount == data.amount,
-            Payment.paid_at.between(data.paid_at - timedelta(days=1), data.paid_at + timedelta(days=1)),
+            Payment.paid_at.between(
+                data.paid_at - timedelta(days=1), data.paid_at + timedelta(days=1)
+            ),
         )
     ).all()
     if data.payer_doc:
-        candidates = [p for p in candidates if p.payer_doc and document_matches(data.payer_doc, p.payer_doc)]
+        candidates = [
+            p for p in candidates if p.payer_doc and document_matches(data.payer_doc, p.payer_doc)
+        ]
     return candidates[0] if len(candidates) == 1 else None
 
 
@@ -124,7 +135,9 @@ def process_receipt(
         origin=PaymentOrigin.COMPROVANTE,
         status=PaymentStatus.AGUARDANDO_BANCO,
         amount=extraction.amount,
-        paid_at=extraction.paid_at if extraction.paid_at.tzinfo else extraction.paid_at.replace(tzinfo=UTC),
+        paid_at=extraction.paid_at
+        if extraction.paid_at.tzinfo
+        else extraction.paid_at.replace(tzinfo=UTC),
         e2e_id=extraction.e2e_id.strip() if extraction.e2e_id else None,
         payer_doc=extraction.payer_doc,
         payer_name=extraction.payer_name,

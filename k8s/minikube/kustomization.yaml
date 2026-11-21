@@ -5,6 +5,7 @@
 #   kubectl apply -k k8s/minikube
 #   kubectl -n cobranca wait --for=condition=complete job/bootstrap --timeout=180s
 #   kubectl -n cobranca port-forward svc/frontend-web 3000:3000
+#   kubectl -n cobranca port-forward svc/site 8080:8080      # landing e /entrar
 #
 # As imagens vêm do Docker Hub (faelsouz/cobranca-api e faelsouz/cobranca-web),
 # publicadas pelo .github/workflows/ci.yml. A tag fica só no bloco images abaixo.
@@ -63,9 +64,16 @@ resources:
   # Painel
   - frontend-web/deployment.yaml
   - frontend-web/service.yaml
+  # Site público: landing e login da área do cliente
+  - site/configmap.yaml
+  - site/deployment.yaml
+  - site/service.yaml
 
 images:
   - name: faelsouz/cobranca-api
-    newTag: sha-96c7dad
+    newTag: sha-2a84689
   - name: faelsouz/cobranca-web
-    newTag: sha-96c7dad
+    newTag: sha-2a84689
+  # O CI publica cobranca-site a partir deste PR. Até lá, build local com a tag dev (docs/SITE.md).
+  - name: faelsouz/cobranca-site
+    newTag: dev

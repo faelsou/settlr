@@ -44,30 +44,15 @@ jobs:
           python-version: "3.12"
       - name: Ruff
         working-directory: api
-        # O restante do repositório ainda tem achados antigos; o gate cobre o que esta pipeline exige.
-        run: >
-          pipx run ruff check
-          app/core/observability.py
-          app/core/config.py
-          app/core/llm.py
-          app/core/logging.py
-          app/core/tracing.py
-          app/main.py
-          app/workers/celery_app.py
-          app/api/routes/health.py
-          app/api/routes/webhooks.py
-          app/services
-          app/aiops
-          tests/test_observability.py
-          tests/test_services.py
-          tests/test_aiops.py
+        # A API inteira passa pelo gate. Exceções ficam em per-file-ignores do pyproject.toml.
+        run: pipx run ruff check .
       - name: Shell
         run: |
           bash -n docker/release.sh docker/migrate.sh
           shellcheck scripts/deploy-minikube.sh
       - name: Dockerfiles
         run: |
-          for f in docker/api.Dockerfile docker/web.Dockerfile; do
+          for f in docker/api.Dockerfile docker/web.Dockerfile docker/site.Dockerfile; do
             docker run --rm -i hadolint/hadolint:v2.12.0 hadolint --failure-threshold error - < "$f"
           done
       - name: Manifestos Kubernetes
@@ -187,6 +172,10 @@ jobs:
             build_args: |
               NEXT_PUBLIC_API_BASE_URL=
               API_UPSTREAM=http://webhook-api:8000
+          # Landing e login. Configuração de runtime: a mesma imagem serve Minikube e produção.
+          - name: cobranca-site
+            dockerfile: docker/site.Dockerfile
+            build_args: ""
     env:
       IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME || 'faelsouz' }}/${{ matrix.name }}
       PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}

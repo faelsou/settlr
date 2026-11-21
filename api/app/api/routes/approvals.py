@@ -47,5 +47,7 @@ def decide(
         raise HTTPException(404, "aprovação não encontrada")
     if approval.status != ApprovalStatus.PENDENTE:
         raise HTTPException(409, "aprovação já decidida")
-    resume_agent.delay(str(user.tenant_id), str(approval_id), body.approved, body.message, user.actor)
+    resume_agent.delay(
+        str(user.tenant_id), str(approval_id), body.approved, body.message, user.actor
+    )
     return {"status": "enfileirado"}

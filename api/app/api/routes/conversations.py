@@ -54,7 +54,9 @@ def list_conversations(
     if state:
         query = query.where(Conversation.state == state)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
-    rows = db.execute(query.order_by(Conversation.updated_at.desc()).limit(limit).offset(offset)).all()
+    rows = db.execute(
+        query.order_by(Conversation.updated_at.desc()).limit(limit).offset(offset)
+    ).all()
     return Page(items=[_out(c, d) for c, d in rows], total=total or 0)
 
 
@@ -92,7 +94,9 @@ def list_deliveries(
 def list_messages(conversation_id: UUID, db: Session = Depends(get_db)) -> list[MessageOut]:
     _get(db, conversation_id)
     messages = db.scalars(
-        select(Message).where(Message.conversation_id == conversation_id).order_by(Message.created_at)
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at)
     ).all()
     return [message_out(m) for m in messages]
 
@@ -143,6 +147,8 @@ def send_message(
     send_to_debtor(db, db.get(Tenant, conv.tenant_id), conv, body.text, author=user.actor)
     db.flush()
     last = db.scalars(
-        select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.desc())
+        select(Message)
+        .where(Message.conversation_id == conv.id)
+        .order_by(Message.created_at.desc())
     ).first()
     return message_out(last)

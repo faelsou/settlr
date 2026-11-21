@@ -55,7 +55,8 @@ class TenantOut(BaseModel):
 
 
 def missing_requirements(tenant: Tenant) -> list[str]:
-    """Nenhum tenant entra em produção sem política, régua, horário, número, base legal e parecer."""
+    """Nenhum tenant entra em produção sem política, régua, horário, número, base legal
+    e parecer."""
     checks = {
         "política de negociação": tenant.negotiation_policy,
         "régua": tenant.dunning_rules,

@@ -47,5 +47,11 @@ def test_mensagem_e_arquivo_entram_no_prometheus():
     record_file("entregue", "envio")
     assert _value("cobranca_whatsapp_files_total", received_ok) == ok_before + 1
     assert _value("cobranca_whatsapp_files_total", received_fail) == fail_before + 1
-    assert _value("cobranca_whatsapp_files_total", {"direction": "recebido", "result": "falha", "reason": "download"}) >= 1
+    assert (
+        _value(
+            "cobranca_whatsapp_files_total",
+            {"direction": "recebido", "result": "falha", "reason": "download"},
+        )
+        >= 1
+    )
     assert _value("cobranca_whatsapp_files_total", delivered_fail) == delivered_before + 1
