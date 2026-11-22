@@ -1,10 +1,11 @@
 import { QueryProvider } from "@/lib/query";
 import { SentryClient } from "@/lib/sentry-client";
-import "@fontsource/manrope/latin-400.css";
-import "@fontsource/manrope/latin-500.css";
-import "@fontsource/manrope/latin-600.css";
-import "@fontsource/manrope/latin-700.css";
-import "@fontsource/sora/latin-600.css";
+import "@fontsource/geist-mono/latin-400.css";
+import "@fontsource/geist-mono/latin-500.css";
+import "@fontsource/geist-sans/latin-400.css";
+import "@fontsource/geist-sans/latin-500.css";
+import "@fontsource/geist-sans/latin-600.css";
+import "@fontsource/geist-sans/latin-700.css";
 import "@fontsource/sora/latin-700.css";
 import type { Metadata } from "next";
 import "./globals.css";

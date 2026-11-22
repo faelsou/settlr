@@ -55,7 +55,7 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 }
 
 export function Label({ children }: { children: ReactNode }) {
-  return <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-700/70">{children}</label>;
+  return <label className="mb-1 block text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/70">{children}</label>;
 }
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -103,7 +103,7 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        {eyebrow ? <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-700">{eyebrow}</p> : null}
+        {eyebrow ? <p className="text-xs font-mono uppercase tracking-[0.04em] text-brand-700">{eyebrow}</p> : null}
         <h1 className="font-display text-3xl tracking-tight">{title}</h1>
         {hint ? <p className="mt-1 max-w-2xl text-sm text-ink-700/70">{hint}</p> : null}
       </div>

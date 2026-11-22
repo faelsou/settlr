@@ -40,7 +40,7 @@ export function Inbox({ activeId }: { activeId?: string }) {
       <section className={clsx("min-h-0 w-full flex-col border-paper-200 md:flex md:w-[340px] md:border-r", activeId ? "hidden" : "flex")}>
         <div className="space-y-3 border-b border-paper-200 px-4 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-ink-700">WhatsApp</p>
+            <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">WhatsApp</p>
             <h1 className="font-display text-2xl">Conversas</h1>
           </div>
           <Segmented label="Estado da conversa" value={state} onChange={setState} options={FILTERS} />
@@ -183,7 +183,7 @@ function Thread({
             <button type="button" onClick={onBack} className="mb-2 text-sm font-semibold text-brand-700 md:hidden">
               ← Conversas
             </button>
-            <p className="text-xs uppercase tracking-[0.18em] text-ink-700">{labelOf(conversation.intent)}</p>
+            <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{labelOf(conversation.intent)}</p>
             <h2 className="truncate font-display text-2xl">{conversation.debtor.name}</h2>
             <p className="mt-1 line-clamp-2 text-sm text-ink-700/70">{conversation.summary ?? "Sem resumo do agente."}</p>
           </div>
@@ -254,7 +254,7 @@ function Thread({
       </section>
       <aside className="hidden w-80 shrink-0 flex-col border-l border-paper-200 bg-white xl:flex">
         <div className="border-b border-paper-200 px-5 py-5">
-          <p className="text-xs uppercase tracking-[0.18em] text-ink-700">Devedor</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">Devedor</p>
           <p className="mt-1 font-display text-2xl leading-tight">{conversation.debtor.name}</p>
           <p className="mt-2 text-sm text-ink-700/80">{phonesBr(conversation.debtor.phones, conversation.debtor.phone)}</p>
           <p className="text-sm text-ink-700/70">{documentBr(conversation.debtor.document)}</p>
@@ -263,7 +263,7 @@ function Thread({
           </p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-700/60">Títulos em aberto</p>
+          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">Títulos em aberto</p>
           {!openInvoices.length ? (
             <p className="mt-3 text-sm text-ink-700/70">Nenhum título em aberto neste recorte.</p>
           ) : (

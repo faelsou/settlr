@@ -150,7 +150,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
 
   return (
     <Card className="p-6">
-      <p className="text-xs uppercase tracking-wide text-ink-700">{labelOf(item.type)}</p>
+      <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{labelOf(item.type)}</p>
       <h2 className="mt-1 font-display text-2xl">Revisar</h2>
       <ExceptionSummary item={item} />
 
@@ -184,7 +184,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
 
       {suggestions.length > 0 ? (
         <div className="mt-5 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-700/60">Sugestões do matcher</p>
+          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">Sugestões do matcher</p>
           {suggestions.map((s, idx) => (
             <button
               key={`${s.method}-${idx}`}

@@ -90,7 +90,7 @@ export function DataTable<T>({
     <div>
       <div className="max-h-[32rem] overflow-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-white text-left text-xs uppercase tracking-wide text-ink-700/60">
+          <thead className="sticky top-0 z-10 bg-white text-left text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">
             <tr>
               {expandable ? <th className="w-10 px-3 py-3" /> : null}
               {columns.map((column) => (
