@@ -523,6 +523,15 @@ export const MESSAGES = {
   "nav.closeMenu": ["Fechar menu", "Close menu", "Cerrar menú"],
   "cfg.ownerEmailPh": ["dono@clinica.com.br", "owner@clinic.com", "dueno@clinica.com"],
   "cfg.inviteEmailPh": ["financeiro@clinica.com.br", "finance@clinic.com", "finanzas@clinica.com"],
+
+  /* Piloto da régua (SETL-65) */
+  "variant.dez_etapas": ["Régua de dez etapas", "Ten-step cadence", "Secuencia de diez etapas"],
+  "variant.quatro_etapas": ["Régua de quatro etapas (D0, D+1, D+5, D+15)", "Four-step cadence (D0, D+1, D+5, D+15)", "Secuencia de cuatro etapas (D0, D+1, D+5, D+15)"],
+  "variant.title": ["Piloto da régua", "Cadence pilot", "Piloto de la secuencia"],
+  "variant.hint": ["Mesma carteira, títulos vencidos no período. Cada título fica sempre na mesma variante.", "Same portfolio, invoices overdue in the period. Each invoice always stays in the same variant.", "Misma cartera, facturas vencidas en el período. Cada factura queda siempre en la misma variante."],
+  "variant.recovered": ["{recovered} de {overdue} em {n} títulos", "{recovered} of {overdue} across {n} invoices", "{recovered} de {overdue} en {n} facturas"],
+  "variant.dispatches": ["{n} disparos", "{n} sends", "{n} envíos"],
+  "variant.perInvoice": [" · {n} por título", " · {n} per invoice", " · {n} por factura"],
 } as const satisfies Record<string, Triple>;
 
 export type MessageKey = keyof typeof MESSAGES;
