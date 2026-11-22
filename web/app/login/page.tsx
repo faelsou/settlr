@@ -1,7 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/logo";
-import { Banner, Button, Field, Input } from "@/components/ui";
+import { AuthButton, AuthField, AuthHeading, AuthInput, AuthNote, AuthShell } from "@/components/auth";
 import { api, errorText } from "@/lib/api";
 import { setToken, supabase, supabaseEnabled } from "@/lib/auth";
 import Link from "next/link";
@@ -74,51 +73,61 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-      <section className="hidden flex-col justify-between bg-brand-700 px-12 py-16 text-white lg:flex">
-        <div>
-          <Logo wordClassName="text-3xl" />
-          <h1 className="mt-10 max-w-md font-display text-5xl leading-tight">Cobrou, recebeu, conciliou.</h1>
-        </div>
-        <p className="max-w-sm text-sm leading-relaxed text-white/80">
-          Exceções, pagamentos e o WhatsApp do devedor. Confirmar uma baixa continua passando pela API.
-        </p>
-      </section>
-      <section className="grid place-items-center bg-paper-50 px-4 py-16">
-      <div className="w-full max-w-md rounded-3xl border border-paper-200 bg-white p-8 shadow-card">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Painel do operador</p>
-        <h1 className="mt-2 font-display text-3xl text-ink-900">Entrar</h1>
-        <p className="mt-2 text-sm text-ink-700/70">
-          {hasSupabase
-            ? "Use a conta do tenant no Supabase Auth. O JWT carrega o tenant_id."
-            : "Ambiente local: o token é emitido pela API após o seed-demo."}
-        </p>
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
-          <Field label="E-mail">
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </Field>
-          {hasSupabase ? (
-            <Field label="Senha">
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </Field>
-          ) : (
-            <Field label="Tenant">
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} required />
-            </Field>
-          )}
-          {error ? <Banner>{error}</Banner> : null}
-          <Button type="submit" disabled={busy} className="w-full">
-            {busy ? "Entrando…" : "Entrar"}
-          </Button>
-        </form>
-        <p className="mt-6 text-sm text-ink-700/70">
-          Primeira vez na empresa?{" "}
-          <Link href="/comecar" className="font-semibold text-brand-700">
-            Criar a conta
-          </Link>
-        </p>
-      </div>
-      </section>
-    </main>
+    <AuthShell
+      foot={
+        <>
+          {hasSupabase ? null : <span>ambiente local · entrada sem senha</span>}
+          <span>Problema para entrar? Fale com o dono da conta da sua empresa.</span>
+        </>
+      }
+    >
+      <AuthHeading eyebrow="Área do cliente" title="Entrar no painel" sub="Exceções, pagamentos e conversas da sua empresa." />
+      <form onSubmit={onSubmit} className="auth-form">
+        <AuthField label="E-mail">
+          <AuthInput
+            type="email"
+            autoComplete="username"
+            inputMode="email"
+            placeholder="voce@empresa.com.br"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </AuthField>
+        {hasSupabase ? (
+          <AuthField label="Senha">
+            <AuthInput
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </AuthField>
+        ) : (
+          <AuthField label="Empresa">
+            <AuthInput
+              autoComplete="organization"
+              spellCheck={false}
+              placeholder="demo"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              required
+            />
+          </AuthField>
+        )}
+        {error ? <AuthNote>{error}</AuthNote> : null}
+        <AuthButton type="submit" disabled={busy} className="w-full">
+          {busy ? "Entrando…" : "Entrar"}
+        </AuthButton>
+      </form>
+      <p className="auth-sub text-[0.88rem]">
+        Recebeu um convite da sua empresa? Abra o link do e-mail para entrar com o seu acesso.
+      </p>
+      <div className="auth-divider">Primeira vez na empresa</div>
+      <Link href="/comecar" className="auth-btn auth-btn-ghost w-full">
+        Criar a conta da empresa
+      </Link>
+    </AuthShell>
   );
 }

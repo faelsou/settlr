@@ -1,7 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/logo";
-import { Banner, Button, Field, Input, Textarea } from "@/components/ui";
+import { AuthButton, AuthField, AuthHeading, AuthInput, AuthNote, AuthShell, AuthTextarea } from "@/components/auth";
 import { ApiError, api, errorText } from "@/lib/api";
 import { setToken } from "@/lib/auth";
 import type { TenantSettings } from "@/lib/types";
@@ -111,33 +110,31 @@ export default function ComecarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper-50 px-4 py-10">
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        <div className="flex items-center justify-between">
-          <Logo />
-          <Link href="/login" className="text-sm font-semibold text-brand-700">
-            Já tenho conta
-          </Link>
-        </div>
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Onboarding</p>
-          <h1 className="mt-2 font-display text-4xl text-ink-900">Criar a conta da empresa</h1>
-          <p className="mt-2 max-w-2xl text-sm text-ink-700/70">
-            Política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação nascem aqui.
-            Sem base legal, a ativação recusa a conta.
-          </p>
-        </div>
+    <AuthShell
+      wide
+      action={
+        <Link href="/login" className="auth-link">
+          Já tenho conta
+        </Link>
+      }
+      foot={<span>A conta nasce desligada e só liga com tudo no lugar.</span>}
+    >
+        <AuthHeading
+          eyebrow="Onboarding"
+          title="Criar a conta da empresa"
+          sub="Política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação nascem aqui. Sem base legal, a ativação recusa a conta."
+        />
 
-        {defaults.isError ? <Banner>{errorText(defaults.error)}</Banner> : null}
-        {!draft ? <p className="text-sm text-ink-700/70">Carregando a configuração padrão…</p> : null}
+        {defaults.isError ? <AuthNote>{errorText(defaults.error)}</AuthNote> : null}
+        {!draft ? <p className="auth-sub text-sm">Carregando a configuração padrão…</p> : null}
 
         {draft && !created ? (
-          <form onSubmit={onCreate} className="space-y-6">
-            <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-              <h2 className="font-display text-2xl">Empresa</h2>
+          <form onSubmit={onCreate} className="grid gap-4">
+            <section className="auth-card">
+              <h2>Empresa</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Nome">
-                  <Input
+                <AuthField label="Nome">
+                  <AuthInput
                     required
                     value={draft.name}
                     onChange={(event) => {
@@ -145,9 +142,9 @@ export default function ComecarPage() {
                       setDraft({ ...draft, name, slug: slugTouched ? draft.slug : slugify(name) });
                     }}
                   />
-                </Field>
-                <Field label="Apelido">
-                  <Input
+                </AuthField>
+                <AuthField label="Apelido">
+                  <AuthInput
                     required
                     value={draft.slug}
                     pattern="[a-z0-9-]{2,80}"
@@ -156,17 +153,17 @@ export default function ComecarPage() {
                       setDraft({ ...draft, slug: event.target.value });
                     }}
                   />
-                </Field>
-                <Field label="E-mail do dono">
-                  <Input
+                </AuthField>
+                <AuthField label="E-mail do dono">
+                  <AuthInput
                     required
                     type="email"
                     value={draft.owner_email}
                     onChange={(event) => setDraft({ ...draft, owner_email: event.target.value })}
                   />
-                </Field>
-                <Field label="Atraso médio antes da implantação (dias)">
-                  <Input
+                </AuthField>
+                <AuthField label="Atraso médio antes da implantação (dias)">
+                  <AuthInput
                     required
                     type="number"
                     min={0}
@@ -175,18 +172,18 @@ export default function ComecarPage() {
                     value={draft.baseline_avg_days_late}
                     onChange={(event) => setDraft({ ...draft, baseline_avg_days_late: event.target.value })}
                   />
-                </Field>
+                </AuthField>
               </div>
-              <p className="text-sm text-ink-700/70">
+              <p className="auth-sub text-sm">
                 Esta linha de base fica gravada na conta. O painel compara o atraso do período com ela.
               </p>
             </section>
 
-            <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-              <h2 className="font-display text-2xl">Política</h2>
+            <section className="auth-card">
+              <h2>Política</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Desconto máx. à vista (%)">
-                  <Input
+                <AuthField label="Desconto máx. à vista (%)">
+                  <AuthInput
                     value={draft.negotiation_policy.max_discount_pct_cash}
                     onChange={(event) =>
                       setDraft({
@@ -195,9 +192,9 @@ export default function ComecarPage() {
                       })
                     }
                   />
-                </Field>
-                <Field label="Máx. de parcelas">
-                  <Input
+                </AuthField>
+                <AuthField label="Máx. de parcelas">
+                  <AuthInput
                     type="number"
                     value={draft.negotiation_policy.max_installments}
                     onChange={(event) =>
@@ -210,45 +207,45 @@ export default function ComecarPage() {
                       })
                     }
                   />
-                </Field>
+                </AuthField>
               </div>
             </section>
 
-            <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-              <h2 className="font-display text-2xl">Régua</h2>
-              <p className="text-sm text-ink-700/70">
+            <section className="auth-card">
+              <h2>Régua</h2>
+              <p className="auth-sub text-sm">
                 A conta nasce com estas etapas. O texto de cada uma continua em Configurações.
               </p>
               <ul className="flex flex-wrap gap-2">
                 {draft.dunning_rules.steps.map((step) => (
-                  <li key={step.key} className="rounded-full bg-paper-100 px-3 py-1 text-sm">
+                  <li key={step.key} className="auth-chip">
                     {step.key}
                   </li>
                 ))}
               </ul>
             </section>
 
-            <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-              <h2 className="font-display text-2xl">Horário</h2>
+            <section className="auth-card">
+              <h2>Horário</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Início">
-                  <Input
+                <AuthField label="Início">
+                  <AuthInput
                     type="time"
                     value={String(draft.allowed_hours.start).slice(0, 5)}
                     onChange={(event) =>
                       setDraft({ ...draft, allowed_hours: { ...draft.allowed_hours, start: event.target.value } })
                     }
                   />
-                </Field>
-                <Field label="Fim">
-                  <Input
+                </AuthField>
+                <AuthField label="Fim">
+                  <AuthInput
                     type="time"
                     value={String(draft.allowed_hours.end).slice(0, 5)}
                     onChange={(event) =>
                       setDraft({ ...draft, allowed_hours: { ...draft.allowed_hours, end: event.target.value } })
                     }
                   />
-                </Field>
+                </AuthField>
               </div>
               <div className="flex flex-wrap gap-2">
                 {WEEKDAYS.map((label, index) => {
@@ -263,7 +260,8 @@ export default function ComecarPage() {
                           : [...draft.allowed_hours.weekdays, index].sort();
                         setDraft({ ...draft, allowed_hours: { ...draft.allowed_hours, weekdays } });
                       }}
-                      className={`rounded-full px-3 py-1 text-sm ${on ? "bg-brand-700 text-white" : "bg-paper-100 text-ink-800"}`}
+                      aria-pressed={on}
+                      className="auth-chip"
                     >
                       {label}
                     </button>
@@ -272,70 +270,69 @@ export default function ComecarPage() {
               </div>
             </section>
 
-            <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-              <h2 className="font-display text-2xl">WhatsApp e base legal</h2>
+            <section className="auth-card">
+              <h2>WhatsApp e base legal</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Instância">
-                  <Input
+                <AuthField label="Instância">
+                  <AuthInput
                     required
                     value={draft.whatsapp_instance}
                     placeholder="nome-na-evolution"
                     onChange={(event) => setDraft({ ...draft, whatsapp_instance: event.target.value })}
                   />
-                </Field>
-                <Field label="Número">
-                  <Input
+                </AuthField>
+                <AuthField label="Número">
+                  <AuthInput
                     required
                     inputMode="tel"
                     value={draft.whatsapp_number}
                     placeholder="11988887777"
                     onChange={(event) => setDraft({ ...draft, whatsapp_number: event.target.value })}
                   />
-                </Field>
+                </AuthField>
               </div>
-              <Field label="Base legal (LGPD)">
-                <Textarea
+              <AuthField label="Base legal (LGPD)">
+                <AuthTextarea
                   rows={3}
                   value={draft.legal_basis}
                   placeholder="Deixe em branco para ver a ativação recusar a conta"
                   onChange={(event) => setDraft({ ...draft, legal_basis: event.target.value })}
                 />
-              </Field>
+              </AuthField>
             </section>
 
-            {error ? <Banner>{error}</Banner> : null}
-            <Button type="submit" disabled={busy}>
+            {error ? <AuthNote>{error}</AuthNote> : null}
+            <AuthButton type="submit" disabled={busy} className="justify-self-start">
               {busy ? "Criando…" : "Criar conta"}
-            </Button>
+            </AuthButton>
           </form>
         ) : null}
 
         {draft && created ? (
-          <section className="space-y-4 rounded-3xl border border-paper-200 bg-white p-6 shadow-card">
-            <h2 className="font-display text-2xl">Conta criada</h2>
-            <p className="text-sm text-ink-700/70">
+          <section className="auth-card">
+            <h2>Conta criada</h2>
+            <p className="auth-sub text-sm">
               Você entrou como dono. A ativação só segue com política, régua, horário, WhatsApp e base legal.
             </p>
-            {created.missing.length ? <Banner>Falta: {created.missing.join(", ")}</Banner> : null}
-            {error ? <Banner>{error}</Banner> : null}
-            <Field label="Base legal (LGPD)">
-              <Textarea
+            {created.missing.length ? <AuthNote>Falta: {created.missing.join(", ")}</AuthNote> : null}
+            {error ? <AuthNote>{error}</AuthNote> : null}
+            <AuthField label="Base legal (LGPD)">
+              <AuthTextarea
                 rows={3}
                 value={draft.legal_basis}
                 onChange={(event) => setDraft({ ...draft, legal_basis: event.target.value })}
               />
-            </Field>
+            </AuthField>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={onActivate} disabled={busy}>
+              <AuthButton type="button" onClick={onActivate} disabled={busy}>
                 {busy ? "Ativando…" : "Ativar"}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => router.push("/configuracoes")}>
+              </AuthButton>
+              <AuthButton type="button" variant="ghost" onClick={() => router.push("/configuracoes")}>
                 Ir para configurações
-              </Button>
+              </AuthButton>
             </div>
           </section>
         ) : null}
-      </div>
-    </main>
+    </AuthShell>
   );
 }

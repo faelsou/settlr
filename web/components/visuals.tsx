@@ -78,7 +78,7 @@ export function Sparkline({
         {last ? <circle cx={last.x} cy={last.y} r="3.5" fill="currentColor" /> : null}
       </svg>
       {startLabel || endLabel ? (
-        <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wide text-ink-700/50">
+        <div className="mt-1 flex justify-between text-[10px] font-mono uppercase tracking-[0.04em] text-ink-700/50">
           <span>{startLabel}</span>
           <span>{endLabel}</span>
         </div>

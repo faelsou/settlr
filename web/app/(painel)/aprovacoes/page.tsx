@@ -119,7 +119,7 @@ function ApprovalCard({
     <Card className="overflow-hidden">
       <div className="flex items-start justify-between gap-4 border-b border-paper-100 bg-paper-50 px-6 py-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-ink-700">Fora da política</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">Fora da política</p>
           <p className="mt-1 font-display text-2xl">{item.debtor.name}</p>
           <p className="mt-1 text-sm text-ink-700/70">{item.reason}</p>
           <Link href={`/conversas?id=${item.conversation_id}`} className="mt-2 inline-block text-sm font-semibold text-brand-700">

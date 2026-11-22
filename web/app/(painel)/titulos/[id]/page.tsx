@@ -121,7 +121,7 @@ export default function TituloDetalhePage() {
       <Breadcrumb items={[{ href: "/titulos", label: "Títulos" }, { label: data.debtor.name }]} />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-ink-700">{data.external_id}</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{data.external_id}</p>
           <h1 className="font-display text-3xl tracking-tight">{data.debtor.name}</h1>
           <p className="mt-1 text-sm text-ink-700/70">
             {documentBr(data.debtor.document)} · {phonesBr(data.debtor.phones, data.debtor.phone)}
@@ -133,15 +133,15 @@ export default function TituloDetalhePage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-700/60">Valor</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Valor</p>
           <p className="mt-1 font-display text-2xl">{money(data.amount)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-700/60">Em aberto</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Em aberto</p>
           <p className="mt-1 font-display text-2xl">{money(openAmount)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-700/60">Vencimento</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Vencimento</p>
           <p className="mt-1 font-display text-2xl">{day(data.due_date)}</p>
         </Card>
       </div>
