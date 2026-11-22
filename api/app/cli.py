@@ -109,12 +109,36 @@ def seed_demo() -> None:
                 description=desc,
                 txid=f"txdemo{n:04d}",
             )
-            for n, (name, doc, phone, amount, offset, desc) in enumerate([
-                ("Maria Souza", "12345678909", "5511952313944", "350.00", -5, "Mensalidade setembro"),
-                ("Maria Souza", "12345678909", "5511952313944", "350.00", 25, "Mensalidade outubro"),
-                ("João Pereira", "98765432100", "21977776666", "1200.00", -12, "Tratamento ortodôntico"),
-                ("Ana Lima", "11144477735", "31966665555", "89.90", 2, "Consulta de retorno"),
-            ], start=1)
+            for n, (name, doc, phone, amount, offset, desc) in enumerate(
+                [
+                    (
+                        "Maria Souza",
+                        "12345678909",
+                        "5511952313944",
+                        "350.00",
+                        -5,
+                        "Mensalidade setembro",
+                    ),
+                    (
+                        "Maria Souza",
+                        "12345678909",
+                        "5511952313944",
+                        "350.00",
+                        25,
+                        "Mensalidade outubro",
+                    ),
+                    (
+                        "João Pereira",
+                        "98765432100",
+                        "21977776666",
+                        "1200.00",
+                        -12,
+                        "Tratamento ortodôntico",
+                    ),
+                    ("Ana Lima", "11144477735", "31966665555", "89.90", 2, "Consulta de retorno"),
+                ],
+                start=1,
+            )
         ]
         result = import_invoices(session, tenant.id, rows, "seed")
 
@@ -206,7 +230,10 @@ def seed_demo() -> None:
                         tenant_id=tenant.id,
                         type=ExceptionType.CONTESTACAO,
                         invoice_id=by_ext["demo-3"].id,
-                        details={"debtor_id": str(joao.id), "motivo": "valor diferente do combinado"},
+                        details={
+                            "debtor_id": str(joao.id),
+                            "motivo": "valor diferente do combinado",
+                        },
                     )
                 )
 
@@ -253,7 +280,11 @@ def seed_demo() -> None:
                     conversation_id=conv.id,
                     thread_id=f"demo-{conv.id}",
                     reason="Pedido de 8 parcelas acima do máximo da política (6).",
-                    payload={"pedido": "8x", "max_politica": 6, "invoice_id": str(by_ext["demo-1"].id)},
+                    payload={
+                        "pedido": "8x",
+                        "max_politica": 6,
+                        "invoice_id": str(by_ext["demo-1"].id),
+                    },
                 )
             )
 
@@ -268,15 +299,87 @@ TEST_PHONE = "5511952313944"
 # Cada vencimento cai numa etapa da régua no dia em que o comando roda.
 # offset é o mesmo da etapa: D-3 vence daqui a 3 dias, D+15 venceu há 15.
 ENVIO_CASES = [
-    ("envio-d-3", "Carla Mendes", "20000000191", "180.00", 3, "Lembrete · consulta de avaliação", "D-3"),
-    ("envio-d0", "Pedro Alves", "20000000272", "240.00", 0, "Vence hoje · sessão de fisioterapia", "D0"),
-    ("envio-d1", "Lúcia Ferreira", "20000000353", "310.00", -1, "Atraso · segunda via do retorno", "D+1"),
-    ("envio-d3", "Helena Prado", "20000000606", "390.00", -3, "Atraso · desconto à vista no clareamento", "D+3"),
-    ("envio-d5", "Rafael Costa", "20000000434", "420.00", -5, "Atraso · negociação do pacote de exames", "D+5"),
-    ("envio-d7", "Marcos Vieira", "20000000797", "510.00", -7, "Atraso · parcelamento da manutenção", "D+7"),
-    ("envio-d10", "Camila Duarte", "20000000878", "640.00", -10, "Atraso · entrada e saldo do implante", "D+10"),
-    ("envio-d15", "Beatriz Nunes", "20000000515", "560.00", -15, "Atraso · última tentativa do tratamento", "D+15"),
-    ("envio-d21", "Otávio Ramos", "20000000959", "780.00", -21, "Atraso · aviso de restrição da prótese", "D+21"),
+    (
+        "envio-d-3",
+        "Carla Mendes",
+        "20000000191",
+        "180.00",
+        3,
+        "Lembrete · consulta de avaliação",
+        "D-3",
+    ),
+    (
+        "envio-d0",
+        "Pedro Alves",
+        "20000000272",
+        "240.00",
+        0,
+        "Vence hoje · sessão de fisioterapia",
+        "D0",
+    ),
+    (
+        "envio-d1",
+        "Lúcia Ferreira",
+        "20000000353",
+        "310.00",
+        -1,
+        "Atraso · segunda via do retorno",
+        "D+1",
+    ),
+    (
+        "envio-d3",
+        "Helena Prado",
+        "20000000606",
+        "390.00",
+        -3,
+        "Atraso · desconto à vista no clareamento",
+        "D+3",
+    ),
+    (
+        "envio-d5",
+        "Rafael Costa",
+        "20000000434",
+        "420.00",
+        -5,
+        "Atraso · negociação do pacote de exames",
+        "D+5",
+    ),
+    (
+        "envio-d7",
+        "Marcos Vieira",
+        "20000000797",
+        "510.00",
+        -7,
+        "Atraso · parcelamento da manutenção",
+        "D+7",
+    ),
+    (
+        "envio-d10",
+        "Camila Duarte",
+        "20000000878",
+        "640.00",
+        -10,
+        "Atraso · entrada e saldo do implante",
+        "D+10",
+    ),
+    (
+        "envio-d15",
+        "Beatriz Nunes",
+        "20000000515",
+        "560.00",
+        -15,
+        "Atraso · última tentativa do tratamento",
+        "D+15",
+    ),
+    (
+        "envio-d21",
+        "Otávio Ramos",
+        "20000000959",
+        "780.00",
+        -21,
+        "Atraso · aviso de restrição da prótese",
+        "D+21",
+    ),
 ]
 
 

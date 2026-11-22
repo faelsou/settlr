@@ -100,7 +100,11 @@ def quoted_stanza_id(data: dict[str, Any]) -> str | None:
 
 def inbound_from_record(instance: str, raw: dict[str, Any]) -> InboundMessage | None:
     """Converte um registro do findMessages (ou o `data` do webhook) em InboundMessage."""
-    data = raw.get("data") if isinstance(raw.get("data"), dict) and "key" in (raw.get("data") or {}) else raw
+    data = (
+        raw.get("data")
+        if isinstance(raw.get("data"), dict) and "key" in (raw.get("data") or {})
+        else raw
+    )
     if not isinstance(data, dict) or not data.get("key"):
         return None
     return parse_inbound(EvolutionWebhook(event="messages.upsert", instance=instance, data=data))
@@ -164,7 +168,9 @@ class EvolutionClient:
         body = response.json()
         return body if isinstance(body, list) else body.get("chats") or body.get("records") or []
 
-    def find_messages(self, instance: str, remote_jid: str, limit: int = 20) -> list[dict[str, Any]]:
+    def find_messages(
+        self, instance: str, remote_jid: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
         response = self._client.post(
             f"/chat/findMessages/{instance}",
             json={"where": {"key": {"remoteJid": remote_jid}}, "limit": limit},

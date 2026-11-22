@@ -137,7 +137,7 @@ Cobrem o que não pode depender de LLM: camadas de matching, decisão da régua,
 
 A stack Swarm de referência é `docker/stack.yml`, alinhada à seção 9 de `ARQUITETURA-DEPLOY.md`. A telemetria sobe à parte, com `observability/stack.yml` (coletor OTLP, Prometheus, Thanos, Loki, Tempo e Grafana na porta 3001 do nó de dados, sem rota no Traefik). O padrão de `OTEL_EXPORTER_OTLP_ENDPOINT` é `http://otel-collector:4317`; vazio desliga o OTLP. Sentry e Langfuse não são serviço de nenhuma das duas stacks: só ligam se as variáveis estiverem preenchidas.
 
-CI em pull request (`.github/workflows/ci.yml`): pytest, ruff nos módulos de observabilidade e tipos do painel. Na `main`, `.github/workflows/release.yml` publica `cobranca-api` e `cobranca-web` no GHCR com o SHA do commit e roda `docker/release.sh` no manager. Se a tag nova não ficar saudável, o script republica a anterior. Para voltar uma tag já publicada: Actions → Release → `rollback_to` = SHA. Sem `DEPLOY_HOST`, a pipeline só publica as imagens.
+CI em pull request (`.github/workflows/ci.yml`): pytest, ruff na API inteira e tipos do painel. Na `main`, `.github/workflows/release.yml` publica `cobranca-api` e `cobranca-web` no GHCR com o SHA do commit e roda `docker/release.sh` no manager. Se a tag nova não ficar saudável, o script republica a anterior. Para voltar uma tag já publicada: Actions → Release → `rollback_to` = SHA. Sem `DEPLOY_HOST`, a pipeline só publica as imagens.
 
 - Painel: `app.settlr.com.br`
 - API: `api.settlr.com.br` (`/health`, `/webhooks/evolution`, `/webhooks/emissor`, `/webhooks/banco`)

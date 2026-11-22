@@ -99,7 +99,9 @@ def _split(total: Decimal, parts: int) -> list[Decimal]:
     return amounts
 
 
-def build_payment_options(total_open: Decimal, policy: NegotiationPolicy, today: date) -> list[PaymentOption]:
+def build_payment_options(
+    total_open: Decimal, policy: NegotiationPolicy, today: date
+) -> list[PaymentOption]:
     if total_open <= 0:
         return []
 
@@ -129,7 +131,9 @@ def build_payment_options(total_open: Decimal, policy: NegotiationPolicy, today:
         if min(rest) < policy.min_installment_amount:
             break
         installments = [Installment(1, first_due, min_down)] + [
-            Installment(i + 2, first_due + timedelta(days=policy.installment_interval_days * (i + 1)), amt)
+            Installment(
+                i + 2, first_due + timedelta(days=policy.installment_interval_days * (i + 1)), amt
+            )
             for i, amt in enumerate(rest)
         ]
         options.append(

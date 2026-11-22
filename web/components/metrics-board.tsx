@@ -3,8 +3,7 @@
 import { Sparkline, Ticker } from "@/components/visuals";
 import { Banner, Card, Segmented, Skeleton } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
-import { money, num, pct } from "@/lib/format";
-import { currentLang, tr, useI18n } from "@/lib/i18n";
+
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -148,6 +147,7 @@ export function MetricsBoard({ periodControl = false }: { periodControl?: boolea
           />
         </div>
       )}
+      {data?.regua_variants?.length ? <VariantComparison variants={data.regua_variants} /> : null}
     </div>
   );
 }
@@ -201,6 +201,37 @@ function Stat({
       <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{title}</p>
       <p className="mt-2 font-display text-3xl tracking-tight">{value == null ? "—" : <Ticker value={value} format={format} />}</p>
       <p className="mt-2 text-sm text-ink-700/70">{hint}</p>
+    </Card>
+  );
+}
+
+const VARIANT_LABEL: Record<ReguaVariantMetrics["variant"], string> = {
+  dez_etapas: "Régua de dez etapas",
+  quatro_etapas: "Régua de quatro etapas (D0, D+1, D+5, D+15)",
+};
+
+function VariantComparison({ variants }: { variants: ReguaVariantMetrics[] }) {
+  return (
+    <Card className="p-5">
+      <p className="text-xs uppercase tracking-wide text-ink-700/60">Piloto da régua</p>
+      <p className="mt-1 text-sm text-ink-700/70">
+        Mesma carteira, títulos vencidos no período. Cada título fica sempre na mesma variante.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {variants.map((item) => (
+          <div key={item.variant} className="rounded-2xl border border-ink-700/10 p-4">
+            <p className="text-sm font-semibold">{VARIANT_LABEL[item.variant] ?? item.variant}</p>
+            <p className="mt-2 font-display text-3xl tracking-tight">{pct(item.recovery_rate)}</p>
+            <p className="mt-1 text-sm text-ink-700/70">
+              {money(item.recovered_amount)} de {money(item.overdue_amount)} em {item.invoices} títulos
+            </p>
+            <p className="mt-1 text-sm text-ink-700/70">
+              {item.dispatches} disparos
+              {item.invoices ? ` · ${(item.dispatches / item.invoices).toFixed(1).replace(".", ",")} por título` : ""}
+            </p>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }

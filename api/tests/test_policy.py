@@ -9,7 +9,6 @@ from app.agent.policy import (
     validate_promise_date,
 )
 
-
 POLICY = NegotiationPolicy.from_json(None)
 TODAY = date(2026, 10, 17)
 

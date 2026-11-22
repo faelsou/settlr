@@ -249,6 +249,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 /* Preço e FAQ */
 .pricing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; align-items: start; }
+.plan.base::before { display: none; }
+.plan .tier { display: flex; flex-wrap: wrap; gap: 8px; }
+.plan .tier span { padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); font-family: var(--f-mono); font-size: .76rem; color: var(--muted); }
+.price-note { margin-top: 18px; font-size: .9rem; color: var(--muted); }
+.pricing + .price-note + .faq { margin-top: 40px; }
 .plan { position: relative; border-radius: 26px; padding: 34px; background: var(--card); display: grid; gap: 22px; isolation: isolate; }
 .plan::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--a, 0deg), transparent 0 60%, var(--violet) 75%, var(--lime) 82%, transparent 92%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; z-index: -1; animation: spin 6s linear infinite; }
 .plan::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 1px solid var(--line); z-index: -2; }
@@ -511,26 +516,42 @@ footer { padding-top: 96px; overflow: hidden; }
         <p class="lede" data-i18n="pr.lede">A conferência dos recebimentos já paga a conta. A régua no WhatsApp entra quando você quiser.</p>
       </div>
       <div class="pricing reveal">
-        <div class="plan">
-          <span class="kicker" data-i18n="pr.phase">Fase 1</span>
-          <div class="price"><b data-i18n="pr.fee">Mensalidade fixa</b><span class="muted" data-i18n="pr.setup">+ setup único</span></div>
-          <p class="muted" data-i18n="pr.p">O valor é fechado na conversa, conforme o volume da carteira. De 100 a 5.000 cobranças por mês.</p>
+        <div class="plan base">
+          <span class="kicker" data-i18n="pr.phase">Fase 1 · Conciliação</span>
+          <div class="price"><b data-i18n="pr.fee">Mensalidade por faixa</b><span class="muted" data-i18n="pr.setup">+ setup único</span></div>
+          <p class="muted" data-i18n="pr.p">Confere cada PIX e boleto contra o título certo, sem falar com o devedor. É a porta de entrada.</p>
+          <div class="tier"><span data-i18n="pr.t1">até 300 títulos/mês</span><span data-i18n="pr.t2">até 1.500</span><span data-i18n="pr.t3">até 5.000</span></div>
           <ul>
             <li><svg><use href="#i-check"/></svg><span data-i18n="pr.1">Conciliação de todo dinheiro que entra, em qualquer banco</span></li>
             <li><svg><use href="#i-check"/></svg><span data-i18n="pr.2">Arquivo do período pronto para o contador</span></li>
-            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.3">Setup do emissor, importação dos títulos e régua</span></li>
-            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.4">Variável sobre o recuperado só com grupo de controle medindo o efeito</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.3">Fila de exceções para o que o sistema não fechou sozinho</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.4">Setup do emissor e importação dos títulos</span></li>
+          </ul>
+          <a class="btn btn-glass" href="#piloto" style="justify-self:start" data-wa="price" target="_blank" rel="noopener"><span data-i18n="pr.cta1">Começar pela conciliação</span> <svg><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="plan">
+          <span class="kicker" data-i18n="pr.b.phase">Cobrança + conciliação</span>
+          <div class="price"><b data-i18n="pr.b.fee">Mensalidade por faixa</b><span class="muted" data-i18n="pr.b.var">+ % só do vencido recuperado</span></div>
+          <p class="muted" data-i18n="pr.b.p">O variável incide só sobre o que estava vencido e o banco confirmou. Se não recuperar, você paga só a faixa.</p>
+          <ul>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.b.1">Tudo da conciliação</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.b.2">Régua no WhatsApp com template oficial; o lembrete antes do vencimento já está na mensalidade</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.b.3">Agente que negocia só dentro da sua política</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.b.4">Recuperado medido contra a linha de base da implantação</span></li>
+            <li><svg><use href="#i-check"/></svg><span data-i18n="pr.b.5">Teto mensal no variável: a conta nunca surpreende</span></li>
           </ul>
           <a class="btn btn-light" href="#piloto" style="justify-self:start" data-wa="price" target="_blank" rel="noopener"><svg class="wa-ic"><use href="#i-chat"/></svg><span data-i18n="pr.cta">Conversar sobre o piloto</span> <svg><use href="#i-arrow"/></svg></a>
         </div>
-        <div class="faq">
-          <details open><summary data-i18n="f.1q">Meu banco precisa ter integração?</summary><p data-i18n="f.1a">Não. O extrato entra pelo Open Finance de qualquer conta. Asaas e Inter já têm adaptador de emissor. OFX e CSV ficam para exceção.</p></details>
+      </div>
+      <p class="price-note reveal" data-i18n="pr.note">Os valores de cada faixa são fechados na conversa, pelo volume da carteira. No piloto, o setup é abatido em troca de um case.</p>
+      <div class="faq reveal">
+          <details open><summary data-i18n="f.6q">O que conta como recuperado?</summary><p data-i18n="f.6a">Título pago depois do vencimento, com a baixa confirmada pelo banco. Lembrete antes do vencimento e comprovante sem extrato não entram. O efeito é medido contra a linha de base da implantação, e o variável tem teto mensal.</p></details>
+          <details><summary data-i18n="f.1q">Meu banco precisa ter integração?</summary><p data-i18n="f.1a">Não. O extrato entra pelo Open Finance de qualquer conta. Asaas e Inter já têm adaptador de emissor. OFX e CSV ficam para exceção.</p></details>
           <details><summary data-i18n="f.2q">E se o devedor mandar um comprovante falso?</summary><p data-i18n="f.2a">Comprovante nunca quita. Ele fica aguardando o banco e só vira baixa quando o extrato ou o webhook confirma o E2E, o valor e a data.</p></details>
           <details><summary data-i18n="f.3q">O agente pode inventar um desconto?</summary><p data-i18n="f.3a">Não. As opções são geradas pelo código a partir da sua política. O agente só escolhe entre elas. Pedido fora disso vai para aprovação.</p></details>
           <details><summary data-i18n="f.4q">Corro risco de ter o número banido?</summary><p data-i18n="f.4a">A régua usa só template aprovado pela Meta, com limite de envio e opt-out imediato. A conta nem liga sem o número pareado e os templates aprovados.</p></details>
           <details><summary data-i18n="f.5q">Já uso Pix Automático. Ainda faz sentido?</summary><p data-i18n="f.5a">Sim. Quando o débito quita, o D-3 e o D0 saem da régua. O Settlr convida à adesão e avisa quando o débito falha, além de conciliar o que entra.</p></details>
         </div>
-      </div>
     </div>
   </section>
 

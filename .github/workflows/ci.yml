@@ -44,23 +44,8 @@ jobs:
           python-version: "3.12"
       - name: Ruff
         working-directory: api
-        # O restante do repositório ainda tem achados antigos; o gate cobre o que esta pipeline exige.
-        run: >
-          pipx run ruff check
-          app/core/observability.py
-          app/core/config.py
-          app/core/llm.py
-          app/core/logging.py
-          app/core/tracing.py
-          app/main.py
-          app/workers/celery_app.py
-          app/api/routes/health.py
-          app/api/routes/webhooks.py
-          app/services
-          app/aiops
-          tests/test_observability.py
-          tests/test_services.py
-          tests/test_aiops.py
+        # A API inteira passa pelo gate. Exceções ficam em per-file-ignores do pyproject.toml.
+        run: pipx run ruff check .
       - name: Shell
         run: |
           bash -n docker/release.sh docker/migrate.sh

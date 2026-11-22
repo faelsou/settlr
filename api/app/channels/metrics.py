@@ -90,7 +90,11 @@ def outbound_context(author: str, intent: str | None) -> str:
 def record_message(direction: str, stage: str, context: str, kind: str, result: str) -> None:
     direction = direction if direction in {"entrada", "saida"} else "entrada"
     stage = stage if stage in _STAGES else "roteada"
-    context = context if context in _ROUTE.values() or context in _INTENTS or context in _RECEIPT else "outro"
+    context = (
+        context
+        if context in _ROUTE.values() or context in _INTENTS or context in _RECEIPT
+        else "outro"
+    )
     kind = kind if kind in _KINDS else "texto"
     result = result if result in {"ok", "falha"} else "falha"
     labels = {

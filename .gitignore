@@ -25,3 +25,6 @@ web/.turbo/
 .obsidian/
 *.swp
 .DS_Store
+
+# SDR n8n: config local tem telefone e e-mail do comercial
+sdr-n8n/config.json

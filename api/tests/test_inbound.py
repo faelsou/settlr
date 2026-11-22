@@ -1,6 +1,6 @@
 """Entrada do WhatsApp: JID interno (@lid) e roteamento depois que a mensagem já foi gravada."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import uuid4
@@ -139,7 +139,7 @@ def test_inbound_from_find_messages_record():
 
 
 def test_conversation_for_phone_prefers_identity_wait():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     maria = SimpleNamespace(id=uuid4())
     carla = SimpleNamespace(id=uuid4())
     conv_maria = SimpleNamespace(
@@ -165,7 +165,9 @@ def test_continue_after_inbound_stays_quiet_when_human_owns_chat():
 
 
 def test_numeric_reply_is_not_an_opt_out(monkeypatch):
-    conv = SimpleNamespace(state=ConversationState.AGENTE, id=uuid4(), intent=Intent.PARCELAR_DESCONTO)
+    conv = SimpleNamespace(
+        state=ConversationState.AGENTE, id=uuid4(), intent=Intent.PARCELAR_DESCONTO
+    )
     debtor = SimpleNamespace(opt_out=False, opt_out_at=None)
 
     def explode(text, today):

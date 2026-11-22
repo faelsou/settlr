@@ -78,7 +78,13 @@ def invite(
         db, tenant_id=tenant.id, actor=user.actor, action="convida_usuario",
         entity="member", entity_id=member.id, after={"email": member.email, "role": member.role},
     )
-    return MemberOut(id=member.id, email=member.email, role=member.role, status=member.status, delivered=delivered)
+    return MemberOut(
+        id=member.id,
+        email=member.email,
+        role=member.role,
+        status=member.status,
+        delivered=delivered,
+    )
 
 
 @router.post("/accept", response_model=TokenOut)

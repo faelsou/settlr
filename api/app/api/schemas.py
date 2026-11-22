@@ -231,6 +231,17 @@ class ImportResultOut(BaseModel):
     errors: list[str] = []
 
 
+class ReguaVariantMetrics(BaseModel):
+    """Piloto da régua curta: um bloco por variante, mesmos títulos do período."""
+
+    variant: str
+    invoices: int
+    overdue_amount: Decimal
+    recovered_amount: Decimal
+    recovery_rate: float | None
+    dispatches: int
+
+
 class Metrics(BaseModel):
     period_start: date
     period_end: date
@@ -247,3 +258,4 @@ class Metrics(BaseModel):
     auto_reconciliation_rate: float | None
     exceptions_open: int
     avg_exception_resolution_hours: float | None
+    regua_variants: list[ReguaVariantMetrics] = []

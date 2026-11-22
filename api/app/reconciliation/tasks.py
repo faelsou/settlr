@@ -21,7 +21,9 @@ def reconcile(tenant_id: str, payment_id: str) -> str:
         tenant = session.get(Tenant, UUID(tenant_id))
         payment = session.get(Payment, UUID(payment_id))
         result = reconcile_payment(session, payment, tenant)
-        log.info("reconcile.done", payment_id=payment_id, decision=result.decision, layer=result.layer)
+        log.info(
+            "reconcile.done", payment_id=payment_id, decision=result.decision, layer=result.layer
+        )
         return result.decision
 
 
