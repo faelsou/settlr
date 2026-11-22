@@ -11,6 +11,10 @@ O serviço `site` serve a landing em `/` e o login da área do cliente em `/entr
 | [`k8s/minikube/site/`](../k8s/minikube/site/) | ConfigMap, Deployment e Service do Minikube |
 | `site` em [`docker/stack.yml`](../docker/stack.yml) | Produção no Swarm, em `DOMAIN` e `www.DOMAIN` |
 
+## Mesmo visual no painel
+
+O painel (`web/`) usa a identidade do site: Geist e Geist Mono, Sora só na marca, violeta `#5b3df5`/`#7c5cff`, lima `#c6f432` e a mesma marca. O `/login`, o `/comecar` e o `/convite/[token]` do painel repetem o `/entrar`: fundo escuro, aurora e a fila de exemplo. Os componentes ficam em [`web/components/auth.tsx`](../web/components/auth.tsx) e as classes `auth-*` em [`web/app/globals.css`](../web/app/globals.css). Mudou o `/entrar`? Mude os dois. As telas de operação seguem claras, por legibilidade de tabela.
+
 ## Configuração
 
 Tudo é de runtime. A mesma imagem serve o Minikube e a produção. O nginx monta o `/config.js` com estas variáveis, e as páginas leem dele.

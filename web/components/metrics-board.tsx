@@ -169,7 +169,7 @@ function TrendCard({
 }) {
   return (
     <Card className={`p-5 ${className ?? ""}`}>
-      <p className="text-xs uppercase tracking-wide text-ink-700/60">{title}</p>
+      <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{title}</p>
       <p className="mt-2 font-display text-4xl tracking-tight">{value == null ? "—" : <Ticker value={value} format={format} />}</p>
       <p className="mt-2 text-sm text-ink-700/70">{hint}</p>
       {seriesPending ? <Skeleton className="mt-4 h-16" /> : null}
@@ -192,7 +192,7 @@ function Stat({
 }) {
   return (
     <Card className="p-5">
-      <p className="text-xs uppercase tracking-wide text-ink-700/60">{title}</p>
+      <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{title}</p>
       <p className="mt-2 font-display text-3xl tracking-tight">{value == null ? "—" : <Ticker value={value} format={format} />}</p>
       <p className="mt-2 text-sm text-ink-700/70">{hint}</p>
     </Card>

@@ -1,7 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/logo";
-import { Banner, Button } from "@/components/ui";
+import { AuthButton, AuthHeading, AuthNote, AuthShell } from "@/components/auth";
 import { api, errorText } from "@/lib/api";
 import { setToken } from "@/lib/auth";
 import { roleLabel } from "@/lib/roles";
@@ -30,22 +29,24 @@ export default function ConvitePage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-paper-50 px-4 py-16">
-      <div className="w-full max-w-md space-y-6 rounded-3xl border border-paper-200 bg-white p-8 shadow-card">
-        <Logo />
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Convite</p>
-          <h1 className="mt-2 font-display text-3xl text-ink-900">Entrar com o seu link</h1>
-          <p className="mt-2 text-sm text-ink-700/70">
-            Este convite é só seu. Não há senha para compartilhar e ninguém precisa te passar o login.
-          </p>
-        </div>
-        {error ? <Banner>{error}</Banner> : null}
-        <Button type="button" className="w-full" onClick={onAccept} disabled={busy || !token}>
-          {busy ? "Entrando…" : "Aceitar convite"}
-        </Button>
-        <p className="text-xs text-ink-700/60">O papel combinado aparece no painel como {roleLabel("financeiro")}, {roleLabel("atendente")} ou {roleLabel("dono")}.</p>
-      </div>
-    </main>
+    <AuthShell
+      art={{
+        title: "Seu acesso, só seu.",
+        lead: "O convite entra com o papel que a empresa combinou. Ninguém precisa te passar senha.",
+      }}
+    >
+      <AuthHeading
+        eyebrow="Convite"
+        title="Entrar com o seu link"
+        sub="Este convite é só seu. Não há senha para compartilhar e ninguém precisa te passar o login."
+      />
+      {error ? <AuthNote>{error}</AuthNote> : null}
+      <AuthButton type="button" className="w-full" onClick={onAccept} disabled={busy || !token}>
+        {busy ? "Entrando…" : "Aceitar convite"}
+      </AuthButton>
+      <p className="auth-sub text-[0.88rem]">
+        O papel combinado aparece no painel como {roleLabel("financeiro")}, {roleLabel("atendente")} ou {roleLabel("dono")}.
+      </p>
+    </AuthShell>
   );
 }

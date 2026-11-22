@@ -130,7 +130,7 @@ export function Shell({ children }: { children: ReactNode }) {
       ) : null}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-ink-950 text-paper-50 transition-[transform,width] duration-200 md:sticky md:top-0 md:h-screen md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-night-950 text-paper-50 transition-[transform,width] duration-200 md:sticky md:top-0 md:h-screen md:translate-x-0",
           compact ? "md:w-[76px]" : "md:w-72",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
