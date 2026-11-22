@@ -1,25 +1,42 @@
-const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const DATE = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
-const DATETIME = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+import { currentLang, type Lang } from "@/lib/i18n";
+
+/* Datas e números seguem o idioma do painel; a moeda continua sendo o real. */
+type Formats = { brl: Intl.NumberFormat; date: Intl.DateTimeFormat; datetime: Intl.DateTimeFormat; pct: Intl.NumberFormat };
+const CACHE = new Map<Lang, Formats>();
+
+function formats(): Formats {
+  const lang = currentLang();
+  let found = CACHE.get(lang);
+  if (!found) {
+    found = {
+      brl: new Intl.NumberFormat(lang, { style: "currency", currency: "BRL", currencyDisplay: "narrowSymbol" }),
+      date: new Intl.DateTimeFormat(lang, { dateStyle: "short" }),
+      datetime: new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" }),
+      pct: new Intl.NumberFormat(lang, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    };
+    CACHE.set(lang, found);
+  }
+  return found;
+}
 
 export function money(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return "—";
-  return BRL.format(Number(value));
+  return formats().brl.format(Number(value));
 }
 
 export function day(value: string | null | undefined): string {
   if (!value) return "—";
-  return DATE.format(new Date(value.includes("T") ? value : `${value}T12:00:00`));
+  return formats().date.format(new Date(value.includes("T") ? value : `${value}T12:00:00`));
 }
 
 export function when(value: string | null | undefined): string {
   if (!value) return "—";
-  return DATETIME.format(new Date(value));
+  return formats().datetime.format(new Date(value));
 }
 
 export function pct(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
-  return `${(value * 100).toFixed(1)}%`;
+  return formats().pct.format(value);
 }
 
 export function documentBr(value: string | null | undefined): string {

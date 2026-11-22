@@ -3,13 +3,15 @@
 import { AuthButton, AuthField, AuthHeading, AuthInput, AuthNote, AuthShell, AuthTextarea } from "@/components/auth";
 import { ApiError, api, errorText } from "@/lib/api";
 import { setToken } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
 import type { TenantSettings } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const WEEKDAYS: MessageKey[] = ["day.0", "day.1", "day.2", "day.3", "day.4", "day.5", "day.6"];
 
 type Draft = {
   name: string;
@@ -44,6 +46,7 @@ function slugify(value: string): string {
 
 export default function ComecarPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const defaults = useQuery({ queryKey: ["onboarding-defaults"], queryFn: api.onboardingDefaults });
   const [draft, setDraft] = useState<Draft | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -114,26 +117,26 @@ export default function ComecarPage() {
       wide
       action={
         <Link href="/login" className="auth-link">
-          Já tenho conta
+          {t("onb.haveAccount")}
         </Link>
       }
-      foot={<span>A conta nasce desligada e só liga com tudo no lugar.</span>}
+      foot={<span>{t("onb.foot")}</span>}
     >
         <AuthHeading
-          eyebrow="Onboarding"
-          title="Criar a conta da empresa"
-          sub="Política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação nascem aqui. Sem base legal, a ativação recusa a conta."
+          eyebrow={t("onb.eyebrow")}
+          title={t("onb.title")}
+          sub={t("onb.sub")}
         />
 
         {defaults.isError ? <AuthNote>{errorText(defaults.error)}</AuthNote> : null}
-        {!draft ? <p className="auth-sub text-sm">Carregando a configuração padrão…</p> : null}
+        {!draft ? <p className="auth-sub text-sm">{t("onb.loading")}</p> : null}
 
         {draft && !created ? (
           <form onSubmit={onCreate} className="grid gap-4">
             <section className="auth-card">
-              <h2>Empresa</h2>
+              <h2>{t("onb.company")}</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <AuthField label="Nome">
+                <AuthField label={t("onb.name")}>
                   <AuthInput
                     required
                     value={draft.name}
@@ -143,7 +146,7 @@ export default function ComecarPage() {
                     }}
                   />
                 </AuthField>
-                <AuthField label="Apelido">
+                <AuthField label={t("onb.slug")}>
                   <AuthInput
                     required
                     value={draft.slug}
@@ -154,7 +157,7 @@ export default function ComecarPage() {
                     }}
                   />
                 </AuthField>
-                <AuthField label="E-mail do dono">
+                <AuthField label={t("onb.ownerEmail")}>
                   <AuthInput
                     required
                     type="email"
@@ -162,7 +165,7 @@ export default function ComecarPage() {
                     onChange={(event) => setDraft({ ...draft, owner_email: event.target.value })}
                   />
                 </AuthField>
-                <AuthField label="Atraso médio antes da implantação (dias)">
+                <AuthField label={t("onb.baseline")}>
                   <AuthInput
                     required
                     type="number"
@@ -175,14 +178,14 @@ export default function ComecarPage() {
                 </AuthField>
               </div>
               <p className="auth-sub text-sm">
-                Esta linha de base fica gravada na conta. O painel compara o atraso do período com ela.
+                {t("onb.baselineHint")}
               </p>
             </section>
 
             <section className="auth-card">
-              <h2>Política</h2>
+              <h2>{t("onb.policy")}</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <AuthField label="Desconto máx. à vista (%)">
+                <AuthField label={t("onb.maxDiscount")}>
                   <AuthInput
                     value={draft.negotiation_policy.max_discount_pct_cash}
                     onChange={(event) =>
@@ -193,7 +196,7 @@ export default function ComecarPage() {
                     }
                   />
                 </AuthField>
-                <AuthField label="Máx. de parcelas">
+                <AuthField label={t("onb.maxInstallments")}>
                   <AuthInput
                     type="number"
                     value={draft.negotiation_policy.max_installments}
@@ -212,9 +215,9 @@ export default function ComecarPage() {
             </section>
 
             <section className="auth-card">
-              <h2>Régua</h2>
+              <h2>{t("onb.ruler")}</h2>
               <p className="auth-sub text-sm">
-                A conta nasce com estas etapas. O texto de cada uma continua em Configurações.
+                {t("onb.rulerHint")}
               </p>
               <ul className="flex flex-wrap gap-2">
                 {draft.dunning_rules.steps.map((step) => (
@@ -226,9 +229,9 @@ export default function ComecarPage() {
             </section>
 
             <section className="auth-card">
-              <h2>Horário</h2>
+              <h2>{t("onb.hours")}</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <AuthField label="Início">
+                <AuthField label={t("onb.start")}>
                   <AuthInput
                     type="time"
                     value={String(draft.allowed_hours.start).slice(0, 5)}
@@ -237,7 +240,7 @@ export default function ComecarPage() {
                     }
                   />
                 </AuthField>
-                <AuthField label="Fim">
+                <AuthField label={t("onb.end")}>
                   <AuthInput
                     type="time"
                     value={String(draft.allowed_hours.end).slice(0, 5)}
@@ -248,11 +251,11 @@ export default function ComecarPage() {
                 </AuthField>
               </div>
               <div className="flex flex-wrap gap-2">
-                {WEEKDAYS.map((label, index) => {
+                {WEEKDAYS.map((dayKey, index) => {
                   const on = draft.allowed_hours.weekdays.includes(index);
                   return (
                     <button
-                      key={label}
+                      key={dayKey}
                       type="button"
                       onClick={() => {
                         const weekdays = on
@@ -263,7 +266,7 @@ export default function ComecarPage() {
                       aria-pressed={on}
                       className="auth-chip"
                     >
-                      {label}
+                      {t(dayKey)}
                     </button>
                   );
                 })}
@@ -271,17 +274,17 @@ export default function ComecarPage() {
             </section>
 
             <section className="auth-card">
-              <h2>WhatsApp e base legal</h2>
+              <h2>{t("onb.whatsapp")}</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <AuthField label="Instância">
+                <AuthField label={t("onb.instance")}>
                   <AuthInput
                     required
                     value={draft.whatsapp_instance}
-                    placeholder="nome-na-evolution"
+                    placeholder={t("onb.instancePh")}
                     onChange={(event) => setDraft({ ...draft, whatsapp_instance: event.target.value })}
                   />
                 </AuthField>
-                <AuthField label="Número">
+                <AuthField label={t("onb.number")}>
                   <AuthInput
                     required
                     inputMode="tel"
@@ -291,11 +294,11 @@ export default function ComecarPage() {
                   />
                 </AuthField>
               </div>
-              <AuthField label="Base legal (LGPD)">
+              <AuthField label={t("onb.legal")}>
                 <AuthTextarea
                   rows={3}
                   value={draft.legal_basis}
-                  placeholder="Deixe em branco para ver a ativação recusar a conta"
+                  placeholder={t("onb.legalPh")}
                   onChange={(event) => setDraft({ ...draft, legal_basis: event.target.value })}
                 />
               </AuthField>
@@ -303,20 +306,20 @@ export default function ComecarPage() {
 
             {error ? <AuthNote>{error}</AuthNote> : null}
             <AuthButton type="submit" disabled={busy} className="justify-self-start">
-              {busy ? "Criando…" : "Criar conta"}
+              {busy ? t("onb.creating") : t("onb.create")}
             </AuthButton>
           </form>
         ) : null}
 
         {draft && created ? (
           <section className="auth-card">
-            <h2>Conta criada</h2>
+            <h2>{t("onb.createdTitle")}</h2>
             <p className="auth-sub text-sm">
-              Você entrou como dono. A ativação só segue com política, régua, horário, WhatsApp e base legal.
+              {t("onb.createdSub")}
             </p>
-            {created.missing.length ? <AuthNote>Falta: {created.missing.join(", ")}</AuthNote> : null}
+            {created.missing.length ? <AuthNote>{t("onb.missing", { list: created.missing.join(", ") })}</AuthNote> : null}
             {error ? <AuthNote>{error}</AuthNote> : null}
-            <AuthField label="Base legal (LGPD)">
+            <AuthField label={t("onb.legal")}>
               <AuthTextarea
                 rows={3}
                 value={draft.legal_basis}
@@ -325,10 +328,10 @@ export default function ComecarPage() {
             </AuthField>
             <div className="flex flex-wrap gap-2">
               <AuthButton type="button" onClick={onActivate} disabled={busy}>
-                {busy ? "Ativando…" : "Ativar"}
+                {busy ? t("onb.activating") : t("onb.activate")}
               </AuthButton>
               <AuthButton type="button" variant="ghost" onClick={() => router.push("/configuracoes")}>
-                Ir para configurações
+                {t("onb.toSettings")}
               </AuthButton>
             </div>
           </section>

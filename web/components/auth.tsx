@@ -5,8 +5,10 @@
  * As classes `auth-*` estão em app/globals.css e espelham site/public/entrar/index.html.
  */
 
+import { LangSelect } from "@/components/lang-select";
 import { Logo } from "@/components/logo";
-import { clsx } from "@/lib/format";
+import { clsx, money } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
@@ -57,10 +59,9 @@ function Aurora() {
   return <canvas ref={ref} />;
 }
 
-const brl = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-
 /** Lado direito: a fila do dia em cartões, o que o operador encontra ao entrar. */
 function AuthArt({ title, lead }: { title: string; lead: string }) {
+  const { t } = useI18n();
   return (
     <aside className="auth-art" aria-hidden="true">
       <Aurora />
@@ -73,36 +74,36 @@ function AuthArt({ title, lead }: { title: string; lead: string }) {
         <div className="auth-float">
           <div className="top">
             <b>PIX · Marina Souza</b>
-            <span className="v">{brl(480)}</span>
+            <span className="v">{money(480)}</span>
           </div>
           <div className="top">
-            <small>E2E igual ao do título</small>
-            <span className="auth-tag ok">conciliado</span>
+            <small>{t("auth.c1s")}</small>
+            <span className="auth-tag ok">{t("auth.c1t")}</span>
           </div>
         </div>
         <div className="auth-float">
           <div className="top">
             <b>PIX · F. Almeida</b>
-            <span className="v">{brl(520)}</span>
+            <span className="v">{money(520)}</span>
           </div>
           <div className="top">
-            <small>2 títulos possíveis</small>
-            <span className="auth-tag wait">para confirmar</span>
+            <small>{t("auth.c2s")}</small>
+            <span className="auth-tag wait">{t("auth.c2t")}</span>
           </div>
         </div>
         <div className="auth-float">
           <div className="top">
-            <b>Pedido de 8 parcelas</b>
-            <span className="v">{brl(1150)}</span>
+            <b>{t("auth.c3b")}</b>
+            <span className="v">{money(1150)}</span>
           </div>
           <div className="top">
-            <small>acima do teto de 6</small>
-            <span className="auth-tag vi">aprovação</span>
+            <small>{t("auth.c3s")}</small>
+            <span className="auth-tag vi">{t("auth.c3t")}</span>
           </div>
         </div>
       </div>
       <div className="auth-art-foot">
-        <span>Dados de exemplo</span>
+        <span>{t("auth.sample")}</span>
         <span>PIX · boleto · Open Finance</span>
       </div>
     </aside>
@@ -114,7 +115,7 @@ export function AuthShell({
   action,
   foot,
   wide = false,
-  art = { title: "Cobrou, recebeu, conciliou.", lead: "Ao entrar, você vê só o que precisa de uma decisão. O resto o sistema já baixou com o banco." },
+  art,
 }: {
   children: ReactNode;
   /** Link no canto superior direito (ex.: "Já tenho conta"). */
@@ -124,6 +125,7 @@ export function AuthShell({
   wide?: boolean;
   art?: { title: string; lead: string };
 }) {
+  const { t } = useI18n();
   return (
     <main className={clsx("auth", wide && "auth-wide")}>
       <div className="auth-split">
@@ -132,12 +134,15 @@ export function AuthShell({
             <Link href="/login" className="no-underline" aria-label="Settlr">
               <Logo />
             </Link>
-            {action}
+            <div className="flex items-center gap-4">
+              {action}
+              <LangSelect />
+            </div>
           </div>
           <div className="auth-box">{children}</div>
-          <div className="auth-foot">{foot ?? <span>Problema para entrar? Fale com o dono da conta da sua empresa.</span>}</div>
+          <div className="auth-foot">{foot ?? <span>{t("auth.help")}</span>}</div>
         </section>
-        {wide ? null : <AuthArt {...art} />}
+        {wide ? null : <AuthArt {...(art ?? { title: t("auth.artTitle"), lead: t("auth.artLead") })} />}
       </div>
     </main>
   );

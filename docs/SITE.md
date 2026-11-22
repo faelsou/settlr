@@ -34,11 +34,12 @@ O painel mora em outra origem (`app.DOMAIN`), e o `localStorage` de uma origem n
 
 ```text
 /entrar ──(Supabase signInWithPassword)──▶ sessão
-        ──▶ APP_URL/login#access_token=…&refresh_token=…
+        ──▶ APP_URL/login#access_token=…&refresh_token=…&lang=…
 painel /login lê o fragmento, apaga da barra, grava a sessão e vai para /inicio
 ```
 
 - O fragmento (`#…`) não vai para nenhum servidor nem para o log do Traefik.
+- O `lang` leva o idioma escolhido no site (`pt-BR`, `en-US` ou `es`). O painel grava em `settlr-lang` e abre nesse idioma.
 - O painel apaga o fragmento com `history.replaceState` antes de qualquer outra coisa. Com o refresh token, o Supabase renova a sessão no painel.
 - No modo local (sem Supabase), o form pede e-mail e apelido da empresa e chama `POST /auth/dev-login` na mesma origem. O nginx repassa só essa rota ao gateway. Em produção a API recusa o dev-login.
 - "Esqueci a senha" chama `resetPasswordForEmail` com retorno para `APP_URL/login`. A resposta na tela é a mesma exista ou não a conta.
