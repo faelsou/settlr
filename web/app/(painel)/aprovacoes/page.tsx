@@ -5,6 +5,7 @@ import { useToast } from "@/components/toast";
 import { Banner, Button, Card, Dialog, Empty, PageHeader, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { when } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Approval, Invoice } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import { useState } from "react";
 
 export default function AprovacoesPage() {
   const client = useQueryClient();
+  const { t } = useI18n();
   const list = useQuery({
     queryKey: ["approvals"],
     queryFn: () => api.approvals(),
@@ -32,7 +34,7 @@ export default function AprovacoesPage() {
     mutationFn: ({ id, approved, message }: { id: string; approved: boolean; message: string }) =>
       api.decideApproval(id, approved, message),
     onSuccess: (_data, variables) => {
-      toast(variables.approved ? "Aprovado. O agente retoma a conversa." : "Recusado. O agente recebe a recusa.");
+      toast(variables.approved ? t("appr.okToast") : t("appr.noToast"));
       setPending(null);
       client.invalidateQueries({ queryKey: ["approvals"] });
     },
@@ -44,19 +46,19 @@ export default function AprovacoesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Humano"
-        title="Aprovações"
-        hint="Pedidos que o agente pausou — fora da política, sem inventar condição."
+        eyebrow={t("appr.eyebrow")}
+        title={t("nav.aprovacoes")}
+        hint={t("appr.hint")}
       />
       {error ? <Banner>{error}</Banner> : null}
       {list.isError ? <Banner>{errorText(list.error)}</Banner> : null}
       {list.isPending ? (
         <Card>
-          <Empty title="Carregando aprovações…" />
+          <Empty title={t("appr.loading")} />
         </Card>
       ) : approvals.length === 0 ? (
         <Card>
-          <Empty title="Nada aguardando humano" hint="Quando o pedido não cabe na política, ele para aqui." />
+          <Empty title={t("appr.empty")} hint={t("appr.emptyHint")} />
         </Card>
       ) : (
         <div className="grid gap-4">
@@ -72,6 +74,7 @@ export default function AprovacoesPage() {
                   id: item.id,
                   approved,
                   name: item.debtor.name,
+                  // Vai para o devedor pelo agente: fica em português, como o resto do WhatsApp.
                   message: drafts[item.id] || (approved ? "Aprovado pela equipe." : "Não foi possível aprovar."),
                 })
               }
@@ -82,13 +85,13 @@ export default function AprovacoesPage() {
       )}
       <Dialog
         open={pending != null}
-        title={pending?.approved ? `Aprovar o pedido de ${pending.name}?` : `Recusar o pedido de ${pending?.name}?`}
+        title={pending?.approved ? t("appr.confirmYes", { name: pending.name }) : t("appr.confirmNo", { name: pending?.name ?? "" })}
         body={
           pending?.approved
-            ? "O agente retoma a conversa com a mensagem abaixo e segue dentro do que a política permite."
-            : "O agente recebe a recusa e não fecha o acordo."
+            ? t("appr.bodyYes")
+            : t("appr.bodyNo")
         }
-        confirmLabel={pending?.approved ? "Aprovar" : "Recusar"}
+        confirmLabel={pending?.approved ? t("appr.approve") : t("appr.decline")}
         danger={!pending?.approved}
         busy={decide.isPending}
         onClose={() => setPending(null)}
@@ -115,15 +118,16 @@ function ApprovalCard({
   onDecide: (approved: boolean) => void;
   busy: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <Card className="overflow-hidden">
       <div className="flex items-start justify-between gap-4 border-b border-paper-100 bg-paper-50 px-6 py-4">
         <div>
-          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">Fora da política</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{t("appr.outside")}</p>
           <p className="mt-1 font-display text-2xl">{item.debtor.name}</p>
           <p className="mt-1 text-sm text-ink-700/70">{item.reason}</p>
           <Link href={`/conversas?id=${item.conversation_id}`} className="mt-2 inline-block text-sm font-semibold text-brand-700">
-            Abrir conversa
+            {t("appr.openChat")}
           </Link>
         </div>
         <Badge value={item.status} />
@@ -132,7 +136,7 @@ function ApprovalCard({
       <dl className="mt-4 space-y-1 rounded-xl bg-paper-50 p-3 text-sm">
         {Object.entries(item.payload).map(([key, value]) => (
           <div key={key} className="flex gap-2">
-            <dt className="text-ink-700/60">{key === "invoice_id" ? "título" : key}</dt>
+            <dt className="text-ink-700/60">{key === "invoice_id" ? t("appr.invoice") : key}</dt>
             <dd>{payloadText(key, value, invoices)}</dd>
           </div>
         ))}
@@ -143,14 +147,14 @@ function ApprovalCard({
         rows={3}
         value={message}
         onChange={(e) => onMessage(e.target.value)}
-        placeholder="Mensagem que o agente envia ao retomar o grafo"
+        placeholder={t("appr.messagePh")}
       />
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="outline" onClick={() => onDecide(false)} disabled={busy}>
-          Recusar
+          {t("appr.decline")}
         </Button>
         <Button onClick={() => onDecide(true)} disabled={busy}>
-          Aprovar
+          {t("appr.approve")}
         </Button>
       </div>
       </div>

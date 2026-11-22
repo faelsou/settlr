@@ -7,28 +7,30 @@ import { Banner, Card, FileButton, Input, PageHeader, Segmented } from "@/compon
 import { api, errorText } from "@/lib/api";
 import { day, documentBr, money } from "@/lib/format";
 import { useDebouncedValue } from "@/lib/hooks";
+import { useI18n, type Vars } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
 import type { Invoice } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const STATUSES = [
-  { value: "", label: "Todos" },
-  { value: "aberto", label: "Aberto" },
-  { value: "em_cobranca", label: "Em cobrança" },
-  { value: "promessa", label: "Promessa" },
-  { value: "em_negociacao", label: "Negociação" },
-  { value: "parcialmente_pago", label: "Parcial" },
-  { value: "pago", label: "Pago" },
-  { value: "fila_humana", label: "Fila humana" },
-  { value: "contestado", label: "Contestado" },
+const STATUSES: { value: string; label: MessageKey }[] = [
+  { value: "", label: "inv.all" },
+  { value: "aberto", label: "status.aberto" },
+  { value: "em_cobranca", label: "status.em_cobranca" },
+  { value: "promessa", label: "status.promessa" },
+  { value: "em_negociacao", label: "inv.negotiation" },
+  { value: "parcialmente_pago", label: "status.parcialmente_pago" },
+  { value: "pago", label: "status.pago" },
+  { value: "fila_humana", label: "status.fila_humana" },
+  { value: "contestado", label: "status.contestado" },
 ];
 
-const columns: Column<Invoice>[] = [
+const invoiceColumns = (t: (key: MessageKey, vars?: Vars) => string): Column<Invoice>[] => [
   {
     id: "debtor",
-    header: "Devedor",
+    header: t("inv.debtor"),
     cell: (invoice) => (
       <span>
         <Link href={`/titulos/${invoice.id}`} className="font-semibold hover:underline" onClick={(event) => event.stopPropagation()}>
@@ -38,15 +40,17 @@ const columns: Column<Invoice>[] = [
       </span>
     ),
   },
-  { id: "ref", header: "Referência", cell: (invoice) => invoice.external_id },
-  { id: "amount", header: "Valor", cell: (invoice) => money(invoice.amount) },
-  { id: "due", header: "Vencimento", cell: (invoice) => day(invoice.due_date) },
-  { id: "status", header: "Status", cell: (invoice) => <Badge value={invoice.status} /> },
+  { id: "ref", header: t("inv.reference"), cell: (invoice) => invoice.external_id },
+  { id: "amount", header: t("inv.amount"), cell: (invoice) => money(invoice.amount) },
+  { id: "due", header: t("inv.due"), cell: (invoice) => day(invoice.due_date) },
+  { id: "status", header: t("inv.status"), cell: (invoice) => <Badge value={invoice.status} /> },
 ];
 
 export function TitulosScreen() {
   const params = useSearchParams();
   const toast = useToast();
+  const { t } = useI18n();
+  const columns = invoiceColumns(t);
   const [q, setQ] = useState(params.get("q") ?? "");
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +76,7 @@ export function TitulosScreen() {
     setError(null);
     try {
       const result = await api.importInvoices(file);
-      toast(`Importação: ${result.created} criados, ${result.updated} atualizados.`);
+      toast(t("inv.imported", { created: result.created, updated: result.updated }));
       list.refetch();
       semPagamento.refetch();
     } catch (err) {
@@ -83,20 +87,25 @@ export function TitulosScreen() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Carteira"
-        title="Títulos"
-        hint="Centro do modelo: régua, conversas e pagamentos apontam para o título."
-        actions={<FileButton label="Importar CSV" accept=".csv" onFile={onImport} />}
+        eyebrow={t("inv.eyebrow")}
+        title={t("nav.titulos")}
+        hint={t("inv.hint")}
+        actions={<FileButton label={t("inv.import")} accept=".csv" onFile={onImport} />}
       />
 
       <div className="flex flex-wrap items-center gap-3">
         <Input
-          placeholder="Buscar por nome, documento ou referência"
+          placeholder={t("inv.searchPh")}
           value={q}
           onChange={(event) => setQ(event.target.value)}
           className="max-w-md"
         />
-        <Segmented label="Status do título" value={status} onChange={setStatus} options={STATUSES} />
+        <Segmented
+          label={t("inv.statusLabel")}
+          value={status}
+          onChange={setStatus}
+          options={STATUSES.map((item) => ({ value: item.value, label: t(item.label) }))}
+        />
       </div>
 
       {error ? <Banner>{error}</Banner> : null}
@@ -104,10 +113,9 @@ export function TitulosScreen() {
       {semPagamento.data && semPagamento.data.total > 0 ? (
         <Card className="overflow-hidden">
           <div className="border-b border-paper-200 px-6 py-4">
-            <h2 className="font-display text-xl">Sem PIX ou boleto</h2>
+            <h2 className="font-display text-xl">{t("inv.noCode")}</h2>
             <p className="mt-1 max-w-2xl text-sm text-ink-700/70">
-              Estes títulos não entram na régua. Quando o código chegar, sai só a etapa do dia, sem as
-              anteriores. Confira esta lista antes de ativar a conta.
+              {t("inv.noCodeHint")}
             </p>
           </div>
           <DataTable
@@ -116,7 +124,7 @@ export function TitulosScreen() {
             rowKey={(invoice) => invoice.id}
             pending={semPagamento.isPending}
             error={semPagamento.isError ? errorText(semPagamento.error) : null}
-            emptyTitle="Nenhum título sem código"
+            emptyTitle={t("inv.noCodeEmpty")}
             resetKey={`sem:${query}`}
             total={semPagamento.data.total}
           />
@@ -130,8 +138,8 @@ export function TitulosScreen() {
           rowKey={(invoice) => invoice.id}
           pending={list.isPending}
           error={list.isError ? errorText(list.error) : null}
-          emptyTitle="Nenhum título"
-          emptyHint="Importe a planilha do emissor ou cadastre via webhook."
+          emptyTitle={t("inv.empty")}
+          emptyHint={t("inv.emptyHint")}
           resetKey={`${status}:${query}`}
           total={list.data?.total}
         />

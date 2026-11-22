@@ -5,11 +5,13 @@ import { MetricsBoard } from "@/components/metrics-board";
 import { Card, PageHeader, Skeleton } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { money, when } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 export default function InicioPage() {
+  const { t } = useI18n();
   const exceptions = useQuery({
     queryKey: ["exceptions", "aberta"],
     queryFn: () => api.exceptions("aberta"),
@@ -34,25 +36,25 @@ export default function InicioPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Operação"
-        title="Painel"
-        hint="Filas que pedem gente, e o ritmo da recuperação nos últimos 30 dias. A baixa continua passando pela API."
+        eyebrow={t("home.eyebrow")}
+        title={t("nav.panel")}
+        hint={t("home.hint")}
       />
       <MetricsBoard />
       <div className="grid gap-4 lg:grid-cols-2">
         <Queue
-          title="Exceções abertas"
+          title={t("home.excTitle")}
           href="/excecoes"
           pending={exceptions.isPending}
           error={exceptions.isError ? errorText(exceptions.error) : null}
-          empty="Nada parado no matcher."
+          empty={t("home.excEmpty")}
         >
           {exceptions.data?.items.slice(0, 5).map((item) => (
             <Link key={item.id} href="/excecoes" className="flex items-center justify-between gap-3 py-3">
               <span className="min-w-0">
                 <Badge value={item.type} />
                 <span className="mt-1 block truncate text-sm text-ink-700/80">
-                  {item.payment ? `${money(item.payment.amount)} · ${item.payment.payer_name ?? "sem nome"}` : "Sem pagamento"}
+                  {item.payment ? `${money(item.payment.amount)} · ${item.payment.payer_name ?? t("home.noName")}` : t("home.noPayment")}
                 </span>
               </span>
               <span className="shrink-0 text-xs text-ink-700/50">{when(item.created_at)}</span>
@@ -60,32 +62,32 @@ export default function InicioPage() {
           ))}
         </Queue>
         <Queue
-          title="Com humano"
+          title={t("home.humanTitle")}
           href="/conversas"
           pending={conversations.isPending}
           error={conversations.isError ? errorText(conversations.error) : null}
-          empty="Nenhuma conversa assumida."
+          empty={t("home.humanEmpty")}
         >
           {conversations.data?.items.slice(0, 5).map((item) => (
             <Link key={item.id} href={`/conversas?id=${item.id}`} className="block py-3">
               <span className="font-semibold">{item.debtor.name}</span>
-              <span className="mt-0.5 block truncate text-sm text-ink-700/70">{item.summary ?? "Sem resumo"}</span>
+              <span className="mt-0.5 block truncate text-sm text-ink-700/70">{item.summary ?? t("home.noSummary")}</span>
             </Link>
           ))}
         </Queue>
         <Queue
-          title="Entregas que falharam"
+          title={t("home.failTitle")}
           href="/entregas"
           pending={deliveries.isPending}
           error={deliveries.isError ? errorText(deliveries.error) : null}
-          empty="Nenhuma mensagem falhou."
+          empty={t("home.failEmpty")}
         >
           {deliveries.data?.items.slice(0, 5).map((item) => (
             <Link key={item.id} href={`/conversas?id=${item.conversation_id}`} className="flex items-center justify-between gap-3 py-3">
               <span className="min-w-0">
                 <span className="font-semibold">{item.debtor_name}</span>
                 <span className="mt-0.5 block truncate text-sm text-ink-700/70">
-                  {item.body === "[comprovante]" ? "Comprovante" : item.body ?? "Sem texto"}
+                  {item.body === "[comprovante]" ? t("home.receipt") : item.body ?? t("home.noText")}
                 </span>
               </span>
               <Badge value={item.delivery_status} />
@@ -93,11 +95,11 @@ export default function InicioPage() {
           ))}
         </Queue>
         <Queue
-          title="Aprovações"
+          title={t("nav.aprovacoes")}
           href="/aprovacoes"
           pending={approvals.isPending}
           error={approvals.isError ? errorText(approvals.error) : null}
-          empty="Nenhum pedido fora da política."
+          empty={t("home.apprEmpty")}
         >
           {approvals.data?.slice(0, 5).map((item) => (
             <Link key={item.id} href="/aprovacoes" className="block py-3">
@@ -126,13 +128,14 @@ function Queue({
   empty: string;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   const items = Array.isArray(children) ? children.filter(Boolean) : children ? [children] : [];
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-xl">{title}</h2>
         <Link href={href} className="text-sm font-semibold text-brand-700">
-          Abrir
+          {t("home.open")}
         </Link>
       </div>
       {error ? <p className="mt-3 text-sm text-red-800">{error}</p> : null}

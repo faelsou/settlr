@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 
 export function Ticker({ value, format }: { value: number; format: (value: number) => string }) {
@@ -39,11 +40,12 @@ export function Sparkline({
   startLabel?: string;
   endLabel?: string;
 }) {
+  const { t } = useI18n();
   const width = 320;
   const height = 72;
   const known = values.filter((value): value is number => value != null);
   if (known.length < 2) {
-    return <p className="mt-4 text-xs text-ink-700/60">Ainda sem histórico semanal.</p>;
+    return <p className="mt-4 text-xs text-ink-700/60">{t("ui.noHistory")}</p>;
   }
 
   const max = Math.max(...known);
@@ -71,7 +73,7 @@ export function Sparkline({
 
   return (
     <div className="mt-4">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-16 w-full text-brand-700" role="img" aria-label="Série semanal">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-16 w-full text-brand-700" role="img" aria-label={t("ui.weeklySeries")}>
         {segments.map((segment) => (
           <path key={segment} d={segment} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         ))}

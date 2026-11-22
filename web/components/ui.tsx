@@ -1,4 +1,7 @@
+"use client";
+
 import { clsx } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { Upload } from "lucide-react";
 import Link from "next/link";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
@@ -156,8 +159,9 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export function Breadcrumb({ items }: { items: { href?: string; label: string }[] }) {
+  const { t } = useI18n();
   return (
-    <nav aria-label="Trilha" className="flex flex-wrap items-center gap-2 text-sm text-ink-700/70">
+    <nav aria-label={t("ui.trail")} className="flex flex-wrap items-center gap-2 text-sm text-ink-700/70">
       {items.map((item, index) => (
         <span key={`${item.label}-${index}`} className="flex items-center gap-2">
           {index > 0 ? <span aria-hidden="true">/</span> : null}
@@ -193,6 +197,7 @@ export function Dialog({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink-950/50 p-4" onClick={onClose}>
@@ -209,10 +214,10 @@ export function Dialog({
         <p className="mt-2 text-sm leading-relaxed text-ink-700/80">{body}</p>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-            Cancelar
+            {t("ui.cancel")}
           </Button>
           <Button type="button" variant={danger ? "danger" : "primary"} onClick={onConfirm} disabled={busy}>
-            {busy ? "Salvando…" : confirmLabel}
+            {busy ? t("ui.saving") : confirmLabel}
           </Button>
         </div>
       </div>

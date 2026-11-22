@@ -34,6 +34,11 @@ export function when(value: string | null | undefined): string {
   return formats().datetime.format(new Date(value));
 }
 
+/** Número com casas fixas no formato do idioma (vírgula ou ponto). */
+export function num(value: number, digits = 1): string {
+  return new Intl.NumberFormat(currentLang(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+}
+
 export function pct(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
   return formats().pct.format(value);

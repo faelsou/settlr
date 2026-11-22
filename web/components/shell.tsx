@@ -115,7 +115,7 @@ export function Shell({ children }: { children: ReactNode }) {
       {mobileOpen ? (
         <button
           type="button"
-          aria-label="Fechar menu"
+          aria-label={t("nav.closeMenu")}
           className="fixed inset-0 z-30 bg-ink-950/50 md:hidden"
           onClick={() => setMobileOpen(false)}
         />

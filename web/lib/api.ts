@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { apiBase, clearToken, resolveAccessToken } from "./auth";
 import type {
   Approval,
@@ -21,7 +22,7 @@ export class ApiError extends Error {
     public status: number,
     public detail: unknown,
   ) {
-    super(typeof detail === "string" ? detail : `Erro ${status}`);
+    super(typeof detail === "string" ? detail : tr("err.status", { status }));
   }
 }
 
@@ -237,10 +238,10 @@ export function errorText(err: unknown): string {
         .join(" · ");
     }
     if (typeof err.detail === "object" && err.detail && "missing" in err.detail) {
-      return `Falta: ${(err.detail as { missing: string[] }).missing.join(", ")}`;
+      return tr("onb.missing", { list: (err.detail as { missing: string[] }).missing.join(", ") });
     }
     return JSON.stringify(err.detail);
   }
-  if (err instanceof Error && err.message === "Failed to fetch") return "Não foi possível falar com a API.";
-  return err instanceof Error ? err.message : "Erro inesperado";
+  if (err instanceof Error && err.message === "Failed to fetch") return tr("err.network");
+  return err instanceof Error ? err.message : tr("err.unexpected");
 }

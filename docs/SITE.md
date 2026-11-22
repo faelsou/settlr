@@ -15,6 +15,15 @@ O serviço `site` serve a landing em `/` e o login da área do cliente em `/entr
 
 O painel (`web/`) usa a identidade do site: Geist e Geist Mono, Sora só na marca, violeta `#5b3df5`/`#7c5cff`, lima `#c6f432` e a mesma marca. O `/login`, o `/comecar` e o `/convite/[token]` do painel repetem o `/entrar`: fundo escuro, aurora e a fila de exemplo. Os componentes ficam em [`web/components/auth.tsx`](../web/components/auth.tsx) e as classes `auth-*` em [`web/app/globals.css`](../web/app/globals.css). Mudou o `/entrar`? Mude os dois. As telas de operação seguem claras, por legibilidade de tabela.
 
+## Idiomas do painel
+
+O painel fala português (Brasil), inglês (EUA) e espanhol, como o site. Cada texto fica em [`web/lib/messages.ts`](../web/lib/messages.ts) como `[pt-BR, en-US, es]`: o build quebra se faltar uma tradução ou se a chave não existir. Em componente, `const { t } = useI18n()` e `t("chave", { variavel })`; fora de componente, `tr()`.
+
+- A escolha fica em `settlr-lang`, a mesma chave do site, e chega do `/entrar` pelo `&lang=` da entrega da sessão. Sem escolha, vale o idioma do navegador.
+- O seletor fica na entrada (login, comecar, convite) e no rodapé do menu lateral.
+- Datas e números seguem o idioma. A moeda é sempre o real (`R$`).
+- Continua em português o que vai para o devedor (templates da régua, mensagem padrão de aprovação, respostas do agente) e o que vem pronto da API (mensagens de erro e o motivo das exceções).
+
 ## Configuração
 
 Tudo é de runtime. A mesma imagem serve o Minikube e a produção. O nginx monta o `/config.js` com estas variáveis, e as páginas leem dele.
