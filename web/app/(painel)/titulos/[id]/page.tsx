@@ -5,6 +5,7 @@ import { useToast } from "@/components/toast";
 import { Banner, Breadcrumb, Button, Card, Field, Input, Skeleton } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { day, documentBr, money, phonesBr, when } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Debtor } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -27,6 +28,7 @@ function fieldsFrom(debtor: Debtor): string[] {
 function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
   const client = useQueryClient();
   const toast = useToast();
+  const { t } = useI18n();
   const savedKey = [debtor.id, ...(debtor.phones ?? []), debtor.phone ?? ""].join("|");
   const [numbers, setNumbers] = useState<string[]>(() => fieldsFrom(debtor));
 
@@ -43,7 +45,7 @@ function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
     onSuccess: (saved) => {
       const next = (saved.phones?.length ? saved.phones : saved.phone ? [saved.phone] : []).map(nationalPhone);
       setNumbers(next.length ? next : [""]);
-      toast("Números gravados. A régua dispara para cada um deles.");
+      toast(t("det.savedNumbers"));
       client.invalidateQueries({ queryKey: ["invoice"] });
     },
   });
@@ -53,13 +55,13 @@ function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
       <div>
         <h2 className="font-display text-xl">WhatsApp</h2>
         <p className="mt-1 text-sm text-ink-700/70">
-          Até {MAX_WHATSAPP} celulares de quem paga. A mesma cobrança sai para todos. Vale para os títulos deste devedor.
+          {t("det.waHint", { max: MAX_WHATSAPP })}
         </p>
       </div>
       {save.isError ? <Banner>{errorText(save.error)}</Banner> : null}
       <div className="grid gap-3 md:grid-cols-2">
         {numbers.map((value, index) => (
-          <Field key={index} label={`WhatsApp ${index + 1}`}>
+          <Field key={index} label={t("det.waN", { n: index + 1 })}>
             <div className="flex gap-2">
               <Input
                 inputMode="tel"
@@ -77,7 +79,7 @@ function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
                   variant="outline"
                   onClick={() => setNumbers(numbers.filter((_, item) => item !== index))}
                 >
-                  Tirar
+                  {t("det.remove")}
                 </Button>
               ) : null}
             </div>
@@ -87,11 +89,11 @@ function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
       <div className="flex flex-wrap gap-2">
         {numbers.length < MAX_WHATSAPP ? (
           <Button type="button" variant="outline" onClick={() => setNumbers([...numbers, ""])}>
-            Adicionar número
+            {t("det.addNumber")}
           </Button>
         ) : null}
         <Button type="button" onClick={() => save.mutate()} disabled={save.isPending}>
-          {save.isPending ? "Salvando…" : "Salvar WhatsApp"}
+          {save.isPending ? t("ui.saving") : t("det.saveWa")}
         </Button>
       </div>
     </Card>
@@ -100,6 +102,7 @@ function WhatsAppNumbers({ debtor }: { debtor: Debtor }) {
 
 export default function TituloDetalhePage() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useI18n();
   const invoice = useQuery({ queryKey: ["invoice", id], queryFn: () => api.invoice(id) });
   const data = invoice.data;
 
@@ -118,7 +121,7 @@ export default function TituloDetalhePage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ href: "/titulos", label: "Títulos" }, { label: data.debtor.name }]} />
+      <Breadcrumb items={[{ href: "/titulos", label: t("nav.titulos") }, { label: data.debtor.name }]} />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{data.external_id}</p>
@@ -133,22 +136,22 @@ export default function TituloDetalhePage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Valor</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{t("inv.amount")}</p>
           <p className="mt-1 font-display text-2xl">{money(data.amount)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Em aberto</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{t("det.open")}</p>
           <p className="mt-1 font-display text-2xl">{money(openAmount)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">Vencimento</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700/60">{t("inv.due")}</p>
           <p className="mt-1 font-display text-2xl">{day(data.due_date)}</p>
         </Card>
       </div>
 
       {data.has_payment_code ? null : (
         <Banner tone="ok">
-          Este título não entra na régua até chegar o PIX ou o boleto. Quando o código chegar, sai só a etapa do dia.
+          {t("det.noCode")}
         </Banner>
       )}
 
@@ -156,9 +159,9 @@ export default function TituloDetalhePage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-6">
-          <h2 className="font-display text-xl">Régua</h2>
+          <h2 className="font-display text-xl">{t("onb.ruler")}</h2>
           {!data.dunning_events.length ? (
-            <p className="mt-3 text-sm text-ink-700/70">Nenhum disparo ainda.</p>
+            <p className="mt-3 text-sm text-ink-700/70">{t("det.noSends")}</p>
           ) : (
             <ol className="mt-5">
               {data.dunning_events.map((ev, index) => (
@@ -181,21 +184,24 @@ export default function TituloDetalhePage() {
           )}
         </Card>
         <Card className="p-6">
-          <h2 className="font-display text-xl">Promessas e matches</h2>
+          <h2 className="font-display text-xl">{t("det.promisesMatches")}</h2>
           <ul className="mt-4 space-y-2 text-sm">
             {data.promises.map((p) => (
               <li key={p.promised_date}>
-                Promessa para {day(p.promised_date)} · {p.fulfilled === null ? "em aberto" : p.fulfilled ? "cumprida" : "quebrada"}
+                {t("det.promise", {
+                  date: day(p.promised_date),
+                  state: p.fulfilled === null ? t("det.pOpen") : p.fulfilled ? t("det.pKept") : t("det.pBroken"),
+                })}
               </li>
             ))}
             {data.matches.map((m) => (
               <li key={`${m.payment_id}-${m.invoice_id}`}>
-                {money(m.amount_applied)} via {labelOf(m.method)}
-                {m.provisional ? " (provisório)" : ""} · {m.confirmed_by}
+                {t("det.via", { amount: money(m.amount_applied), method: labelOf(m.method) })}
+                {m.provisional ? t("det.provisional") : ""} · {m.confirmed_by}
               </li>
             ))}
             {!data.promises.length && !data.matches.length ? (
-              <li className="text-ink-700/70">Sem promessa e sem baixa ainda.</li>
+              <li className="text-ink-700/70">{t("det.nothingYet")}</li>
             ) : null}
           </ul>
         </Card>
@@ -203,7 +209,7 @@ export default function TituloDetalhePage() {
 
       {data.installments.length > 0 ? (
         <Card className="p-6">
-          <h2 className="font-display text-xl">Parcelas do acordo</h2>
+          <h2 className="font-display text-xl">{t("det.installments")}</h2>
           <ul className="mt-4 space-y-2 text-sm">
             {data.installments.map((item) => (
               <li key={item.id} className="flex items-center justify-between gap-3 border-b border-paper-100 pb-2">
@@ -220,9 +226,9 @@ export default function TituloDetalhePage() {
       ) : null}
 
       <Card className="p-6">
-        <h2 className="font-display text-xl">Conversa do devedor</h2>
+        <h2 className="font-display text-xl">{t("det.chat")}</h2>
         {!data.messages.length ? (
-          <p className="mt-3 text-sm text-ink-700/70">Nenhuma mensagem nesta conversa.</p>
+          <p className="mt-3 text-sm text-ink-700/70">{t("det.noMessages")}</p>
         ) : (
           <div className="mt-4 max-h-96 space-y-3 overflow-y-auto">
             {data.messages.map((m) => {
@@ -237,7 +243,7 @@ export default function TituloDetalhePage() {
                     }
                   >
                     <p className={inbound ? "text-[11px] font-semibold text-ink-700/60" : "text-[11px] font-semibold text-white/75"}>
-                      {inbound ? "Devedor" : m.author} · {when(m.created_at)}
+                      {inbound ? t("inbox.debtor") : m.author} · {when(m.created_at)}
                     </p>
                     <p className="mt-1 whitespace-pre-wrap">{m.body}</p>
                     {deliveryCaption(m.delivery_status, m.file_status) ? (

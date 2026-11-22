@@ -4,6 +4,9 @@ import { api } from "@/lib/api";
 import { roleLabel } from "@/lib/roles";
 import { clearToken, supabase, supabaseEnabled } from "@/lib/auth";
 import { clsx } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
+import { LangSelect } from "@/components/lang-select";
 import { useQuery } from "@tanstack/react-query";
 import {
   CheckSquare,
@@ -26,32 +29,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 const NAV = [
-  { href: "/inicio", label: "Início", icon: LayoutDashboard, countKey: null },
-  { href: "/excecoes", label: "Exceções", icon: FileWarning, countKey: "exceptions" },
-  { href: "/pagamentos", label: "Pagamentos", icon: CircleDollarSign, countKey: null },
-  { href: "/titulos", label: "Títulos", icon: Receipt, countKey: null },
-  { href: "/conversas", label: "Conversas", icon: MessageSquare, countKey: "conversations" },
-  { href: "/entregas", label: "Entregas", icon: Send, countKey: "deliveries" },
-  { href: "/aprovacoes", label: "Aprovações", icon: CheckSquare, countKey: "approvals" },
-  { href: "/configuracoes", label: "Configurações", icon: Settings2, countKey: null },
-  { href: "/metricas", label: "Métricas", icon: Gauge, countKey: null },
-] as const;
-
-const TITLES: Record<string, string> = {
-  "/inicio": "Início",
-  "/excecoes": "Exceções",
-  "/pagamentos": "Pagamentos",
-  "/titulos": "Títulos",
-  "/conversas": "Conversas",
-  "/entregas": "Entregas",
-  "/aprovacoes": "Aprovações",
-  "/configuracoes": "Configurações",
-  "/metricas": "Métricas",
-};
+  { href: "/inicio", label: "nav.inicio", icon: LayoutDashboard, countKey: null },
+  { href: "/excecoes", label: "nav.excecoes", icon: FileWarning, countKey: "exceptions" },
+  { href: "/pagamentos", label: "nav.pagamentos", icon: CircleDollarSign, countKey: null },
+  { href: "/titulos", label: "nav.titulos", icon: Receipt, countKey: null },
+  { href: "/conversas", label: "nav.conversas", icon: MessageSquare, countKey: "conversations" },
+  { href: "/entregas", label: "nav.entregas", icon: Send, countKey: "deliveries" },
+  { href: "/aprovacoes", label: "nav.aprovacoes", icon: CheckSquare, countKey: "approvals" },
+  { href: "/configuracoes", label: "nav.configuracoes", icon: Settings2, countKey: null },
+  { href: "/metricas", label: "nav.metricas", icon: Gauge, countKey: null },
+] as const satisfies ReadonlyArray<{ href: string; label: MessageKey; icon: unknown; countKey: string | null }>;
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
   const me = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false });
   const exceptions = useQuery({
     queryKey: ["exceptions", "aberta"],
@@ -96,7 +88,7 @@ export function Shell({ children }: { children: ReactNode }) {
     deliveries: failedDeliveries.data?.total,
   };
   const compact = collapsed && !mobileOpen;
-  const section = Object.keys(TITLES).find((href) => pathname === href || pathname.startsWith(`${href}/`));
+  const section = NAV.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
 
   function toggleCollapsed() {
     setCollapsed((current) => {
@@ -123,7 +115,7 @@ export function Shell({ children }: { children: ReactNode }) {
       {mobileOpen ? (
         <button
           type="button"
-          aria-label="Fechar menu"
+          aria-label={t("nav.closeMenu")}
           className="fixed inset-0 z-30 bg-ink-950/50 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
@@ -143,7 +135,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <h1>
                 <Logo />
               </h1>
-              <p className="mt-3 truncate text-sm text-paper-200/80">{me.data?.tenant_name ?? "Carregando…"}</p>
+              <p className="mt-3 truncate text-sm text-paper-200/80">{me.data?.tenant_name ?? t("nav.loading")}</p>
             </>
           )}
         </div>
@@ -156,7 +148,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                title={item.label}
+                title={t(item.label)}
                 aria-current={active ? "page" : undefined}
                 className={clsx(
                   "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
@@ -165,7 +157,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon size={18} />
-                {compact ? null : <span className="flex-1 font-medium">{item.label}</span>}
+                {compact ? null : <span className="flex-1 font-medium">{t(item.label)}</span>}
                 {count ? (
                   compact ? (
                     <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-signal-400" />
@@ -191,15 +183,18 @@ export function Shell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={logout}
-            title="Sair"
+            title={t("nav.logout")}
             className={clsx(
               "inline-flex items-center gap-2 text-sm text-paper-200/80 hover:text-white",
               compact ? "justify-center" : "mt-3",
             )}
           >
             <LogOut size={16} />
-            {compact ? null : "Sair"}
+            {compact ? null : t("nav.logout")}
           </button>
+          <div className={clsx(compact ? "mt-3 flex justify-center" : "mt-4")}>
+            <LangSelect compact={compact} up />
+          </div>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -207,7 +202,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <button
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full text-ink-800 hover:bg-paper-100 md:hidden"
-            aria-label="Abrir menu"
+            aria-label={t("nav.openMenu")}
             onClick={() => setMobileOpen(true)}
           >
             <Menu size={18} />
@@ -215,19 +210,19 @@ export function Shell({ children }: { children: ReactNode }) {
           <button
             type="button"
             className="hidden h-9 w-9 place-items-center rounded-full text-ink-800 hover:bg-paper-100 md:grid"
-            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            aria-label={collapsed ? t("nav.expand") : t("nav.collapse")}
             onClick={toggleCollapsed}
           >
             <PanelLeft size={18} />
           </button>
-          <p className="hidden text-sm font-semibold text-ink-900 sm:block">{section ? TITLES[section] : "Painel"}</p>
+          <p className="hidden text-sm font-semibold text-ink-900 sm:block">{section ? t(section.label) : t("nav.panel")}</p>
           <form onSubmit={onSearch} className="relative ml-auto min-w-0 w-full max-w-md">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-700/40" />
             <input
               value={term}
               onChange={(event) => setTerm(event.target.value)}
-              placeholder="Buscar devedor, documento ou referência"
-              aria-label="Buscar títulos"
+              placeholder={t("nav.searchPh")}
+              aria-label={t("nav.searchAria")}
               className="w-full rounded-full border border-paper-200 bg-paper-50 py-2 pl-9 pr-3 text-sm text-ink-900 outline-none ring-brand-600/30 focus:border-brand-700 focus:ring-2"
             />
           </form>

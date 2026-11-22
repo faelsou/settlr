@@ -2,6 +2,7 @@
 
 import { Banner, Button, Empty, Skeleton } from "@/components/ui";
 import { clsx } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { ChevronDown } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -41,6 +42,7 @@ export function DataTable<T>({
   renderExtra?: (row: T) => ReactNode;
   total?: number;
 }) {
+  const { t } = useI18n();
   const [page, setPage] = useState(0);
   const [seenKey, setSeenKey] = useState(resetKey);
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -141,12 +143,12 @@ export function DataTable<T>({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-paper-100 px-5 py-3 text-sm text-ink-700/70">
         <p>
-          {from}–{to} de {rows.length}
-          {total != null && total > rows.length ? ` · ${total} no total, mostrando os primeiros ${rows.length}` : ""}
+          {t("table.range", { from, to, count: rows.length })}
+          {total != null && total > rows.length ? t("table.truncated", { total, count: rows.length }) : ""}
         </p>
         <div className="flex gap-2">
           <Button type="button" variant="outline" className="px-3 py-1.5" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>
-            Anterior
+            {t("table.prev")}
           </Button>
           <Button
             type="button"
@@ -155,7 +157,7 @@ export function DataTable<T>({
             disabled={safePage >= pages - 1}
             onClick={() => setPage(safePage + 1)}
           >
-            Próxima
+            {t("table.next")}
           </Button>
         </div>
       </div>

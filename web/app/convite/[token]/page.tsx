@@ -3,6 +3,7 @@
 import { AuthButton, AuthHeading, AuthNote, AuthShell } from "@/components/auth";
 import { api, errorText } from "@/lib/api";
 import { setToken } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 import { roleLabel } from "@/lib/roles";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -13,6 +14,7 @@ export default function ConvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const token = decodeURIComponent(params.token ?? "");
+  const { t } = useI18n();
 
   async function onAccept() {
     setBusy(true);
@@ -31,21 +33,21 @@ export default function ConvitePage() {
   return (
     <AuthShell
       art={{
-        title: "Seu acesso, só seu.",
-        lead: "O convite entra com o papel que a empresa combinou. Ninguém precisa te passar senha.",
+        title: t("invite.artTitle"),
+        lead: t("invite.artLead"),
       }}
     >
       <AuthHeading
-        eyebrow="Convite"
-        title="Entrar com o seu link"
-        sub="Este convite é só seu. Não há senha para compartilhar e ninguém precisa te passar o login."
+        eyebrow={t("invite.eyebrow")}
+        title={t("invite.title")}
+        sub={t("invite.sub")}
       />
       {error ? <AuthNote>{error}</AuthNote> : null}
       <AuthButton type="button" className="w-full" onClick={onAccept} disabled={busy || !token}>
-        {busy ? "Entrando…" : "Aceitar convite"}
+        {busy ? t("login.busy") : t("invite.accept")}
       </AuthButton>
       <p className="auth-sub text-[0.88rem]">
-        O papel combinado aparece no painel como {roleLabel("financeiro")}, {roleLabel("atendente")} ou {roleLabel("dono")}.
+        {t("invite.roles", { a: roleLabel("financeiro"), b: roleLabel("atendente"), c: roleLabel("dono") })}
       </p>
     </AuthShell>
   );

@@ -6,6 +6,7 @@ import { useToast } from "@/components/toast";
 import { Banner, Button, Card, Dialog, Empty, Field, Input, PageHeader, Segmented, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { canSettle } from "@/lib/roles";
+import { tr, useI18n } from "@/lib/i18n";
 import { day, documentBr, money, when } from "@/lib/format";
 import type { Invoice, ReviewException, Suggestion } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ type Allocation = { invoice_id: string; amount: string };
 
 export default function ExcecoesPage() {
   const client = useQueryClient();
+  const { t } = useI18n();
   const [status, setStatus] = useState("aberta");
   const list = useQuery({
     queryKey: ["exceptions", status],
@@ -33,18 +35,18 @@ export default function ExcecoesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Fila"
-        title="Exceções"
-        hint="O que o matcher não baixa sozinho. Confirmar ou rejeitar passa pela API e vai ao audit_log."
+        eyebrow={t("exc.eyebrow")}
+        title={t("nav.excecoes")}
+        hint={t("exc.hint")}
         actions={
           <Segmented
-            label="Status da exceção"
+            label={t("exc.statusLabel")}
             value={status}
             onChange={setStatus}
             options={[
-              { value: "aberta", label: "Abertas" },
-              { value: "resolvida", label: "Resolvidas" },
-              { value: "rejeitada", label: "Rejeitadas" },
+              { value: "aberta", label: t("exc.open") },
+              { value: "resolvida", label: t("exc.resolved") },
+              { value: "rejeitada", label: t("exc.rejected") },
             ]}
           />
         }
@@ -54,12 +56,12 @@ export default function ExcecoesPage() {
         <Card className="overflow-hidden">
           <DataTable
             rows={list.data?.items ?? []}
-            columns={exceptionColumns}
+            columns={exceptionColumns()}
             rowKey={(item) => item.id}
             pending={list.isPending}
             error={list.isError ? errorText(list.error) : null}
-            emptyTitle="Fila vazia"
-            emptyHint="Baixa automática alta: é o indicador de qualidade do matching."
+            emptyTitle={t("exc.empty")}
+            emptyHint={t("exc.emptyHint")}
             onRow={setSelected}
             activeKey={selected?.id}
             resetKey={status}
@@ -78,7 +80,7 @@ export default function ExcecoesPage() {
           />
         ) : (
           <Card>
-            <Empty title="Selecione uma exceção" hint="Sugestões da camada 3 já vêm com títulos candidatos." />
+            <Empty title={t("exc.select")} hint={t("exc.selectHint")} />
           </Card>
         )}
       </div>
@@ -88,6 +90,7 @@ export default function ExcecoesPage() {
 
 function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () => void }) {
   const toast = useToast();
+  const { t } = useI18n();
   const me = useQuery({ queryKey: ["me"], queryFn: api.me });
   const settles = canSettle(me.data?.role);
   const suggestions = item.details.suggestions ?? [];
@@ -121,7 +124,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
       return api.confirmException(item.id, body);
     },
     onSuccess: () => {
-      toast("Exceção confirmada. A baixa ficou registrada.");
+      toast(t("exc.confirmed"));
       setAsk(null);
       onDone();
     },
@@ -130,7 +133,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
   const reject = useMutation({
     mutationFn: () => api.rejectException(item.id, { note, discard_payment: false }),
     onSuccess: () => {
-      toast("Exceção rejeitada.");
+      toast(t("exc.rejectedToast"));
       setAsk(null);
       onDone();
     },
@@ -151,32 +154,32 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
   return (
     <Card className="p-6">
       <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{labelOf(item.type)}</p>
-      <h2 className="mt-1 font-display text-2xl">Revisar</h2>
+      <h2 className="mt-1 font-display text-2xl">{t("exc.review")}</h2>
       <ExceptionSummary item={item} />
 
       {item.payment ? (
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-ink-700/60">Valor</dt>
+            <dt className="text-ink-700/60">{t("inv.amount")}</dt>
             <dd className="font-semibold">{money(item.payment.amount)}</dd>
           </div>
           <div>
-            <dt className="text-ink-700/60">Pago em</dt>
+            <dt className="text-ink-700/60">{t("exc.paidAt")}</dt>
             <dd>{when(item.payment.paid_at)}</dd>
           </div>
           <div>
-            <dt className="text-ink-700/60">Pagador</dt>
+            <dt className="text-ink-700/60">{t("pay.payer")}</dt>
             <dd>{item.payment.payer_name ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-ink-700/60">Documento</dt>
+            <dt className="text-ink-700/60">{t("exc.document")}</dt>
             <dd>{documentBr(item.payment.payer_doc)}</dd>
           </div>
           <div className="col-span-2">
-            <dt className="text-ink-700/60">Banco / E2E</dt>
+            <dt className="text-ink-700/60">{t("exc.bankE2e")}</dt>
             <dd>
-              {item.payment.payer_bank ?? "—"} · {item.payment.e2e_id ?? "sem E2E"}
-              {item.payment.bank_confirmed ? "" : " · aguardando banco"}
+              {item.payment.payer_bank ?? "—"} · {item.payment.e2e_id ?? t("exc.noE2e")}
+              {item.payment.bank_confirmed ? "" : t("exc.awaitingBank")}
             </dd>
           </div>
         </dl>
@@ -184,7 +187,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
 
       {suggestions.length > 0 ? (
         <div className="mt-5 space-y-2">
-          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">Sugestões do matcher</p>
+          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">{t("exc.suggestions")}</p>
           {suggestions.map((s, idx) => (
             <button
               key={`${s.method}-${idx}`}
@@ -193,7 +196,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
               className="w-full rounded-xl border border-paper-200 px-3 py-2 text-left text-sm hover:border-brand-600"
             >
               <span className="font-semibold">{labelOf(s.method)}</span>
-              <span className="ml-2 text-ink-700/60">score {s.score}</span>
+              <span className="ml-2 text-ink-700/60">{t("exc.score", { score: s.score })}</span>
               <SuggestionLines suggestion={s} invoices={invoiceMap} />
             </button>
           ))}
@@ -202,8 +205,8 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
 
       {PAYMENT_TYPES.has(item.type) ? (
         <div className="mt-5 space-y-3">
-          <Field label="Buscar título">
-            <Input placeholder="Nome, documento ou referência" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Field label={t("exc.searchInvoice")}>
+            <Input placeholder={t("exc.searchPh")} value={query} onChange={(e) => setQuery(e.target.value)} />
           </Field>
           {invoices.data?.items.slice(0, 5).map((inv) => (
             <button
@@ -234,7 +237,7 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
                 }
               />
               <Button variant="ghost" type="button" onClick={() => setAllocations((prev) => prev.filter((_, i) => i !== idx))}>
-                tirar
+                {t("exc.remove")}
               </Button>
             </div>
           ))}
@@ -250,19 +253,19 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
       {item.type === "leitura_baixa_confianca" ? (
         <div className="mt-5 grid gap-3">
           {item.details.file_key ? <ReceiptPreview exceptionId={item.id} contentType={item.details.content_type} /> : null}
-          <Field label="Valor">
+          <Field label={t("inv.amount")}>
             <Input value={receipt.amount} onChange={(e) => setReceipt({ ...receipt, amount: e.target.value })} />
           </Field>
-          <Field label="Pago em">
+          <Field label={t("exc.paidAt")}>
             <Input type="datetime-local" value={receipt.paid_at} onChange={(e) => setReceipt({ ...receipt, paid_at: e.target.value })} />
           </Field>
           <Field label="E2E">
             <Input value={receipt.e2e_id} onChange={(e) => setReceipt({ ...receipt, e2e_id: e.target.value })} />
           </Field>
-          <Field label="Pagador">
+          <Field label={t("pay.payer")}>
             <Input value={receipt.payer_name} onChange={(e) => setReceipt({ ...receipt, payer_name: e.target.value })} />
           </Field>
-          <Field label="Documento do pagador">
+          <Field label={t("exc.payerDoc")}>
             <Input value={receipt.payer_doc} onChange={(e) => setReceipt({ ...receipt, payer_doc: e.target.value })} />
           </Field>
         </div>
@@ -279,20 +282,20 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
       ) : null}
 
       {item.type === "contestacao" ? (
-        <Field label="Resolver a favor">
+        <Field label={t("exc.favor")}>
           <Segmented
-            label="Resolver a favor"
+            label={t("exc.favor")}
             value={contestation}
             onChange={setContestation}
             options={[
-              { value: "cobranca", label: "Da cobrança" },
-              { value: "devedor", label: "Do devedor" },
+              { value: "cobranca", label: t("exc.favorCharge") },
+              { value: "devedor", label: t("exc.favorDebtor") },
             ]}
           />
         </Field>
       ) : null}
 
-      <Field label="Nota">
+      <Field label={t("exc.note")}>
         <Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
 
@@ -302,36 +305,36 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
       {item.status === "aberta" ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {item.type === "contestacao" && me.data && !settles ? (
-            <p className="w-full text-sm text-ink-700/70">O financeiro decide a contestação. O atendente acompanha a fila.</p>
+            <p className="w-full text-sm text-ink-700/70">{t("exc.financeDisputes")}</p>
           ) : PAYMENT_TYPES.has(item.type) && me.data && !settles ? (
-            <p className="w-full text-sm text-ink-700/70">O financeiro confirma a baixa. O atendente acompanha a fila.</p>
+            <p className="w-full text-sm text-ink-700/70">{t("exc.financeSettles")}</p>
           ) : (
             <Button onClick={() => setAsk("confirm")} disabled={confirm.isPending}>
-              Confirmar
+              {t("exc.confirm")}
             </Button>
           )}
           {item.type === "contestacao" && me.data && !settles ? null : (
             <Button variant="outline" onClick={() => setAsk("reject")} disabled={reject.isPending}>
-              Rejeitar
+              {t("exc.reject")}
             </Button>
           )}
         </div>
       ) : (
         <p className="mt-4 text-sm text-ink-700/70">
-          Tratada em {day(item.resolved_at)} por {item.assignee ?? "—"}.
+          {t("exc.handled", { date: day(item.resolved_at), who: item.assignee ?? "—" })}
         </p>
       )}
       <Dialog
         open={ask != null}
-        title={ask === "reject" ? "Rejeitar esta exceção?" : "Confirmar esta exceção?"}
+        title={ask === "reject" ? t("exc.askReject") : t("exc.askConfirm")}
         body={
           item.type === "transcricao_indisponivel"
-            ? "O áudio sai da fila e a nota fica no audit_log. A conversa segue com a equipe."
+            ? t("exc.bodyAudio")
             : ask === "reject"
-              ? "Ela sai da fila sem baixar o pagamento. A nota entra no audit_log."
-              : "A baixa segue pela API e fica no audit_log. Confira valor e títulos antes de seguir."
+              ? t("exc.bodyReject")
+              : t("exc.bodyConfirm")
         }
-        confirmLabel={ask === "reject" ? "Rejeitar" : "Confirmar"}
+        confirmLabel={ask === "reject" ? t("exc.reject") : t("exc.confirm")}
         danger={ask === "reject"}
         busy={confirm.isPending || reject.isPending}
         onClose={() => setAsk(null)}
@@ -344,17 +347,18 @@ function ExceptionDetail({ item, onDone }: { item: ReviewException; onDone: () =
   );
 }
 
-const exceptionColumns: Column<ReviewException>[] = [
-  { id: "type", header: "Tipo", cell: (item) => <Badge value={item.type} /> },
-  { id: "payment", header: "Pagamento", cell: (item) => paymentLabel(item) },
-  { id: "when", header: "Quando", cell: (item) => when(item.created_at) },
-  { id: "status", header: "Status", cell: (item) => <Badge value={item.status} /> },
+/* Chamada dentro de ExcecoesPage, que já usa useI18n(): tr() pega o idioma corrente. */
+const exceptionColumns = (): Column<ReviewException>[] => [
+  { id: "type", header: tr("exc.type"), cell: (item) => <Badge value={item.type} /> },
+  { id: "payment", header: tr("exc.payment"), cell: (item) => paymentLabel(item) },
+  { id: "when", header: tr("deliv.when"), cell: (item) => when(item.created_at) },
+  { id: "status", header: tr("inv.status"), cell: (item) => <Badge value={item.status} /> },
 ];
 
 function paymentLabel(item: ReviewException): string {
-  if (item.payment) return `${money(item.payment.amount)} · ${item.payment.payer_name ?? "sem nome"}`;
+  if (item.payment) return `${money(item.payment.amount)} · ${item.payment.payer_name ?? tr("home.noName")}`;
   const extracted = item.details.extraction;
-  if (extracted?.amount != null) return `${money(extracted.amount)} · ${extracted.payer_name || "sem nome"}`;
+  if (extracted?.amount != null) return `${money(extracted.amount)} · ${extracted.payer_name || tr("home.noName")}`;
   return "—";
 }
 
@@ -371,10 +375,11 @@ function receiptDraft(item: ReviewException) {
 }
 
 function ExceptionSummary({ item }: { item: ReviewException }) {
+  const { t } = useI18n();
   const problems = item.details.problems ?? [];
   const reason = item.details.reason ?? item.details.motivo;
   if (!reason && problems.length === 0) {
-    return <p className="mt-2 text-sm text-ink-700/70">Sem detalhe extra.</p>;
+    return <p className="mt-2 text-sm text-ink-700/70">{t("exc.noDetail")}</p>;
   }
   return (
     <div className="mt-2 space-y-1 text-sm text-ink-700/80">
@@ -387,6 +392,7 @@ function ExceptionSummary({ item }: { item: ReviewException }) {
 }
 
 function ReceiptPreview({ exceptionId, contentType }: { exceptionId: string; contentType?: string }) {
+  const { t } = useI18n();
   const [url, setUrl] = useState<string | null>(null);
   const [kind, setKind] = useState(contentType ?? "");
 
@@ -415,11 +421,11 @@ function ReceiptPreview({ exceptionId, contentType }: { exceptionId: string; con
     return <audio controls src={url} className="w-full" />;
   }
   if (kind.startsWith("image/")) {
-    return <img src={url} alt="Comprovante enviado" className="max-h-72 w-full rounded-xl object-contain bg-paper-50" />;
+    return <img src={url} alt={t("exc.receiptSent")} className="max-h-72 w-full rounded-xl object-contain bg-paper-50" />;
   }
   return (
     <a href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-brand-700 underline">
-      Abrir comprovante
+      {t("exc.openReceipt")}
     </a>
   );
 }
@@ -430,10 +436,11 @@ function invoiceLabel(invoice: Invoice | undefined): string | null {
 }
 
 function SuggestionLines({ suggestion, invoices }: { suggestion: Suggestion; invoices: Map<string, Invoice> }) {
+  const { t } = useI18n();
   return (
     <p className="mt-1 text-ink-700/70">
       {suggestion.allocations
-        .map((a) => `${invoiceLabel(invoices.get(a.invoice_id)) ?? "título"} · ${money(a.amount)}`)
+        .map((a) => `${invoiceLabel(invoices.get(a.invoice_id)) ?? t("appr.invoice")} · ${money(a.amount)}`)
         .join(" · ")}
     </p>
   );

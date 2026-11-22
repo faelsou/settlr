@@ -4,23 +4,26 @@ import { Badge, deliveryCaption, labelOf } from "@/components/status";
 import { Banner, Button, Empty, Segmented, Skeleton, Textarea } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
 import { clsx, documentBr, money, phonesBr, when } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
 import type { Conversation } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const FILTERS = [
-  { value: "", label: "Todas" },
-  { value: "agente", label: "Agente" },
-  { value: "humano", label: "Humano" },
-  { value: "aguardando_aprovacao", label: "Aprovação" },
+const FILTERS: { value: string; label: MessageKey }[] = [
+  { value: "", label: "inbox.all" },
+  { value: "agente", label: "inbox.agent" },
+  { value: "humano", label: "inbox.human" },
+  { value: "aguardando_aprovacao", label: "inbox.approval" },
 ];
 
 const CLOSED = new Set(["pago", "cancelado", "renegociado"]);
 
 export function Inbox({ activeId }: { activeId?: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [state, setState] = useState("");
   const list = useQuery({
     queryKey: ["conversations"],
@@ -41,9 +44,14 @@ export function Inbox({ activeId }: { activeId?: string }) {
         <div className="space-y-3 border-b border-paper-200 px-4 py-4">
           <div>
             <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">WhatsApp</p>
-            <h1 className="font-display text-2xl">Conversas</h1>
+            <h1 className="font-display text-2xl">{t("nav.conversas")}</h1>
           </div>
-          <Segmented label="Estado da conversa" value={state} onChange={setState} options={FILTERS} />
+          <Segmented
+            label={t("inbox.stateLabel")}
+            value={state}
+            onChange={setState}
+            options={FILTERS.map((filter) => ({ value: filter.value, label: t(filter.label) }))}
+          />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {list.isPending ? (
@@ -57,7 +65,7 @@ export function Inbox({ activeId }: { activeId?: string }) {
               <Banner>{errorText(list.error)}</Banner>
             </div>
           ) : !visible.length ? (
-            <Empty title="Nenhuma conversa" hint="O agente só aparece aqui depois que o devedor responde." />
+            <Empty title={t("inbox.empty")} hint={t("inbox.emptyHint")} />
           ) : (
             <ul>
               {visible.map((conversation) => {
@@ -113,6 +121,7 @@ function Thread({
   onBack: () => void;
 }) {
   const client = useQueryClient();
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const messages = useQuery({
@@ -157,7 +166,7 @@ function Thread({
   if (!activeId) {
     return (
       <section className="hidden min-w-0 flex-1 items-center justify-center bg-paper-50 md:flex">
-        <Empty title="Selecione uma conversa" hint="A lista à esquerda é a caixa de entrada do WhatsApp." />
+        <Empty title={t("inbox.select")} hint={t("inbox.selectHint")} />
       </section>
     );
   }
@@ -165,7 +174,7 @@ function Thread({
   if (!conversation) {
     return (
       <section className="flex min-w-0 flex-1 items-center justify-center bg-paper-50">
-        {pending ? <Skeleton className="h-40 w-80" /> : <Empty title="Conversa não encontrada" />}
+        {pending ? <Skeleton className="h-40 w-80" /> : <Empty title={t("inbox.notFound")} />}
       </section>
     );
   }
@@ -181,21 +190,21 @@ function Thread({
         <header className="flex items-start justify-between gap-3 border-b border-paper-200 bg-white px-4 py-4 md:px-6">
           <div className="min-w-0">
             <button type="button" onClick={onBack} className="mb-2 text-sm font-semibold text-brand-700 md:hidden">
-              ← Conversas
+              {t("inbox.back")}
             </button>
             <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{labelOf(conversation.intent)}</p>
             <h2 className="truncate font-display text-2xl">{conversation.debtor.name}</h2>
-            <p className="mt-1 line-clamp-2 text-sm text-ink-700/70">{conversation.summary ?? "Sem resumo do agente."}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-ink-700/70">{conversation.summary ?? t("inbox.noSummary")}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Badge value={conversation.state} />
             {human ? (
               <Button variant="outline" onClick={() => release.mutate()} disabled={release.isPending}>
-                Devolver ao agente
+                {t("inbox.release")}
               </Button>
             ) : (
               <Button onClick={() => takeover.mutate()} disabled={takeover.isPending}>
-                Assumir
+                {t("inbox.takeover")}
               </Button>
             )}
           </div>
@@ -243,29 +252,29 @@ function Thread({
               rows={2}
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder={human ? "Escreva para o devedor" : "Assuma a conversa para responder"}
+              placeholder={human ? t("inbox.write") : t("inbox.takeoverToReply")}
               disabled={!human}
             />
             <Button type="submit" disabled={!human || !text.trim() || send.isPending}>
-              Enviar
+              {t("inbox.send")}
             </Button>
           </div>
         </form>
       </section>
       <aside className="hidden w-80 shrink-0 flex-col border-l border-paper-200 bg-white xl:flex">
         <div className="border-b border-paper-200 px-5 py-5">
-          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">Devedor</p>
+          <p className="text-xs font-mono uppercase tracking-[0.04em] text-ink-700">{t("inbox.debtor")}</p>
           <p className="mt-1 font-display text-2xl leading-tight">{conversation.debtor.name}</p>
           <p className="mt-2 text-sm text-ink-700/80">{phonesBr(conversation.debtor.phones, conversation.debtor.phone)}</p>
           <p className="text-sm text-ink-700/70">{documentBr(conversation.debtor.document)}</p>
           <p className="mt-2 text-xs text-ink-700/60">
-            {conversation.identity_verified ? "Identidade confirmada" : "Identidade ainda não confirmada"}
+            {conversation.identity_verified ? t("inbox.idOk") : t("inbox.idPending")}
           </p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">Títulos em aberto</p>
+          <p className="text-xs font-mono font-medium uppercase tracking-[0.04em] text-ink-700/60">{t("inbox.openInvoices")}</p>
           {!openInvoices.length ? (
-            <p className="mt-3 text-sm text-ink-700/70">Nenhum título em aberto neste recorte.</p>
+            <p className="mt-3 text-sm text-ink-700/70">{t("inbox.noOpenInvoices")}</p>
           ) : (
             <ul className="mt-3 space-y-3">
               {openInvoices.slice(0, 6).map((invoice) => (
