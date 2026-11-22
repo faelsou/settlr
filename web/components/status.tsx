@@ -1,54 +1,9 @@
-import { clsx } from "@/lib/format";
+"use client";
 
-const LABELS: Record<string, string> = {
-  aberto: "Aberto",
-  em_cobranca: "Em cobrança",
-  promessa: "Promessa",
-  em_negociacao: "Em negociação",
-  renegociado: "Renegociado",
-  parcialmente_pago: "Parcial",
-  pago: "Pago",
-  fila_humana: "Fila humana",
-  sessao_canal: "Sessão caída",
-  contestado: "Contestado",
-  cancelado: "Cancelado",
-  recebido_comprovante: "Comprovante",
-  aguardando_banco: "Aguardando banco",
-  recebido_banco: "Recebido banco",
-  confirmado: "Confirmado",
-  conciliado: "Conciliado",
-  em_excecao: "Em exceção",
-  descartado: "Descartado",
-  aberta: "Aberta",
-  resolvida: "Resolvida",
-  rejeitada: "Rejeitada",
-  pendente: "Pendente",
-  aceito: "Enviada",
-  enviado: "Enviada",
-  entregue: "Entregue",
-  lido: "Lida",
-  falhou: "Falha",
-  sem_recibo: "Sem recibo",
-  recebido: "Recebido",
-  nao_recebido: "Não recebido",
-  aprovada: "Aprovada",
-  agente: "Com o agente",
-  aguardando_identidade: "Identidade",
-  aguardando_comprovante: "Comprovante",
-  aguardando_aprovacao: "Aprovação",
-  humano: "Humano",
-  encerrada: "Encerrada",
-  pagamento_nao_identificado: "Não identificado",
-  sugestao_match: "Sugestão de match",
-  contestacao: "Contestação",
-  leitura_baixa_confianca: "Leitura fraca",
-  transcricao_indisponivel: "Áudio sem transcrição",
-  diferenca_valor: "Diferença de valor",
-  cobranca_emissor: "Cobrança no emissor",
-  comprovante: "Comprovante",
-  extrato: "Extrato",
-  webhook: "Webhook",
-};
+import { clsx } from "@/lib/format";
+import { tr, useI18n } from "@/lib/i18n";
+import { MESSAGES, type MessageKey } from "@/lib/messages";
+
 
 const TONES: Record<string, string> = {
   pago: "bg-signal-400 text-ink-950",
@@ -86,17 +41,19 @@ export function deliveryCaption(
 ): string | null {
   const parts: string[] = [];
   if (delivery) parts.push(labelOf(delivery));
-  if (file === "recebido") parts.push("Arquivo recebido");
-  if (file === "nao_recebido") parts.push("Arquivo não recebido");
+  if (file === "recebido") parts.push(tr("status.fileReceived"));
+  if (file === "nao_recebido") parts.push(tr("status.fileNotReceived"));
   return parts.length ? parts.join(" · ") : null;
 }
 
 export function labelOf(value: string | null | undefined): string {
   if (!value) return "—";
-  return LABELS[value] ?? value.replaceAll("_", " ");
+  const key = `status.${value}`;
+  return key in MESSAGES ? tr(key as MessageKey) : value.replaceAll("_", " ");
 }
 
 export function Badge({ value }: { value: string | null | undefined }) {
+  useI18n(); // re-renderiza na troca de idioma
   if (!value) return <span>—</span>;
   return (
     <span

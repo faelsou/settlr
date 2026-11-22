@@ -3,20 +3,21 @@
 import { AuthButton, AuthField, AuthHeading, AuthInput, AuthNote, AuthShell } from "@/components/auth";
 import { api, errorText } from "@/lib/api";
 import { setToken, supabase, supabaseEnabled } from "@/lib/auth";
+import { isLang, useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /**
- * Sessão entregue pelo site público (/entrar): #access_token=…&refresh_token=….
+ * Sessão entregue pelo site público (/entrar): #access_token=…&refresh_token=…&lang=….
  * O fragmento não vai ao servidor; aqui ele é lido e apagado da barra antes de qualquer outra coisa.
  */
-function takeHandoff(): { access: string; refresh: string | null } | null {
+function takeHandoff(): { access: string; refresh: string | null; lang: string | null } | null {
   if (typeof window === "undefined" || !window.location.hash.includes("access_token=")) return null;
   const params = new URLSearchParams(window.location.hash.slice(1));
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
   const access = params.get("access_token");
-  return access ? { access, refresh: params.get("refresh_token") } : null;
+  return access ? { access, refresh: params.get("refresh_token"), lang: params.get("lang") } : null;
 }
 
 export default function LoginPage() {
@@ -27,10 +28,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const hasSupabase = supabaseEnabled();
+  const { t, setLang } = useI18n();
 
   useEffect(() => {
     const handoff = takeHandoff();
     if (!handoff) return;
+    // O idioma escolhido no site vale no painel, que mora em outra origem.
+    if (isLang(handoff.lang)) setLang(handoff.lang);
     setBusy(true);
     (async () => {
       try {
@@ -49,7 +53,7 @@ export default function LoginPage() {
         setBusy(false);
       }
     })();
-  }, [hasSupabase, router]);
+  }, [hasSupabase, router, setLang]);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -58,7 +62,7 @@ export default function LoginPage() {
     try {
       if (hasSupabase) {
         const { data, error: authError } = await supabase().auth.signInWithPassword({ email, password });
-        if (authError || !data.session) throw new Error(authError?.message ?? "Falha no login");
+        if (authError || !data.session) throw new Error(authError?.message ?? t("login.fail"));
         setToken(data.session.access_token);
       } else {
         const result = await api.devLogin(email, slug);
@@ -76,26 +80,26 @@ export default function LoginPage() {
     <AuthShell
       foot={
         <>
-          {hasSupabase ? null : <span>ambiente local · entrada sem senha</span>}
-          <span>Problema para entrar? Fale com o dono da conta da sua empresa.</span>
+          {hasSupabase ? null : <span>{t("login.dev")}</span>}
+          <span>{t("auth.help")}</span>
         </>
       }
     >
-      <AuthHeading eyebrow="Área do cliente" title="Entrar no painel" sub="Exceções, pagamentos e conversas da sua empresa." />
+      <AuthHeading eyebrow={t("login.eyebrow")} title={t("login.title")} sub={t("login.sub")} />
       <form onSubmit={onSubmit} className="auth-form">
-        <AuthField label="E-mail">
+        <AuthField label={t("login.email")}>
           <AuthInput
             type="email"
             autoComplete="username"
             inputMode="email"
-            placeholder="voce@empresa.com.br"
+            placeholder={t("login.emailPh")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </AuthField>
         {hasSupabase ? (
-          <AuthField label="Senha">
+          <AuthField label={t("login.password")}>
             <AuthInput
               type="password"
               autoComplete="current-password"
@@ -105,7 +109,7 @@ export default function LoginPage() {
             />
           </AuthField>
         ) : (
-          <AuthField label="Empresa">
+          <AuthField label={t("login.company")}>
             <AuthInput
               autoComplete="organization"
               spellCheck={false}
@@ -118,15 +122,15 @@ export default function LoginPage() {
         )}
         {error ? <AuthNote>{error}</AuthNote> : null}
         <AuthButton type="submit" disabled={busy} className="w-full">
-          {busy ? "Entrando…" : "Entrar"}
+          {busy ? t("login.busy") : t("login.submit")}
         </AuthButton>
       </form>
       <p className="auth-sub text-[0.88rem]">
-        Recebeu um convite da sua empresa? Abra o link do e-mail para entrar com o seu acesso.
+        {t("login.invite")}
       </p>
-      <div className="auth-divider">Primeira vez na empresa</div>
+      <div className="auth-divider">{t("login.divider")}</div>
       <Link href="/comecar" className="auth-btn auth-btn-ghost w-full">
-        Criar a conta da empresa
+        {t("login.create")}
       </Link>
     </AuthShell>
   );

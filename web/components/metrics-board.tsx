@@ -3,16 +3,11 @@
 import { Sparkline, Ticker } from "@/components/visuals";
 import { Banner, Card, Segmented, Skeleton } from "@/components/ui";
 import { api, errorText } from "@/lib/api";
-import { money, pct } from "@/lib/format";
-import type { ReguaVariantMetrics } from "@/lib/types";
+
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
-const PERIODS = [
-  { value: "7", label: "7 dias" },
-  { value: "30", label: "30 dias" },
-  { value: "90", label: "90 dias" },
-] as const;
+const PERIODS = ["7", "30", "90"] as const;
 
 function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -39,31 +34,32 @@ function lastWeeks(count = 6): { start: string; end: string }[] {
 }
 
 function weekLabel(value: string): string {
-  const [, month, day] = value.split("-");
-  return `${day}/${month}`;
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat(currentLang(), { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(Date.UTC(year, month - 1, day));
 }
 
 function lateHint(current: number | null, baseline: number | null): string {
-  if (baseline == null) return "Depois do vencimento";
-  const base = baseline.toFixed(1).replace(".", ",");
-  if (current == null) return `Linha de base da implantação: ${base} dias`;
+  if (baseline == null) return tr("metrics.afterDue");
+  const base = num(baseline);
+  if (current == null) return tr("metrics.baseline", { base });
   const diff = current - baseline;
-  const gap = Math.abs(diff).toFixed(1).replace(".", ",");
-  if (diff < -0.05) return `${gap} dias abaixo da linha de base (${base})`;
-  if (diff > 0.05) return `${gap} dias acima da linha de base (${base})`;
-  return `Na linha de base (${base})`;
+  const gap = num(Math.abs(diff));
+  if (diff < -0.05) return tr("metrics.belowBase", { gap, base });
+  if (diff > 0.05) return tr("metrics.aboveBase", { gap, base });
+  return tr("metrics.atBase", { base });
 }
 
 function deltaText(current: number | null | undefined, previous: number | null | undefined): string | null {
   if (current == null || previous == null) return null;
-  const points = Math.abs((current - previous) * 100).toFixed(1).replace(".", ",");
-  if (current - previous > 0.0001) return `${points} p.p. acima da semana anterior`;
-  if (previous - current > 0.0001) return `${points} p.p. abaixo da semana anterior`;
-  return "Estável em relação à semana anterior";
+  const points = num(Math.abs((current - previous) * 100));
+  if (current - previous > 0.0001) return tr("metrics.up", { points });
+  if (previous - current > 0.0001) return tr("metrics.down", { points });
+  return tr("metrics.flat");
 }
 
 export function MetricsBoard({ periodControl = false }: { periodControl?: boolean }) {
-  const [days, setDays] = useState<(typeof PERIODS)[number]["value"]>("30");
+  const { t } = useI18n();
+  const [days, setDays] = useState<(typeof PERIODS)[number]>("30");
   const range = useMemo(() => rangeFor(Number(days)), [days]);
   const weeks = useMemo(() => lastWeeks(6), []);
   const metrics = useQuery({
@@ -83,10 +79,15 @@ export function MetricsBoard({ periodControl = false }: { periodControl?: boolea
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-700/70">
-          {data ? `Período ${data.period_start} → ${data.period_end}` : "Últimos 30 dias"}
+          {data ? t("metrics.periodRange", { start: data.period_start, end: data.period_end }) : t("metrics.last30")}
         </p>
         {periodControl ? (
-          <Segmented label="Período" value={days} onChange={setDays} options={[...PERIODS]} />
+          <Segmented
+            label={t("metrics.period")}
+            value={days}
+            onChange={setDays}
+            options={PERIODS.map((value) => ({ value, label: t("metrics.days", { n: value }) }))}
+          />
         ) : null}
       </div>
       {metrics.isError ? <Banner>{errorText(metrics.error)}</Banner> : null}
@@ -100,10 +101,10 @@ export function MetricsBoard({ periodControl = false }: { periodControl?: boolea
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <TrendCard
             className="md:col-span-2"
-            title="Taxa de recuperação"
+            title={t("metrics.recovery")}
             value={data.recovery_rate}
             format={pct}
-            hint={`${money(data.recovered_amount)} de ${money(data.overdue_amount)} vencidos`}
+            hint={t("metrics.recoveryHint", { recovered: money(data.recovered_amount), overdue: money(data.overdue_amount) })}
             series={points?.map((point) => point.recovery_rate) ?? null}
             labels={points ? [weekLabel(points[0].period_start), weekLabel(points[points.length - 1].period_end)] : undefined}
             delta={deltaText(points?.at(-1)?.recovery_rate, points?.at(-2)?.recovery_rate)}
@@ -111,33 +112,38 @@ export function MetricsBoard({ periodControl = false }: { periodControl?: boolea
           />
           <TrendCard
             className="md:col-span-2"
-            title="Baixa automática"
+            title={t("metrics.auto")}
             value={data.auto_reconciliation_rate}
             format={pct}
-            hint={`${data.auto_reconciled} de ${data.payments_reconciled} pagamentos`}
+            hint={t("metrics.autoHint", { auto: data.auto_reconciled, total: data.payments_reconciled })}
             series={points?.map((point) => point.auto_reconciliation_rate) ?? null}
             labels={points ? [weekLabel(points[0].period_start), weekLabel(points[points.length - 1].period_end)] : undefined}
             delta={deltaText(points?.at(-1)?.auto_reconciliation_rate, points?.at(-2)?.auto_reconciliation_rate)}
             seriesPending={series.isPending}
           />
           <Stat
-            title="Dias médios de atraso"
+            title={t("metrics.daysLate")}
             value={data.avg_days_late}
-            format={(value) => value.toFixed(1)}
+            format={(value) => num(value)}
             hint={lateHint(data.avg_days_late, data.baseline_avg_days_late)}
           />
           <Stat
-            title="Promessas cumpridas"
+            title={t("metrics.promises")}
             value={data.promise_kept_rate}
             format={pct}
-            hint={`${data.promises_kept} de ${data.promises_made}`}
+            hint={t("metrics.ofTotal", { a: data.promises_kept, b: data.promises_made })}
           />
-          <Stat title="Exceções abertas" value={data.exceptions_open} format={(value) => String(Math.round(value))} hint="Fila curta indica matching bom" />
           <Stat
-            title="Tempo médio de resolução"
+            title={t("metrics.openExc")}
+            value={data.exceptions_open}
+            format={(value) => String(Math.round(value))}
+            hint={t("metrics.openExcHint")}
+          />
+          <Stat
+            title={t("metrics.resolution")}
             value={data.avg_exception_resolution_hours}
-            format={(value) => `${value.toFixed(1)} h`}
-            hint="Exceções fechadas no período"
+            format={(value) => `${num(value)} h`}
+            hint={t("metrics.resolutionHint")}
           />
         </div>
       )}

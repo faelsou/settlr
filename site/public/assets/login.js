@@ -2,7 +2,7 @@
  * Login da área do cliente.
  *
  * Com SUPABASE_URL e SUPABASE_ANON_KEY no /config.js, entra pelo Supabase Auth (e-mail e senha) e entrega a
- * sessão ao painel pelo fragmento da URL: APP_URL/login#access_token=…&refresh_token=…. O fragmento não vai
+ * sessão ao painel pelo fragmento da URL: APP_URL/login#access_token=…&refresh_token=…&lang=…. O fragmento não vai
  * para o servidor, e o painel apaga o fragmento assim que lê.
  * Sem Supabase (ambiente local), usa o POST /auth/dev-login da API com e-mail e apelido da empresa, como o
  * login do painel faz no Minikube.
@@ -134,7 +134,7 @@
   /* Entrega a sessão ao painel. O fragmento não chega ao servidor de destino. */
   function handoff(access, refresh) {
     if (!APP_URL) { fail("e.cfg"); return; }
-    var frag = "access_token=" + encodeURIComponent(access) + (refresh ? "&refresh_token=" + encodeURIComponent(refresh) : "");
+    var frag = "access_token=" + encodeURIComponent(access) + (refresh ? "&refresh_token=" + encodeURIComponent(refresh) : "") + "&lang=" + encodeURIComponent(lang);
     window.location.assign(APP_URL + "/login#" + frag);
   }
 
