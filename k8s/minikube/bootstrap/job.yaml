@@ -14,6 +14,11 @@ spec:
           envFrom:
             - configMapRef:
                 name: cobranca-env
+            # Senhas do Postgres. Chaves em minúsculo: o pydantic-settings não diferencia caixa.
+            - secretRef:
+                name: postgres-secrets
+            - secretRef:
+                name: cobranca-auth
           command: ["python", "-c"]
           args:
             - |

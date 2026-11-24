@@ -124,7 +124,7 @@ No dev, o turno disparado pelo polling roda dentro do processo `cobranca`, sem p
 
 ## 5. Dados e configuração
 
-Tudo que os pods leem no Minikube está no ConfigMap `cobranca-env` (`k8s/minikube/cobranca-env/configmap.yaml`). Mudança de variável só vale depois de `kubectl -n cobranca rollout restart` do deploy que a usa. O processo guarda a configuração em memória.
+A configuração que os pods leem no Minikube está no ConfigMap `cobranca-env` (`k8s/minikube/cobranca-env/configmap.yaml`). Segredo não fica nela: `JWT_SECRET` e `WEBHOOK_HMAC` estão no Secret `cobranca-auth` (`k8s/minikube/cobranca-auth/secret.yaml`), as senhas do Postgres no `postgres-secrets`, e as chaves da Evolution, do LLM e da voz nos Secrets `evolution-api`, `llm-api` e `speech-api`. Mudança de variável só vale depois de `kubectl -n cobranca rollout restart` do deploy que a usa. O processo guarda a configuração em memória.
 
 | Variável | Efeito se estiver vazia ou errada |
 | --- | --- |

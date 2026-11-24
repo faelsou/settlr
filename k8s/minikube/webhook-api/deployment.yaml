@@ -19,6 +19,11 @@ spec:
           envFrom:
             - configMapRef:
                 name: cobranca-env
+            # Senhas do Postgres. Chaves em minúsculo: o pydantic-settings não diferencia caixa.
+            - secretRef:
+                name: postgres-secrets
+            - secretRef:
+                name: cobranca-auth
           command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000

@@ -1,18 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  # Sem segredo aqui: senhas vêm de postgres-secrets e JWT/HMAC de cobranca-auth.
   name: cobranca-env
 data:
   ENV: dev
   DATABASE_HOST: postgres
   DATABASE_PORT: "5432"
   DATABASE_NAME: cobranca
-  POSTGRES_PASSWORD: cobranca
-  POSTGRES_APP_PASSWORD: cobranca_app
   REDIS_HOST: redis
   REDIS_PORT: "6379"
-  JWT_SECRET: dev-secret-change-me
-  WEBHOOK_HMAC: dev-webhook-secret
   EVOLUTION_BASE_URL: https://apiwp.aiagentautomate.com.br
   # Vazios de propósito. A chave real fica nos Secrets evolution-api, llm-api e speech-api
   # (não versionados). Os processos leem o Secret por cima deste valor.

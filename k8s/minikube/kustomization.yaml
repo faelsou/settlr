@@ -37,6 +37,7 @@ resources:
   - namespace.yaml
   # Configuração lida por todos os processos
   - cobranca-env/configmap.yaml
+  - cobranca-auth/secret.yaml
   # Dados
   - postgres/secret.yaml
   - postgres/init-configmap.yaml
