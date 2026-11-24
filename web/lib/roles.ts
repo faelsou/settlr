@@ -9,7 +9,8 @@ export function roleLabel(role: string | undefined): string {
 }
 
 export function canConfigure(role: string | undefined): boolean {
-  return role === "dono" || role === "operador";
+  // Espelha CONFIGURE_ROLES de api/app/core/roles.py (SETL-69).
+  return role === "dono";
 }
 
 export function canSettle(role: string | undefined): boolean {

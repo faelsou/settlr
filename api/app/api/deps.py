@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal, set_tenant
-from app.core.roles import can_configure
+from app.core.roles import KNOWN_ROLES, can_configure
 
 
 @dataclass(frozen=True)
@@ -40,12 +40,16 @@ def get_current_user(authorization: str = Header(default="")) -> CurrentUser:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token inválido") from exc
 
     meta = claims.get("app_metadata") or {}
+    role = meta.get("role")
+    # Sem papel não vira papel nenhum: fail-closed (SETL-68).
+    if role not in KNOWN_ROLES:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "token sem papel válido")
     tenant = meta.get("tenant_id")
     return CurrentUser(
         id=claims["sub"],
         email=claims.get("email", claims["sub"]),
         tenant_id=UUID(tenant) if tenant else None,
-        role=meta.get("role", "operador"),
+        role=role,
     )
 
 

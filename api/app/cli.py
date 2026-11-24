@@ -95,7 +95,9 @@ def seed_demo() -> None:
         set_tenant(session, tenant.id)
         from app.onboarding.members import ensure_active_member
 
-        ensure_active_member(session, tenant.id, "operador@demo.local", "dono")
+        demo_owner = ensure_active_member(session, tenant.id, "operador@demo.local", "dono")
+        # Bancos semeados antes da SETL-69 podem ter o usuário demo com outro papel.
+        demo_owner.role = "dono"
 
         today = date.today()
         rows = [
