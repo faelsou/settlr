@@ -22,8 +22,8 @@ function Aurora() {
     if (!canvas || !ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const blobs = [
-      { c: "rgba(91,61,245,.9)", r: 0.5, x: 0.35, y: 0.3, sx: 0.00019, sy: 0.00015 },
-      { c: "rgba(143,120,255,.55)", r: 0.35, x: 0.75, y: 0.2, sx: 0.00015, sy: 0.00021 },
+      { c: "rgba(91,67,230,.9)", r: 0.5, x: 0.35, y: 0.3, sx: 0.00019, sy: 0.00015 },
+      { c: "rgba(154,133,255,.55)", r: 0.35, x: 0.75, y: 0.2, sx: 0.00015, sy: 0.00021 },
       { c: "rgba(198,244,50,.18)", r: 0.25, x: 0.6, y: 0.7, sx: 0.00023, sy: 0.00012 },
     ];
     let frame = 0;
@@ -131,7 +131,7 @@ export function AuthShell({
       <div className="auth-split">
         <section className="auth-side">
           <div className="auth-bar">
-            <Link href="/login" className="no-underline" aria-label="Settlr">
+            <Link href="/login" className="no-underline" aria-label="Kitou">
               <Logo />
             </Link>
             <div className="flex items-center gap-4">

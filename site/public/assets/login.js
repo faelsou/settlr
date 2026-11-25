@@ -24,13 +24,13 @@
       "l.tenant": "Company", "l.tenantErr": "Enter your company's handle.", "l.dev": "local environment · sign-in without password",
       "l.submit": "Sign in", "l.busy": "Signing in…",
       "l.invite": "Got an invitation from your company? Open the link in the email to create your password.",
-      "l.or": "NOT A CLIENT YET", "l.newP": "<b>Want Settlr at your company?</b> A monthly fee by invoice tier and, for collections, a % only of the overdue amount the bank confirms. Accounts are opened with our team, on WhatsApp.", "l.plans": "See plans", "l.wa": "Chat on WhatsApp",
+      "l.or": "NOT A CLIENT YET", "l.newP": "<b>Want Kitou at your company?</b> A monthly fee by invoice tier and, for collections, a % only of the overdue amount the bank confirms. Accounts are opened with our team, on WhatsApp.", "l.plans": "See plans", "l.wa": "Chat on WhatsApp",
       "l.help": "Trouble signing in? Contact your company's account owner.",
-      "e.creds": "Email or password doesn't match. Check them and try again.", "e.tenant": "We couldn't find this company, or this email has no access to it.", "e.net": "We couldn't reach the server. Check your connection and try again.", "e.cfg": "Sign-in isn't configured on this server. Tell the Settlr team.", "e.generic": "Sign-in failed. Try again in a few minutes.",
+      "e.creds": "Email or password doesn't match. Check them and try again.", "e.tenant": "We couldn't find this company, or this email has no access to it.", "e.net": "We couldn't reach the server. Check your connection and try again.", "e.cfg": "Sign-in isn't configured on this server. Tell the Kitou team.", "e.generic": "Sign-in failed. Try again in a few minutes.",
       "r.eyebrow": "RECOVER ACCESS", "r.h1": "Forgot your password?", "r.sub": "We'll email you a link. It's valid for one hour.", "r.sent": "If this email has an account, the link arrives in a few minutes. Check your spam folder too.", "r.submit": "Send the link", "r.back": "Back to sign in",
       "a.h2": "Billed, paid, reconciled.", "a.lead": "When you sign in, you only see what needs a decision. The system already settled the rest with the bank.",
       "a.c1s": "E2E matches the invoice", "a.c1t": "reconciled", "a.c2s": "2 possible invoices", "a.c2t": "to confirm", "a.c3b": "Request for 8 installments", "a.c3s": "above the cap of 6", "a.c3t": "approval", "a.f1": "Sample data",
-      "wa.msg": "Hi! I'd like to bring Settlr to my company."
+      "wa.msg": "Hi! I'd like to bring Kitou to my company."
     },
     "es": {
       "l.eyebrow": "ÁREA DEL CLIENTE", "l.h1": "Entrar al panel", "l.sub": "Excepciones, pagos y conversaciones de tu empresa.",
@@ -38,19 +38,19 @@
       "l.tenant": "Empresa", "l.tenantErr": "Ingresa el identificador de la empresa.", "l.dev": "entorno local · entrada sin contraseña",
       "l.submit": "Entrar", "l.busy": "Entrando…",
       "l.invite": "¿Recibiste una invitación de tu empresa? Abre el enlace del correo para crear tu contraseña.",
-      "l.or": "TODAVÍA NO ES CLIENTE", "l.newP": "<b>¿Quieres Settlr en tu empresa?</b> Mensualidad por rango de facturas y, en la cobranza, un % solo de lo vencido que el banco confirme. La cuenta se abre con nuestro equipo, por WhatsApp.", "l.plans": "Ver planes", "l.wa": "Hablar por WhatsApp",
+      "l.or": "TODAVÍA NO ES CLIENTE", "l.newP": "<b>¿Quieres Kitou en tu empresa?</b> Mensualidad por rango de facturas y, en la cobranza, un % solo de lo vencido que el banco confirme. La cuenta se abre con nuestro equipo, por WhatsApp.", "l.plans": "Ver planes", "l.wa": "Hablar por WhatsApp",
       "l.help": "¿Problemas para entrar? Habla con el dueño de la cuenta de tu empresa.",
-      "e.creds": "El correo o la contraseña no coinciden. Revísalos e intenta de nuevo.", "e.tenant": "No encontramos esta empresa, o este correo no tiene acceso a ella.", "e.net": "No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.", "e.cfg": "El acceso no está configurado en este servidor. Avisa al equipo de Settlr.", "e.generic": "No se pudo entrar. Intenta de nuevo en unos minutos.",
+      "e.creds": "El correo o la contraseña no coinciden. Revísalos e intenta de nuevo.", "e.tenant": "No encontramos esta empresa, o este correo no tiene acceso a ella.", "e.net": "No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.", "e.cfg": "El acceso no está configurado en este servidor. Avisa al equipo de Kitou.", "e.generic": "No se pudo entrar. Intenta de nuevo en unos minutos.",
       "r.eyebrow": "RECUPERAR ACCESO", "r.h1": "¿Olvidaste la contraseña?", "r.sub": "Te enviamos un enlace por correo. Es válido por una hora.", "r.sent": "Si ese correo tiene una cuenta, el enlace llega en unos minutos. Revisa también la carpeta de spam.", "r.submit": "Enviar el enlace", "r.back": "Volver a entrar",
       "a.h2": "Cobrado, pagado, conciliado.", "a.lead": "Al entrar, ves solo lo que necesita una decisión. El resto el sistema ya lo concilió con el banco.",
       "a.c1s": "E2E igual al de la factura", "a.c1t": "conciliado", "a.c2s": "2 facturas posibles", "a.c2t": "por confirmar", "a.c3b": "Pedido de 8 cuotas", "a.c3s": "sobre el máximo de 6", "a.c3t": "aprobación", "a.f1": "Datos de ejemplo",
-      "wa.msg": "¡Hola! Quiero llevar Settlr a mi empresa."
+      "wa.msg": "¡Hola! Quiero llevar Kitou a mi empresa."
     }
   };
   var PT = {
     "l.busy": "Entrando…", "l.hide": "Ocultar senha", "l.show": "Mostrar senha",
-    "e.creds": "E-mail ou senha não conferem. Confira e tente de novo.", "e.tenant": "Não achamos essa empresa, ou esse e-mail não tem acesso a ela.", "e.net": "Não conseguimos falar com o servidor. Confira a conexão e tente de novo.", "e.cfg": "O login não está configurado neste servidor. Avise a equipe do Settlr.", "e.generic": "Não foi possível entrar. Tente de novo em alguns minutos.",
-    "wa.msg": "Olá! Quero levar o Settlr para a minha empresa."
+    "e.creds": "E-mail ou senha não conferem. Confira e tente de novo.", "e.tenant": "Não achamos essa empresa, ou esse e-mail não tem acesso a ela.", "e.net": "Não conseguimos falar com o servidor. Confira a conexão e tente de novo.", "e.cfg": "O login não está configurado neste servidor. Avise a equipe da Kitou.", "e.generic": "Não foi possível entrar. Tente de novo em alguns minutos.",
+    "wa.msg": "Olá! Quero levar a Kitou para a minha empresa."
   };
   var LANG_LABEL = { "pt-BR": ["PT-BR", "Idioma: Português (Brasil)"], "en-US": ["EN-US", "Language: English (US)"], "es": ["ES", "Idioma: Español"] };
 
@@ -182,8 +182,8 @@
   /* Luz da marca */
   var cv = $("aurora"), ctx = cv.getContext("2d");
   var blobs = [
-    { c: "rgba(91,61,245,.9)", r: .5, x: .35, y: .3, sx: .00019, sy: .00015 },
-    { c: "rgba(143,120,255,.55)", r: .35, x: .75, y: .2, sx: .00015, sy: .00021 },
+    { c: "rgba(91,67,230,.9)", r: .5, x: .35, y: .3, sx: .00019, sy: .00015 },
+    { c: "rgba(154,133,255,.55)", r: .35, x: .75, y: .2, sx: .00015, sy: .00021 },
     { c: "rgba(198,244,50,.18)", r: .25, x: .6, y: .7, sx: .00023, sy: .00012 }
   ];
   function size() { var r = cv.getBoundingClientRect(); cv.width = Math.max(1, r.width / 3); cv.height = Math.max(1, r.height / 3); }

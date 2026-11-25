@@ -26,8 +26,8 @@ def test_guia_traz_o_passo_a_passo_em_html():
     assert "não há senha" in text.lower()
     assert "opacity" not in html
     assert "color:#5f5a78" not in html
-    assert 'src="cid:settlr-logo"' in html
-    assert "color:#12101f" in html
+    assert 'src="cid:kitou-logo"' in html
+    assert "color:#0e0f1a" in html
 
 
 def test_entrega_o_html_e_nao_derruba_o_cadastro_sem_smtp(monkeypatch):
@@ -50,7 +50,7 @@ def test_entrega_o_html_e_nao_derruba_o_cadastro_sem_smtp(monkeypatch):
     assert deliver_welcome("Clínica Norte", "dona@clinica.test", "https://app.exemplo") is True
     assert captured["to"] == "dona@clinica.test"
     assert captured["html"].startswith("<!DOCTYPE html>")
-    assert captured["inline"][0][0] == "settlr-logo"
+    assert captured["inline"][0][0] == "kitou-logo"
     assert captured["inline"][0][1].startswith(b"\x89PNG")
     assert captured["inline"][0][2] == "png"
     assert deliver_welcome("Clínica Norte", "  ") is False

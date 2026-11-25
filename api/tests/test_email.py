@@ -10,13 +10,13 @@ def test_imagem_inline_viaja_com_o_html():
         "para@settlr.test",
         "Assunto",
         "texto",
-        '<img src="cid:settlr-logo" alt="Settlr">',
-        [("settlr-logo", png, "png")],
+        '<img src="cid:kitou-logo" alt="Kitou">',
+        [("kitou-logo", png, "png")],
     )
     imagens = [parte for parte in msg.walk() if parte.get_content_type() == "image/png"]
     assert len(imagens) == 1
-    assert imagens[0]["Content-ID"] == "<settlr-logo>"
+    assert imagens[0]["Content-ID"] == "<kitou-logo>"
     assert imagens[0].get_content() == png
     html = msg.get_body(preferencelist=("html",))
     assert html is not None
-    assert 'src="cid:settlr-logo"' in html.get_content()
+    assert 'src="cid:kitou-logo"' in html.get_content()

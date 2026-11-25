@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mesma tipografia do site público (landing e /entrar): Geist no texto, Geist Mono em rótulos e valores,
-   Sora só na marca. */
+/* Mesma tipografia do site público (landing e /entrar), do manual Kitou: Space Grotesk em tudo
+   (700 títulos, 500 números, 400 texto) e Space Mono, da mesma família, em rótulos e valores tabulares. */
 :root {
   color-scheme: light;
-  --font-sans: "Geist Sans";
-  --font-mono: "Geist Mono";
-  --font-mark: "Sora";
+  --font-sans: "Space Grotesk";
+  --font-mono: "Space Mono";
+  --font-mark: "Space Grotesk";
 }
 
 html,
@@ -21,8 +21,8 @@ body {
 }
 
 .font-display {
-  font-weight: 600;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 a {
@@ -34,20 +34,20 @@ a {
 /* O fundo da página acompanha a entrada escura: sem faixa clara no fim da rolagem. */
 html:has(.auth),
 body:has(.auth) {
-  background: #09080f;
+  background: #0e0f1a;
 }
 
 .auth {
   color-scheme: dark;
-  --bg: #09080f;
-  --card: #12101f;
-  --field: #0d0b17;
+  --bg: #0e0f1a;
+  --card: #161829;
+  --field: #10121e;
   --line: rgba(255, 255, 255, 0.08);
   --line-2: rgba(255, 255, 255, 0.15);
-  --fg: #f4f2ff;
-  --muted: #9b96b6;
-  --dim: #6c6789;
-  --violet: #7c5cff;
+  --fg: #f4f5f0;
+  --muted: #a0a4b5;
+  --dim: #6e7387;
+  --violet: #7b61ff;
   --lime: #c6f432;
   --amber: #ffb35c;
   --rose: #ff7a90;
@@ -60,8 +60,8 @@ body:has(.auth) {
 .auth h1,
 .auth h2 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1.05;
   text-wrap: balance;
 }
@@ -129,7 +129,7 @@ body:has(.auth) {
   color: var(--muted);
 }
 .auth-link {
-  color: #b7a8ff;
+  color: #b5a6ff;
   text-decoration: none;
   font-size: 0.88rem;
 }
@@ -171,7 +171,7 @@ textarea.auth-ctl {
 }
 .auth-ctl:focus {
   border-color: var(--violet);
-  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.18);
+  box-shadow: 0 0 0 4px rgba(123, 97, 255, 0.18);
 }
 .auth-btn {
   display: inline-flex;
@@ -199,9 +199,9 @@ textarea.auth-ctl {
   transform: none;
 }
 .auth-btn-light {
-  background: var(--fg);
-  color: #0b0a12;
-  box-shadow: 0 10px 30px -10px rgba(124, 92, 255, 0.7);
+  background: var(--lime);
+  color: #0e0f1a;
+  box-shadow: 0 10px 30px -10px rgba(198, 244, 50, 0.5);
 }
 .auth-btn-ghost {
   background: transparent;
@@ -215,9 +215,9 @@ textarea.auth-ctl {
   padding: 14px 16px;
   border-radius: 16px;
   font-size: 0.88rem;
-  background: rgba(124, 92, 255, 0.08);
-  border: 1px solid rgba(124, 92, 255, 0.25);
-  color: #d3caff;
+  background: rgba(123, 97, 255, 0.08);
+  border: 1px solid rgba(123, 97, 255, 0.25);
+  color: #cdc3ff;
 }
 .auth-note.bad {
   background: rgba(255, 122, 144, 0.07);
@@ -271,7 +271,7 @@ button.auth-chip {
   cursor: pointer;
 }
 .auth-chip[aria-pressed="true"] {
-  color: #0b0a12;
+  color: #0e0f1a;
   background: var(--lime);
   border-color: var(--lime);
 }
@@ -291,7 +291,7 @@ button.auth-chip {
   overflow: hidden;
   margin: 12px;
   border-radius: 30px;
-  background: #0c0a19;
+  background: #0e0f1a;
   border: 1px solid var(--line);
   display: grid;
   align-content: space-between;
@@ -322,7 +322,7 @@ button.auth-chip {
   max-width: 12ch;
 }
 .auth-lead {
-  color: rgba(244, 242, 255, 0.72);
+  color: rgba(244, 245, 240, 0.72);
   max-width: 40ch;
   margin-top: 16px;
 }
@@ -335,7 +335,7 @@ button.auth-chip {
   width: min(340px, 80%);
   padding: 16px 18px;
   border-radius: 18px;
-  background: rgba(18, 16, 31, 0.72);
+  background: rgba(14, 15, 26, 0.72);
   border: 1px solid var(--line-2);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -404,9 +404,9 @@ button.auth-chip {
   background: rgba(255, 179, 92, 0.07);
 }
 .auth-tag.vi {
-  color: #b7a8ff;
-  border-color: rgba(124, 92, 255, 0.3);
-  background: rgba(124, 92, 255, 0.1);
+  color: #b5a6ff;
+  border-color: rgba(123, 97, 255, 0.3);
+  background: rgba(123, 97, 255, 0.1);
 }
 .auth-art-foot {
   display: flex;
@@ -414,7 +414,7 @@ button.auth-chip {
   gap: 12px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: rgba(244, 242, 255, 0.5);
+  color: rgba(244, 245, 240, 0.5);
 }
 
 /* Celular e telas estreitas: só o formulário, com a luz da marca no topo */
@@ -431,7 +431,7 @@ button.auth-chip {
     inset: -30% -20% auto;
     height: 55%;
     z-index: -1;
-    background: radial-gradient(50% 60% at 40% 40%, rgba(91, 61, 245, 0.45), transparent 70%);
+    background: radial-gradient(50% 60% at 40% 40%, rgba(91, 67, 230, 0.45), transparent 70%);
     filter: blur(30px);
   }
 }
@@ -454,7 +454,7 @@ button.auth-chip {
   inset: -30% -20% auto;
   height: 55%;
   z-index: -1;
-  background: radial-gradient(50% 60% at 40% 40%, rgba(91, 61, 245, 0.45), transparent 70%);
+  background: radial-gradient(50% 60% at 40% 40%, rgba(91, 67, 230, 0.45), transparent 70%);
   filter: blur(30px);
 }
 .auth-wide .auth-box {
