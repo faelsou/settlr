@@ -48,7 +48,7 @@
             {
               "id": "dbce3e7e-317d-52c1-8117-e46e9fbda693",
               "name": "closer_email",
-              "value": "comercial@kitou.com.br",
+              "value": "comercial@kitou.app.br",
               "type": "string"
             },
             {
@@ -72,7 +72,7 @@
             {
               "id": "81cfc5fe-b193-5647-ba85-24b33c603ca1",
               "name": "calendar_id",
-              "value": "comercial@kitou.com.br",
+              "value": "comercial@kitou.app.br",
               "type": "string"
             },
             {

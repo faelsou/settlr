@@ -13,9 +13,9 @@ A primeira onda do produto tem 100 a 5.000 cobranças por mês. As faixas desta 
 | Tenants | 1 |
 | Teto de mensagens por dia | 100 templates, uma etapa vigente por título. No primeiro ciclo o teto efetivo é 10 |
 | Provedor | AWS, `sa-east-1`, RDS PostgreSQL Multi-AZ. A célula é a da seção 5, R$ 14.800 por mês nesta página |
-| Domínio | `kitou.com.br`. Produção: `app.kitou.com.br`, `api.kitou.com.br`, `wa.kitou.com.br`. Homologação: `app-hml.kitou.com.br`, `api-hml.kitou.com.br`, `wa-hml.kitou.com.br` |
+| Domínio | `kitou.app.br`. Produção: `app.kitou.app.br`, `api.kitou.app.br`, `wa.kitou.app.br`. Homologação: `app-hml.kitou.app.br`, `api-hml.kitou.app.br`, `wa-hml.kitou.app.br` |
 
-A premissa desta página é residência em São Paulo e failover do Postgres fora do plantão. O RDS Multi-AZ cumpre as duas, e o `DOMAIN` do deploy é `kitou.com.br`. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle deixa o failover com a gente. A Hetzner continua laboratório: o dado mora na Alemanha.
+A premissa desta página é residência em São Paulo e failover do Postgres fora do plantão. O RDS Multi-AZ cumpre as duas, e o `DOMAIN` do deploy é `kitou.app.br`. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle deixa o failover com a gente. A Hetzner continua laboratório: o dado mora na Alemanha.
 
 ---
 

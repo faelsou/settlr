@@ -14,8 +14,8 @@ SEGREDO = "tok-inter-segredo"
     [
         (f"/webhooks/emissor?token={SEGREDO}", "/webhooks/emissor?token=REDACTED"),
         (f"/webhooks/emissor?x=1&token={SEGREDO}&y=2", "/webhooks/emissor?x=1&token=REDACTED&y=2"),
-        (f"https://api.kitou.com.br/webhooks/emissor?TOKEN={SEGREDO}",
-         "https://api.kitou.com.br/webhooks/emissor?TOKEN=REDACTED"),
+        (f"https://api.kitou.app.br/webhooks/emissor?TOKEN={SEGREDO}",
+         "https://api.kitou.app.br/webhooks/emissor?TOKEN=REDACTED"),
         ("/invoices?status=aberto", "/invoices?status=aberto"),
         ("/webhooks/emissor?mytoken=1", "/webhooks/emissor?mytoken=1"),
         ("", ""),

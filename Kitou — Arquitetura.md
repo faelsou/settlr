@@ -141,7 +141,7 @@ cobranca/                # monorepo
 
 ## Painel web (Next.js)
 
-O painel do MVP é um app Next.js no mesmo repositório, falando só com o gateway (`api.kitou.com.br`). O devedor nunca o vê; ele existe para o cliente resolver o que o agente não resolve sozinho.
+O painel do MVP é um app Next.js no mesmo repositório, falando só com o gateway (`api.kitou.app.br`). O devedor nunca o vê; ele existe para o cliente resolver o que o agente não resolve sozinho.
 
 | Tela | O que faz | Fase |
 | --- | --- | --- |

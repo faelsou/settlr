@@ -32,7 +32,7 @@ Envelope do produto, ainda sem medição de produção. O cliente da primeira on
 | Webhooks | Evolution, emissor e banco entram pelo gateway e voltam 202 | `webhook-api` |
 | Réplicas HTTP | No Minikube o gateway escala de 1 a 4 por CPU a 70% | `k8s/hpa.yaml` |
 
-O piloto é um tenant, a conta `clinica-piloto`: clínica da primeira onda, 100 títulos por mês, régua ligada primeiro em 10 títulos de quem topou receber. O teto de disparo é 100 mensagens de template por dia, uma etapa vigente por título. O provedor é a AWS em `sa-east-1` e os hosts são `app.kitou.com.br`, `api.kitou.com.br` e `wa.kitou.com.br`. O registro está em [INFRA.md](./INFRA.md). Tamanho do bucket e chamadas de LLM por título continuam sem medição até o cliente estar no ar.
+O piloto é um tenant, a conta `clinica-piloto`: clínica da primeira onda, 100 títulos por mês, régua ligada primeiro em 10 títulos de quem topou receber. O teto de disparo é 100 mensagens de template por dia, uma etapa vigente por título. O provedor é a AWS em `sa-east-1` e os hosts são `app.kitou.app.br`, `api.kitou.app.br` e `wa.kitou.app.br`. O registro está em [INFRA.md](./INFRA.md). Tamanho do bucket e chamadas de LLM por título continuam sem medição até o cliente estar no ar.
 
 ## 2. Restrições
 
