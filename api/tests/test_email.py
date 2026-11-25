@@ -6,8 +6,8 @@ from app.channels.email import build_message
 def test_imagem_inline_viaja_com_o_html():
     png = b"\x89PNG\r\n\x1a\n"
     msg = build_message(
-        "de@settlr.test",
-        "para@settlr.test",
+        "de@kitou.test",
+        "para@kitou.test",
         "Assunto",
         "texto",
         '<img src="cid:kitou-logo" alt="Kitou">',

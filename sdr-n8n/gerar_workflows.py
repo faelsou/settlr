@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera os workflows n8n do SDR do Settlr em workflows/*.json.
+"""Gera os workflows n8n do SDR da Kitou em workflows/*.json.
 
 Fonte de verdade: este arquivo, prompts/*.md e config.json (ou config.exemplo.json).
 Edite aqui e rode `python3 gerar_workflows.py`; não edite o JSON gerado à mão.
@@ -17,8 +17,8 @@ TOOLS_WF_ID = "REPLACE_TOOLS_WORKFLOW_ID"
 
 # Credenciais: o n8n pede para escolher na primeira abertura se o id não existir.
 # scripts/importar.sh troca os ids se as variáveis SDR_CRED_* estiverem definidas.
-PG = {"postgres": {"id": "SDR_CRED_PG", "name": "Settlr SDR Postgres"}}
-REDIS = {"redis": {"id": "SDR_CRED_REDIS", "name": "Settlr SDR Redis"}}
+PG = {"postgres": {"id": "SDR_CRED_PG", "name": "Kitou SDR Postgres"}}
+REDIS = {"redis": {"id": "SDR_CRED_REDIS", "name": "Kitou SDR Redis"}}
 ANTH = {"anthropicApi": {"id": "SDR_CRED_ANTHROPIC", "name": "Anthropic"}}
 EVO = {"httpHeaderAuth": {"id": "SDR_CRED_EVOLUTION", "name": "Evolution SDR (apikey)"}}
 GCAL = {"googleCalendarOAuth2Api": {"id": "SDR_CRED_GCAL", "name": "Google Calendar SDR"}}
@@ -37,7 +37,7 @@ FOLLOWUP_PROMPT = render((ROOT / "prompts" / "followup.md").read_text(encoding="
 
 
 def nid(*parts: str) -> str:
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, "settlr-sdr/" + "/".join(parts)))
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, "kitou-sdr/" + "/".join(parts)))
 
 
 class WF:
@@ -204,10 +204,10 @@ values ($1, jsonb_build_object('type', 'ai', 'content', $2::text,
 # ======================================================= 01 — conversa (inbound)
 
 def wf_inbound():
-    wf = WF("Settlr SDR · 01 Conversa (WhatsApp)", "01-sdr-conversa")
+    wf = WF("Kitou SDR · 01 Conversa (WhatsApp)", "01-sdr-conversa")
     wf.add("Webhook Evolution", "n8n-nodes-base.webhook", 2, {
         "httpMethod": "POST",
-        "path": "settlr-sdr/evolution",
+        "path": "kitou-sdr/evolution",
         "responseMode": "onReceived",
         "options": {},
     }, [0, 300], webhookId=nid("webhook", "evolution"))
@@ -359,7 +359,7 @@ const prompt = `<contexto>\n${linhas.join('\n')}\n</contexto>\n\n<mensagem_do_le
 return [{ json: { phone: l.phone, lead_id: l.id, prompt } }];
 """, [3300, 420])
 
-    wf.add("SDR Settlr", "@n8n/n8n-nodes-langchain.agent", 1.7, {
+    wf.add("SDR Kitou", "@n8n/n8n-nodes-langchain.agent", 1.7, {
         "promptType": "define",
         "text": "={{ $json.prompt }}",
         "options": {"systemMessage": SYSTEM_PROMPT, "maxIterations": 8},
@@ -374,8 +374,8 @@ return [{ json: { phone: l.phone, lead_id: l.id, prompt } }];
         "tableName": "sdr_chat_memory",
         "contextWindowLength": 30,
     }, [3460, 700], creds=PG)
-    wf.link("Claude", "SDR Settlr", kind="ai_languageModel")
-    wf.link("Memória (Postgres)", "SDR Settlr", kind="ai_memory")
+    wf.link("Claude", "SDR Kitou", kind="ai_languageModel")
+    wf.link("Memória (Postgres)", "SDR Kitou", kind="ai_memory")
 
     phone_expr = "={{ $('Montar contexto').first().json.phone }}"
     tools = [
@@ -434,7 +434,7 @@ return [{ json: { phone: l.phone, lead_id: l.id, prompt } }];
                 "convertFieldsToString": False,
             },
         }, [3620 + 160 * i, 700])
-        wf.link(node, "SDR Settlr", kind="ai_tool")
+        wf.link(node, "SDR Kitou", kind="ai_tool")
 
     code(wf, "Quebrar em balões", r"""
 // Cada bloco separado por linha em branco vira um balão. "digitando..." proporcional ao tamanho.
@@ -472,14 +472,14 @@ update sdr_leads
     wf.chain("Bufferizar mensagem", "Marcar última", "Esperar o lead terminar", "Ler última", "Sou a última mensagem?")
     wf.link("Sou a última mensagem?", "Ler buffer", 0)
     wf.chain("Ler buffer", "Juntar mensagens", "Limpar buffer", "Contexto do lead", "Montar contexto",
-             "SDR Settlr", "Quebrar em balões", "Enviar WhatsApp", "Marcar como do bot", "Registrar envio")
+             "SDR Kitou", "Quebrar em balões", "Enviar WhatsApp", "Marcar como do bot", "Registrar envio")
     wf.dump()
 
 
 # ======================================================= 04 — ferramentas do agente
 
 def wf_tools():
-    wf = WF("Settlr SDR · 04 Ferramentas do agente", "04-sdr-ferramentas")
+    wf = WF("Kitou SDR · 04 Ferramentas do agente", "04-sdr-ferramentas")
     wf.add("Entrada", "n8n-nodes-base.executeWorkflowTrigger", 1.1, {
         "workflowInputs": {"values": [{"name": f} for f in ["acao", "phone", "inicio", "email", "campos", "motivo"]]},
     }, [0, 600])
@@ -618,7 +618,7 @@ const l = $('Dados do lead').first().json;
 const email = v.email || l.email || '';
 const quem = l.company || l.name || ('+' + l.phone);
 const descr = [
-  `Conversa de ${cfg.duracao_reuniao_min} min com ${cfg.closer_nome}, do Settlr.`,
+  `Conversa de ${cfg.duracao_reuniao_min} min com ${cfg.closer_nome}, da Kitou.`,
   '',
   'Pré-atendimento (SDR):',
   `Contato: ${l.name || '?'} | WhatsApp +${l.phone}`,
@@ -631,7 +631,7 @@ if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) attendees.push({ email, displayNam
 return [{ json: {
   email_valido: attendees.length > 1 ? email : '',
   evento: {
-    summary: `Settlr × ${quem}: cobrança e conciliação`,
+    summary: `Kitou × ${quem}: cobrança e conciliação`,
     description: descr,
     start: { dateTime: v.start, timeZone: cfg.timezone },
     end: { dateTime: v.end, timeZone: cfg.timezone },
@@ -827,7 +827,7 @@ update sdr_leads
 # ======================================================= 02 — follow-up
 
 def wf_followup():
-    wf = WF("Settlr SDR · 02 Follow-up", "02-sdr-followup")
+    wf = WF("Kitou SDR · 02 Follow-up", "02-sdr-followup")
     wf.add("A cada 30 min", "n8n-nodes-base.scheduleTrigger", 1.2, {
         "rule": {"interval": [{"field": "minutes", "minutesInterval": 30}]},
     }, [0, 300])
@@ -931,7 +931,7 @@ select phone, jsonb_build_object('type', 'ai', 'content', $2::text,
 # ======================================================= 03 — lembretes de reunião
 
 def wf_reminders():
-    wf = WF("Settlr SDR · 03 Lembretes de reunião", "03-sdr-lembretes")
+    wf = WF("Kitou SDR · 03 Lembretes de reunião", "03-sdr-lembretes")
     wf.add("A cada 5 min", "n8n-nodes-base.scheduleTrigger", 1.2, {
         "rule": {"interval": [{"field": "minutes", "minutesInterval": 5}]},
     }, [0, 300])
@@ -1032,10 +1032,10 @@ update sdr_leads set stage = 'realizado', updated_at = now()
 # ======================================================= 05 — novo lead (formulário/anúncio)
 
 def wf_new_lead():
-    wf = WF("Settlr SDR · 05 Novo lead (formulário)", "05-sdr-novo-lead")
+    wf = WF("Kitou SDR · 05 Novo lead (formulário)", "05-sdr-novo-lead")
     wf.add("Webhook formulário", "n8n-nodes-base.webhook", 2, {
         "httpMethod": "POST",
-        "path": "settlr-sdr/lead",
+        "path": "kitou-sdr/lead",
         "authentication": "headerAuth",
         "responseMode": "onReceived",
         "options": {},
@@ -1094,7 +1094,7 @@ const l = $('Resolver número').first().json;
 const nome = (l.nome || '').split(' ')[0];
 const oi = nome ? `Oi, ${nome}! ` : 'Oi! ';
 const empresa = l.empresa ? ` da ${l.empresa}` : '';
-const abertura = `${oi}Aqui é a ${cfg.sdr_nome}, assistente virtual do time do Settlr. Vi que você deixou seu contato${empresa} no nosso site.`;
+const abertura = `${oi}Aqui é a ${cfg.sdr_nome}, assistente virtual do time da Kitou. Vi que você deixou seu contato${empresa} no nosso site.`;
 const pergunta = l.mensagem
   ? `Li a sua mensagem por aqui. Pra eu entender melhor: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`
   : `Pra eu te direcionar do jeito certo: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`;

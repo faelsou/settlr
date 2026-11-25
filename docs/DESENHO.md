@@ -1,12 +1,12 @@
 # Desenho do sistema
 
-Perguntas de system design do Settlr, no roteiro do [arc42](https://arc42.org/overview). Contexto, blocos, runtime e deploy já estão escritos; este arquivo só fixa carga, garantia, consistência, falha, decisão e o que muda depois do piloto.
+Perguntas de system design da Kitou, no roteiro do [arc42](https://arc42.org/overview). Contexto, blocos, runtime e deploy já estão escritos; este arquivo só fixa carga, garantia, consistência, falha, decisão e o que muda depois do piloto.
 
 | Seção arc42 | Onde está |
 | --- | --- |
 | 1. Objetivos | [PRODUTO.md](./PRODUTO.md) e a seção 1 daqui |
 | 2. Restrições | Seção 2 daqui |
-| 3. Contexto | [Settlr — Arquitetura.md](../Settlr%20%E2%80%94%20Arquitetura.md) |
+| 3. Contexto | [Kitou — Arquitetura.md](../Kitou%20%E2%80%94%20Arquitetura.md) |
 | 4. Estratégia | Seção 4 daqui |
 | 5. Blocos | [TECNICA.md](./TECNICA.md) |
 | 6. Runtime | [FLUXOS.md](../FLUXOS.md) |
@@ -32,7 +32,7 @@ Envelope do produto, ainda sem medição de produção. O cliente da primeira on
 | Webhooks | Evolution, emissor e banco entram pelo gateway e voltam 202 | `webhook-api` |
 | Réplicas HTTP | No Minikube o gateway escala de 1 a 4 por CPU a 70% | `k8s/hpa.yaml` |
 
-O piloto é um tenant, a conta `clinica-piloto`: clínica da primeira onda, 100 títulos por mês, régua ligada primeiro em 10 títulos de quem topou receber. O teto de disparo é 100 mensagens de template por dia, uma etapa vigente por título. O provedor é a AWS em `sa-east-1` e os hosts são `app.settlr.com.br`, `api.settlr.com.br` e `wa.settlr.com.br`. O registro está em [INFRA.md](./INFRA.md). Tamanho do bucket e chamadas de LLM por título continuam sem medição até o cliente estar no ar.
+O piloto é um tenant, a conta `clinica-piloto`: clínica da primeira onda, 100 títulos por mês, régua ligada primeiro em 10 títulos de quem topou receber. O teto de disparo é 100 mensagens de template por dia, uma etapa vigente por título. O provedor é a AWS em `sa-east-1` e os hosts são `app.kitou.com.br`, `api.kitou.com.br` e `wa.kitou.com.br`. O registro está em [INFRA.md](./INFRA.md). Tamanho do bucket e chamadas de LLM por título continuam sem medição até o cliente estar no ar.
 
 ## 2. Restrições
 
@@ -158,10 +158,10 @@ Riscos já aceitos no piloto: webhook do Asaas e do Inter em cliente vivo. A bai
 
 | Termo | Neste sistema |
 | --- | --- |
-| Tenant | Empresa controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id`. Na PME, a empresa contrata o Settlr; no BPO, a empresa entra na carteira do BPO |
-| Agência | Equipe do Settlr que opera várias contas pela role `agencia` (`/admin/tenants`). Não é o BPO nem um revendedor |
+| Tenant | Empresa controladora dos dados de quem deve. Toda linha de negócio carrega `tenant_id`. Na PME, a empresa contrata a Kitou; no BPO, a empresa entra na carteira do BPO |
+| Agência | Equipe da Kitou que opera várias contas pela role `agencia` (`/admin/tenants`). Não é o BPO nem um revendedor |
 | Organização | Agrupa os tenants de um BPO. Proposta em SETL-56; contrato e LGPD em [CONTRATO-BPO.md](./CONTRATO-BPO.md) |
-| BPO | Operador da empresa (LGPD). Opera a carteira com `bpo_admin` / `bpo_operador`. O Settlr fica suboperador. Não compartilha WhatsApp entre empresas |
+| BPO | Operador da empresa (LGPD). Opera a carteira com `bpo_admin` / `bpo_operador`. A Kitou fica suboperador. Não compartilha WhatsApp entre empresas |
 | Título | `invoices`. Centro da régua, da conversa e da baixa |
 | Baixa | Match confirmado pelo banco que muda o status do título |
 | Provisório | Match de comprovante ainda sem extrato ou webhook |

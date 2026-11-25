@@ -73,7 +73,7 @@ SETTLE_OUTCOMES = {
     max_retries=5,
 )
 def settle_issuer_charges(self, tenant_id: str, invoice_ids: list[str]) -> str:
-    """Depois da baixa no Settlr, fecha a cobrança no emissor.
+    """Depois da baixa na Kitou, fecha a cobrança no emissor.
 
     Falha que não é de rede, ou de rede depois do último retry, vira exceção na
     fila com o id da cobrança: o devedor ainda consegue pagar pelo emissor.

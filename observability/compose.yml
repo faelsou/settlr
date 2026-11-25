@@ -1,4 +1,4 @@
-# Prometheus + Thanos + Loki + Tempo + Grafana para o Settlr.
+# Prometheus + Thanos + Loki + Tempo + Grafana para a Kitou.
 # O coletor OpenTelemetry recebe traces, métricas, logs e métricas de recurso.
 # Sobe à parte e entra na rede do compose de desenvolvimento.
 #

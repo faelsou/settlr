@@ -109,7 +109,7 @@
     }
   };
   /* WhatsApp comercial: vem de WHATSAPP_NUMBER no /config.js. Sem número, os botões levam ao bloco do piloto. */
-  var WA_NUMBER = String((window.SETTLR_CONFIG || {}).whatsappNumber || "").replace(/\D/g, "");
+  var WA_NUMBER = String((window.KITOU_CONFIG || {}).whatsappNumber || "").replace(/\D/g, "");
   if (!WA_NUMBER) document.querySelectorAll("[data-wa]").forEach(function (a) { a.removeAttribute("target"); a.removeAttribute("rel"); });
   var WA_MSG = {
     "pt-BR": { pilot: "Olá! Quero conhecer o piloto da Kitou.", price: "Olá! Quero conversar sobre o preço e o piloto da Kitou.", account: "Olá! Quero abrir a conta da minha empresa na Kitou.", float: "Olá! Quero saber mais sobre a Kitou." },
@@ -187,7 +187,7 @@
       root.classList.remove("swapping");
     }
     if (animate && !reduce) { root.classList.add("swapping"); setTimeout(run, 180); } else run();
-    try { localStorage.setItem("settlr-lang", lang); } catch (e) {}
+    try { localStorage.setItem("kitou-lang", lang); } catch (e) {}
   }
   function $(id) { return document.getElementById(id); }
 
@@ -286,6 +286,6 @@
   tick(); if (!reduce) setInterval(tick, 2200);
 
   /* Idioma inicial: o que a pessoa escolheu antes; senão, português */
-  var saved = null; try { saved = localStorage.getItem("settlr-lang"); } catch (e) {}
+  var saved = null; try { saved = localStorage.getItem("kitou-lang"); } catch (e) {}
   apply(I18N[saved] || saved === "pt-BR" ? saved : "pt-BR", false);
 })();

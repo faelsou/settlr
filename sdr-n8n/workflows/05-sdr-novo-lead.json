@@ -1,8 +1,8 @@
 {
-  "name": "Settlr SDR · 05 Novo lead (formulário)",
+  "name": "Kitou SDR · 05 Novo lead (formulário)",
   "nodes": [
     {
-      "id": "de3913b8-7ffb-5e0a-a931-8feeb6c9e75f",
+      "id": "c18f4e79-b44a-5c02-83a9-1c21e4cce414",
       "name": "Webhook formulário",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -12,7 +12,7 @@
       ],
       "parameters": {
         "httpMethod": "POST",
-        "path": "settlr-sdr/lead",
+        "path": "kitou-sdr/lead",
         "authentication": "headerAuth",
         "responseMode": "onReceived",
         "options": {}
@@ -23,10 +23,10 @@
           "name": "SDR Formulário (segredo)"
         }
       },
-      "webhookId": "1af5512f-7a04-5856-aab8-7be0154a39a5"
+      "webhookId": "caca1ab7-e0f3-5b39-8b0e-5b7168365651"
     },
     {
-      "id": "3b541271-0aca-5d9e-8b5b-d730ae7f55f8",
+      "id": "853f54f0-2bef-57d5-b5f8-e8dd83d53578",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -38,121 +38,121 @@
         "assignments": {
           "assignments": [
             {
-              "id": "e40a5be6-dad7-5c47-b206-2c120679944d",
+              "id": "fdb02d5a-50c6-585b-af61-d18f376c47a4",
               "name": "sdr_nome",
               "value": "Lia",
               "type": "string"
             },
             {
-              "id": "0cd2ffe5-10a9-5ab4-af2a-73928e6a231d",
+              "id": "f3f5d66a-0c26-5b47-b9f7-9e6adfa65978",
               "name": "closer_nome",
               "value": "Rafael",
               "type": "string"
             },
             {
-              "id": "700315e6-0c46-5b4a-9a25-a98303003805",
+              "id": "00a3e689-3375-591c-9b50-c6f7363a5974",
               "name": "closer_email",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "8ca171ac-23ff-5058-a4f9-8ffce03aba7d",
+              "id": "c21d30b5-6bd3-5591-ad46-fb5a6e9d717c",
               "name": "closer_whatsapp",
               "value": "5511900000000",
               "type": "string"
             },
             {
-              "id": "8d7a0727-2c2a-5d48-ad33-b25587a25360",
+              "id": "33731e32-ade3-541a-9aea-cb9c3fb8e610",
               "name": "evolution_url",
               "value": "https://evolution.exemplo.com.br",
               "type": "string"
             },
             {
-              "id": "dd192357-653f-52aa-ac49-14b3b64fbd10",
+              "id": "adbc74cd-cfd7-5903-b3c2-4fe3e70ffe4f",
               "name": "evolution_instance",
-              "value": "settlr-sdr",
+              "value": "kitou-sdr",
               "type": "string"
             },
             {
-              "id": "16a23892-2782-566a-aa4e-489718ea50f2",
+              "id": "d41f767b-64bb-55c9-87f1-1dc785eca49f",
               "name": "calendar_id",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "b639045e-135b-5e7d-890e-9e1a6020683f",
+              "id": "98aba7f3-21eb-5bfd-8557-2ddfcee1f8a6",
               "name": "timezone",
               "value": "America/Sao_Paulo",
               "type": "string"
             },
             {
-              "id": "a1c72bd8-338e-59ef-8b2f-46e3d5eaf7f5",
+              "id": "586f0631-f688-5723-bd89-9ba494822407",
               "name": "duracao_reuniao_min",
               "value": 30,
               "type": "number"
             },
             {
-              "id": "3c993c3c-ddab-5585-8ee6-e21bbcebf99a",
+              "id": "f3395d10-a531-5aa5-acf6-d0dd2c52fd50",
               "name": "horario_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "922bf251-15cf-5d89-b5bf-667c982297d9",
+              "id": "1271140d-c46c-52a5-b453-78d447733393",
               "name": "horario_fim",
               "value": 18,
               "type": "number"
             },
             {
-              "id": "21ecb9a4-a946-5556-b6de-26b122a97c51",
+              "id": "8ac02f42-a939-5eb6-956d-cda0009cc8ba",
               "name": "almoco_inicio",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "c649b2b0-4f09-516b-87bf-3fae1b7b4e8c",
+              "id": "0418ea04-9532-50a1-b4fc-48406d388f4f",
               "name": "almoco_fim",
               "value": 13,
               "type": "number"
             },
             {
-              "id": "f332eb9c-26f2-5f07-8d36-9935d256c98f",
+              "id": "7aac21e0-9e8f-5aa7-b22a-d0a0a2a75754",
               "name": "antecedencia_min_horas",
               "value": 2,
               "type": "number"
             },
             {
-              "id": "3c3e47ce-112b-5290-82f7-02e63441ecee",
+              "id": "6b49ca37-5913-5f2f-9f7a-48d87a347f19",
               "name": "dias_busca",
               "value": 7,
               "type": "number"
             },
             {
-              "id": "34f8353a-46bc-519d-957c-587ce249f4f9",
+              "id": "7226f7d3-4321-5960-aea6-fb18785e4e90",
               "name": "debounce_segundos",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "566171b6-1fe7-51df-8a8e-67d2adaefd49",
+              "id": "0b1c73d3-86b1-5347-a078-89dbe352c942",
               "name": "pausa_humano_horas",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "2b61fb6a-3c8d-5805-bf34-3f0f8046f7aa",
+              "id": "96afece3-d39a-527a-923c-862a1674e8af",
               "name": "max_followups",
               "value": 4,
               "type": "number"
             },
             {
-              "id": "3a8556b4-2a75-50d4-ac73-68b3ea2d44df",
+              "id": "e0094597-f520-5ac7-ba35-ed128427e32b",
               "name": "followup_hora_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "407eb9b9-ec03-5e57-a6f3-6812d8e89758",
+              "id": "0c23441d-f66a-5694-bfbc-711e8a09c171",
               "name": "followup_hora_fim",
               "value": 18,
               "type": "number"
@@ -164,7 +164,7 @@
       }
     },
     {
-      "id": "ffcb41b6-16e5-551d-9a92-7f9269c9c018",
+      "id": "114cc0ea-3eb8-5411-83cc-84dffda3ef5c",
       "name": "Normalizar lead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -177,7 +177,7 @@
       }
     },
     {
-      "id": "be03989e-50b5-593b-8d16-e6beaab64aa4",
+      "id": "293e7aa8-23db-5d27-af9a-f59fdf711e3a",
       "name": "Checar WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -203,7 +203,7 @@
       }
     },
     {
-      "id": "ef58fd3b-c582-5e20-90bd-23c37a4d9480",
+      "id": "c6af9801-8ddb-5b2c-9b2e-425270e97408",
       "name": "Resolver número",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -216,7 +216,7 @@
       }
     },
     {
-      "id": "f4200f78-44c2-5e41-86d5-b566c9e57d1c",
+      "id": "1001b903-a5b9-5f29-b1dd-793bbbffb232",
       "name": "Criar lead",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -234,12 +234,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "85d1eabf-df2f-58cc-aca4-b6fe3a3a036b",
+      "id": "13558d62-c2d4-5dab-9a18-615c3e87548c",
       "name": "Primeiro contato?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -257,7 +257,7 @@
           },
           "conditions": [
             {
-              "id": "41660c7a-200f-5a08-a617-a225b68dc80f",
+              "id": "6d5347cf-e701-5966-ae65-e317730ae59f",
               "leftValue": "={{ $json.novo || (!$json.last_outbound_at && !$json.opted_out_at) }}",
               "operator": {
                 "type": "boolean",
@@ -273,7 +273,7 @@
       }
     },
     {
-      "id": "78d2d936-f158-507d-ad08-f967756e0e81",
+      "id": "50eaa1f9-38f4-5f36-9db6-0f82d107616d",
       "name": "Mensagem de abertura",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -282,11 +282,11 @@
         300
       ],
       "parameters": {
-        "jsCode": "const cfg = $('Config').first().json;\nconst l = $('Resolver número').first().json;\nconst nome = (l.nome || '').split(' ')[0];\nconst oi = nome ? `Oi, ${nome}! ` : 'Oi! ';\nconst empresa = l.empresa ? ` da ${l.empresa}` : '';\nconst abertura = `${oi}Aqui é a ${cfg.sdr_nome}, assistente virtual do time do Settlr. Vi que você deixou seu contato${empresa} no nosso site.`;\nconst pergunta = l.mensagem\n  ? `Li a sua mensagem por aqui. Pra eu entender melhor: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`\n  : `Pra eu te direcionar do jeito certo: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`;\nreturn [\n  { json: { phone: l.phone, text: abertura, delay: 2500 } },\n  { json: { phone: l.phone, text: pergunta, delay: 4000 } },\n];\n"
+        "jsCode": "const cfg = $('Config').first().json;\nconst l = $('Resolver número').first().json;\nconst nome = (l.nome || '').split(' ')[0];\nconst oi = nome ? `Oi, ${nome}! ` : 'Oi! ';\nconst empresa = l.empresa ? ` da ${l.empresa}` : '';\nconst abertura = `${oi}Aqui é a ${cfg.sdr_nome}, assistente virtual do time da Kitou. Vi que você deixou seu contato${empresa} no nosso site.`;\nconst pergunta = l.mensagem\n  ? `Li a sua mensagem por aqui. Pra eu entender melhor: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`\n  : `Pra eu te direcionar do jeito certo: hoje, como vocês conferem os PIX e boletos que entram contra o que foi cobrado?`;\nreturn [\n  { json: { phone: l.phone, text: abertura, delay: 2500 } },\n  { json: { phone: l.phone, text: pergunta, delay: 4000 } },\n];\n"
       }
     },
     {
-      "id": "bca429b3-2191-5912-8129-1b069c0d562e",
+      "id": "03c32ca9-ac04-5ecc-aa30-26c96d93942a",
       "name": "Enviar abertura",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -320,7 +320,7 @@
       }
     },
     {
-      "id": "d52ff3c1-b605-5788-9d75-1a52d3c17461",
+      "id": "457457e7-012f-5145-9a2b-e453965d4cd0",
       "name": "Marcar como do bot",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -339,13 +339,13 @@
       "credentials": {
         "redis": {
           "id": "SDR_CRED_REDIS",
-          "name": "Settlr SDR Redis"
+          "name": "Kitou SDR Redis"
         }
       },
       "onError": "continueRegularOutput"
     },
     {
-      "id": "a706363f-522a-5878-9b77-3c5a7d9c0e6f",
+      "id": "92258951-889d-57a0-806e-db8a2c0ef4dd",
       "name": "Guardar na memória",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -363,12 +363,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "02595b0a-eef9-51e6-8a96-8fe5eeb675a5",
+      "id": "92338478-c251-5281-8fb1-4f1852eaabdb",
       "name": "Registrar abertura",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -386,7 +386,7 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       },
       "executeOnce": true

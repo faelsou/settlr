@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/candidate.json",
+    "sha256": "4b5722e2ab935c14e55ee6409b5f2f6fd4b5836410797e65d0e05daf162e825e",
+    "bytes": 15174
+  },
+  "artifact": {
+    "path": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/kitou-e2e.html",
+    "sha256": "8e78dd1173283b1f8ba994f01131feb69bc14ef73646afa78f3293f8b6acac7f",
+    "bytes": 864091
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "fail"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/browser-check-runtime",
+      "severity": "error",
+      "message": "browser-check could not complete its Chrome inspection.",
+      "subject": {
+        "artifact": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/kitou-e2e.html"
+      },
+      "evidence": {
+        "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: signal SIGSEGV.\nChrome stderr:\n[456916:456916:1112/155155.276650:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[456916:456916:1112/155155.276786:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/rafael/.config/google-chrome/Crash Reports/settings.dat: Permissão negada (13)\n[456916:456916:1112/155155.277607:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:166] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/google/chrome/chrome-sandbox is owned by root and has mode 4755.\n[1112/155155.277741:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Permission denied (13)\n[1112/155155.277818:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\n[1112/155155.277832:ERROR:third_party/crashpad/crashpad/handler/linux/exception_handler_server.cc:143] tgkill: Permission denied (13)\nChrome transport: Node v22.23.2, libuv 1.51.0, linux; pid=456916, exitCode=null, signalCode=SIGSEGV.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      },
+      "supportedFixes": [
+        "resolve the reported Chrome inspection error, then rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/kitou-e2e.finalize.json",
+    "summaryReceipt": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/kitou-e2e.finalize-summary.json",
+    "browserCheckReceipt": "/home/rafael/www/Kitou/.archify/architecture-kitou-e2e-20261112-154808/kitou-e2e.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6218
+}

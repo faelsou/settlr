@@ -49,7 +49,7 @@ Sim na pergunta 5: 0 de 0.
 
 ---
 
-## 3. Pergunta 2 — O que o Settlr faz com o Pix Automático ligado
+## 3. Pergunta 2 — O que a Kitou faz com o Pix Automático ligado
 
 **Resposta:** escrita em [PRODUTO.md](./PRODUTO.md) §5. Resumo para a reunião.
 

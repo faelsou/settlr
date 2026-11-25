@@ -1,6 +1,6 @@
-# SRE no Settlr
+# SRE na Kitou
 
-Como operar o Settlr com as práticas do livro *Site Reliability Engineering* (Beyer, Jones, Petoff e Murphy, Google). O livro trata confiabilidade como funcionalidade com orçamento, não como “nunca cair”. Este arquivo aplica isso à cobrança, à conciliação e ao painel.
+Como operar a Kitou com as práticas do livro *Site Reliability Engineering* (Beyer, Jones, Petoff e Murphy, Google). O livro trata confiabilidade como funcionalidade com orçamento, não como “nunca cair”. Este arquivo aplica isso à cobrança, à conciliação e ao painel.
 
 O desenho de falha e de consistência está em [DESENHO.md](./DESENHO.md). Sinais e painéis, em [OBSERVABILIDADE.md](./OBSERVABILIDADE.md). Onde olhar numa falha, em [TROUBLESHOOTING.md](./TROUBLESHOOTING.md). Alerta, remediação e o texto curto do Slack, em [AIOPS.md](./AIOPS.md). Backup e rollback de imagem, em [ARQUITETURA-DEPLOY.md](../ARQUITETURA-DEPLOY.md).
 
@@ -88,10 +88,10 @@ Os alertas de hoje são limiar (`5xx`, p95, fila, `up`). Eles pegam saturação 
 
 Capítulo de monitoramento do livro: latência, tráfego, erros e saturação. Causa (disco, conexão, deploy) explica o sintoma; o alerta de página nasce do sintoma. CPU alta com a jornada dentro do SLO não acorda ninguém.
 
-| Sinal | O que olhar no Settlr | Onde |
+| Sinal | O que olhar na Kitou | Onde |
 | --- | --- | --- |
 | Latência | p95 de `cobranca_http_request_duration_seconds`; tempo do 202 até a baixa | Prometheus / Thanos, Tempo |
-| Tráfego | taxa HTTP por serviço; tasks publicadas; `dunning_events` no dia; mensagens inbound | painel `Settlr — aplicação` |
+| Tráfego | taxa HTTP por serviço; tasks publicadas; `dunning_events` no dia; mensagens inbound | painel `Kitou — aplicação` |
 | Erros | 5xx, `celery_tasks_total{state="FAILURE"}`, `leitura_baixa_confianca`, exceções novas, `gateway.upstream_down` | regras em `observability/prometheus/rules/cobranca.yml` |
 | Saturação | tamanho das filas Celery, throttle de CPU, working set contra o limit, conexões do Postgres, memória do Redis | regras em `k8s/observability/files/k8s.yml` |
 

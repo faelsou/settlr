@@ -4,14 +4,14 @@ Tarefas no Jira, épico [SETL-54](https://rafadsouz.atlassian.net/browse/SETL-54
 
 ## Visão geral
 
-Hoje um login vale para uma empresa (`app_metadata.tenant_id` no JWT), o painel não troca de empresa e o papel `agencia` é da equipe do Settlr, sem limite de carteira. O BPO precisa de um login que opere várias empresas, sem que uma carteira enxergue a outra.
+Hoje um login vale para uma empresa (`app_metadata.tenant_id` no JWT), o painel não troca de empresa e o papel `agencia` é da equipe da Kitou, sem limite de carteira. O BPO precisa de um login que opere várias empresas, sem que uma carteira enxergue a outra.
 
 ## Decisões de arquitetura
 
 - Uma `organization` agrupa as empresas do BPO. `tenants.organization_id` é nulável: empresa sem organização segue como hoje.
 - A empresa é escolhida a cada requisição pelo header `X-Tenant-Id`, validado contra a organização do token.
 - A transação continua escopada a um tenant pelo RLS. Visões consolidadas abrem um `tenant_session` por empresa; nenhuma role contorna o RLS.
-- `require_agency` fica só para a equipe do Settlr. O BPO ganha papéis próprios (`bpo_admin`, `bpo_operador`).
+- `require_agency` fica só para a equipe da Kitou. O BPO ganha papéis próprios (`bpo_admin`, `bpo_operador`).
 
 ## Ordem das tarefas
 
@@ -56,4 +56,4 @@ Propostas em [docs/CONTRATO-BPO.md](../docs/CONTRATO-BPO.md) (aguardam parecer S
 - O preço é por organização ou por empresa? → **Proposta:** mensalidade da organização + valor por empresa ativa.
 - `bpo_operador` confirma baixa (como financeiro) ou só acompanha (como atendente)? → **Proposta:** só acompanha (como atendente); baixa fica com financeiro/`bpo_admin` se o anexo comercial permitir.
 - WhatsApp compartilhado entre empresas? → **Proposta:** não; mantém `_ensure_unique_instances`.
-- Cadeia LGPD? → **Proposta:** empresa controladora → BPO operador → Settlr suboperador.
+- Cadeia LGPD? → **Proposta:** empresa controladora → BPO operador → Kitou suboperador.

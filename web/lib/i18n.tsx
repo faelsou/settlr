@@ -4,7 +4,7 @@
  * Idiomas do painel: português (Brasil), inglês (EUA) e espanhol.
  *
  * Cada texto mora em lib/messages.ts como [pt-BR, en-US, es]. O TypeScript recusa chave desconhecida e
- * tradução faltando. A escolha fica no localStorage em `settlr-lang`, a mesma chave do site público, e
+ * tradução faltando. A escolha fica no localStorage em `kitou-lang`, a mesma chave do site público, e
  * também chega do site pela entrega da sessão (/login#…&lang=en-US), porque o painel mora em outra origem.
  */
 
@@ -20,7 +20,7 @@ export const LANG_INFO: Record<Lang, { code: string; name: string; region: strin
   es: { code: "ES", name: "Español", region: "Latinoamérica" },
 };
 
-const STORAGE_KEY = "settlr-lang";
+const STORAGE_KEY = "kitou-lang";
 const INDEX: Record<Lang, 0 | 1 | 2> = { "pt-BR": 0, "en-US": 1, es: 2 };
 
 export function isLang(value: unknown): value is Lang {

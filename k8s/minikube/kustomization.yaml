@@ -30,7 +30,7 @@ namespace: cobranca
 
 labels:
   - pairs:
-      app.kubernetes.io/part-of: settlr
+      app.kubernetes.io/part-of: kitou
     includeSelectors: false
 
 resources:

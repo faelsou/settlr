@@ -10,26 +10,26 @@ Versão proposta: `2026-11-14`. O advogado confirma a cadeia controlador → ope
 
 | Pergunta | Proposta desta minuta | Motivo |
 | --- | --- | --- |
-| Cadeia LGPD | Empresa da carteira = **controladora**; BPO = **operador**; Settlr = **suboperador** | O BPO opera em nome da empresa; o Settlr só executa a plataforma sob instrução do BPO e do contrato |
+| Cadeia LGPD | Empresa da carteira = **controladora**; BPO = **operador**; Kitou = **suboperador** | O BPO opera em nome da empresa; a Kitou só executa a plataforma sob instrução do BPO e do contrato |
 | Login da empresa | Opcional: a empresa **pode** ter `dono`; o BPO opera com `bpo_admin` / `bpo_operador` | Não bloqueia a operação; permite auditoria e saída limpa se o BPO sair |
 | Preço | Mensalidade da **organização** + valor por **empresa ativa** | Alinha com carteira (BPO) e com custo por tenant (infra, WhatsApp, LLM) |
 | WhatsApp compartilhado | **Mantém a trava**: uma instância por empresa | Evita cobrança no número errado e vazamento entre controladoras; `_ensure_unique_instances` permanece |
-| Modelo de venda (SETL-35) | **Venda direta ao BPO** (parceiro operacional, não revenda white-label nesta versão) | O Settlr contrata com o BPO; cada empresa adere por termo/mandato. Revenda white-label fica fora |
+| Modelo de venda (SETL-35) | **Venda direta ao BPO** (parceiro operacional, não revenda white-label nesta versão) | A Kitou contrata com o BPO; cada empresa adere por termo/mandato. Revenda white-label fica fora |
 
 Corrigir qualquer linha acima antes do parecer. Sem essa confirmação, SETL-55 não fecha.
 
 ---
 
-## Parte A — Contrato de prestação (Settlr ↔ BPO)
+## Parte A — Contrato de prestação (Kitou ↔ BPO)
 
 ### A1. Partes
 
 - **Contratante:** o BPO (razão social, CNPJ). Opera cobrança e conciliação em nome das empresas da carteira.
-- **Contratada:** o Settlr. Disponibiliza a plataforma (régua, agente, painel, conciliação) e trata dados como **suboperador**, nos limites desta minuta e do Anexo B.
+- **Contratada:** a Kitou. Disponibiliza a plataforma (régua, agente, painel, conciliação) e trata dados como **suboperador**, nos limites desta minuta e do Anexo B.
 
 ### A2. Objeto
 
-Disponibilizar a plataforma Settlr para o BPO operar **várias empresas**, cada uma em uma conta (`tenant`) agrupada numa organização (`organization`), sem cruzar dados entre empresas nem entre organizações.
+Disponibilizar a plataforma Kitou para o BPO operar **várias empresas**, cada uma em uma conta (`tenant`) agrupada numa organização (`organization`), sem cruzar dados entre empresas nem entre organizações.
 
 Inclui: régua por WhatsApp/e-mail, agente de resposta dentro da política de cada empresa, conciliação, fila de exceções e painel multiempresa.
 
@@ -40,7 +40,7 @@ Não inclui: compra de dívida, representação em juízo, negativação, protes
 - O BPO recebe uma **organização**. Cada empresa da carteira é um **tenant** com `organization_id` dessa organização.
 - Dado de um tenant não entra em outro (RLS, `audit_log`, sem score cruzado — ver [CONTRATO.md](./CONTRATO.md) §9).
 - Papéis do BPO: `bpo_admin` (cria/ativa empresas, convida operadores, política quando autorizado) e `bpo_operador` (fila e conversa; **não** confirma baixa — espelha o atendente, salvo anexo comercial em contrário).
-- A equipe interna do Settlr continua com role `agencia` (não é o BPO).
+- A equipe interna da Kitou continua com role `agencia` (não é o BPO).
 
 ### A4. Onboarding de cada empresa
 
@@ -80,9 +80,9 @@ Fase 1 do produto (conciliação em mensalidade fixa) aplica-se por empresa, sal
 - Não usar a plataforma para cobrança vexatória (CDC art. 42).
 - Não solicitar nem tentar cruzar dados entre empresas.
 - Respeitar opt-out e horário.
-- Informar o Settlr de incidente, contestação judicial ou pedido de titular que afete o tratamento.
+- Informar a Kitou de incidente, contestação judicial ou pedido de titular que afete o tratamento.
 
-### A8. Obrigações do Settlr
+### A8. Obrigações da Kitou
 
 - Isolar tenants e organizações.
 - Tratar dados só para executar o objeto e as instruções documentadas.
@@ -109,9 +109,9 @@ Valores em reais, SLA com crédito, célula dedicada, white-label e revenda com 
 | --- | --- | --- |
 | Controladora | Cada empresa da carteira (titular da relação com o devedor) | Decide a finalidade; declara `legal_basis` |
 | Operador | O BPO | Trata sob instrução da controladora (mandato + este contrato) |
-| Suboperador | O Settlr | Trata sob instrução do BPO e desta minuta (LGPD art. 39 e encadeamento de operadores) |
+| Suboperador | A Kitou | Trata sob instrução do BPO e desta minuta (LGPD art. 39 e encadeamento de operadores) |
 
-O Settlr **não** decide base legal. Sem `legal_basis` no tenant, a conta não ativa.
+A Kitou **não** decide base legal. Sem `legal_basis` no tenant, a conta não ativa.
 
 ### B2. Base legal típica no piloto
 
@@ -137,9 +137,9 @@ Igual a [CONTRATO.md](./CONTRATO.md) §5 (proposta: 5 anos após baixa/cancelame
 
 ### B7. Direitos do titular e incidentes
 
-Pedidos do titular (acesso, correção, eliminação, oposição) entram pela controladora ou pelo BPO e são executados no tenant correto. Incidente de segurança: BPO e Settlr se avisam sem demora injustificada; a controladora é informada pelo BPO quando a lei exigir.
+Pedidos do titular (acesso, correção, eliminação, oposição) entram pela controladora ou pelo BPO e são executados no tenant correto. Incidente de segurança: BPO e Kitou se avisam sem demora injustificada; a controladora é informada pelo BPO quando a lei exigir.
 
-### B8. Suboperadores técnicos do Settlr
+### B8. Suboperadores técnicos da Kitou
 
 Meta/Evolution (WhatsApp), storage de comprovantes, provedor de LLM/áudio. Lista atualizada sob pedido. Troca que aumente risco exige aviso prévio razoável ao BPO.
 
@@ -147,13 +147,13 @@ Meta/Evolution (WhatsApp), storage de comprovantes, provedor de LLM/áudio. List
 
 ## Parte C — Termo de adesão / mandato (Empresa → BPO)
 
-Texto curto para a **empresa controladora** autorizar o BPO a operar a conta dela no Settlr. Anexar ao contrato do BPO com a empresa ou coletar no onboarding.
+Texto curto para a **empresa controladora** autorizar o BPO a operar a conta dela na Kitou. Anexar ao contrato do BPO com a empresa ou coletar no onboarding.
 
 ### C1. Identificação
 
 - Empresa controladora: \[razão social, CNPJ\]
 - BPO operador: \[razão social, CNPJ\]
-- Conta Settlr (apelido/`slug`): \[ \]
+- Conta Kitou (apelido/`slug`): \[ \]
 
 ### C2. Mandato
 
@@ -161,13 +161,13 @@ A empresa nomeia o BPO como **operador** para, em seu nome:
 
 - configurar política, régua, horário e WhatsApp da conta;
 - importar títulos e tratar a fila de exceções;
-- operar cobrança amigável e conciliação via plataforma Settlr.
+- operar cobrança amigável e conciliação via plataforma Kitou.
 
 A empresa permanece **controladora** dos dados dos seus clientes/devedores e declara a base legal em `legal_basis`.
 
-### C3. Settlr
+### C3. Kitou
 
-A empresa reconhece que o Settlr atua como **suboperador** técnico da plataforma, sem comprar dívida e sem representar a empresa em juízo.
+A empresa reconhece que a Kitou atua como **suboperador** técnico da plataforma, sem comprar dívida e sem representar a empresa em juízo.
 
 ### C4. WhatsApp e CDC
 
@@ -189,7 +189,7 @@ Local, data, nome e assinatura (ou aceite eletrônico registrado) do representan
 
 ## Checklist para o jurídico (SETL-55)
 
-- [ ] Confirmar cadeia controladora → BPO operador → Settlr suboperador
+- [ ] Confirmar cadeia controladora → BPO operador → Kitou suboperador
 - [ ] Confirmar que venda direta ao BPO (sem white-label) basta nesta versão
 - [ ] Validar retenção de 5 anos e CDC art. 42 nos textos da régua (SETL-15)
 - [ ] Validar preço por organização + por empresa (só a forma; valores à parte)
@@ -199,4 +199,4 @@ Local, data, nome e assinatura (ou aceite eletrônico registrado) do representan
 
 ## Relação com a PME
 
-A minuta [CONTRATO.md](./CONTRATO.md) continua valendo para **venda direta à PME** (empresa = controladora, Settlr = operador). Esta minuta BPO **não substitui** a da PME; aplica-se quando o comprador é o BPO com carteira multiempresa.
+A minuta [CONTRATO.md](./CONTRATO.md) continua valendo para **venda direta à PME** (empresa = controladora, Kitou = operador). Esta minuta BPO **não substitui** a da PME; aplica-se quando o comprador é o BPO com carteira multiempresa.

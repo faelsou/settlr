@@ -441,7 +441,7 @@ export default function ConfiguracoesPage() {
               </Field>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label={t("cfg.officialName")}>
-                  <Input value={official.name} placeholder="settlr_lembrete" onChange={(e) => setOfficial({ name: e.target.value })} />
+                  <Input value={official.name} placeholder="kitou_lembrete" onChange={(e) => setOfficial({ name: e.target.value })} />
                 </Field>
                 <Field label={t("cfg.templateLang")}>
                   <Input value={official.language} placeholder="pt_BR" onChange={(e) => setOfficial({ language: e.target.value })} />

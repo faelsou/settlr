@@ -1,5 +1,5 @@
 {
-  "name": "settlr",
+  "name": "kitou",
   "private": true,
   "scripts": {
     "dev": "npm run dev --prefix web",

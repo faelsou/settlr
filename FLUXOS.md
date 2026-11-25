@@ -1,7 +1,7 @@
-# Fluxos do Settlr
+# Fluxos da Kitou
 
 > Documento de detalhamento operacional dos fluxos descritos em
-> [`Settlr — Arquitetura.md`](./Settlr%20%E2%80%94%20Arquitetura.md).
+> [`Kitou — Arquitetura.md`](./Kitou%20%E2%80%94%20Arquitetura.md).
 >
 > Objetivo: descrever **passo a passo** cada fluxo do produto — gatilhos, decisões,
 > estados, regras duras e pontos de escalonamento humano — para servir de base de
@@ -125,7 +125,7 @@ horário, WhatsApp, base legal e o atraso médio de antes da implantação. Esse
 número fica gravado na conta. O painel compara o atraso do período com ele.
 O dono entra na hora e liga a conta em `POST /settings/activate`.
 
-**Pela API.** A agência, equipe do Settlr com a role `agencia`, cadastra pelo
+**Pela API.** A agência, equipe da Kitou com a role `agencia`, cadastra pelo
 `POST /admin/tenants` e liga em `POST /admin/tenants/{id}/activate`. Os dois
 caminhos criam a conta desligada e aplicam a mesma checagem na ativação.
 

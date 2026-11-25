@@ -19,7 +19,7 @@ O painel (`web/`) usa a identidade do site: Geist e Geist Mono, Sora só na marc
 
 O painel fala português (Brasil), inglês (EUA) e espanhol, como o site. Cada texto fica em [`web/lib/messages.ts`](../web/lib/messages.ts) como `[pt-BR, en-US, es]`: o build quebra se faltar uma tradução ou se a chave não existir. Em componente, `const { t } = useI18n()` e `t("chave", { variavel })`; fora de componente, `tr()`.
 
-- A escolha fica em `settlr-lang`, a mesma chave do site, e chega do `/entrar` pelo `&lang=` da entrega da sessão. Sem escolha, vale o idioma do navegador.
+- A escolha fica em `kitou-lang`, a mesma chave do site, e chega do `/entrar` pelo `&lang=` da entrega da sessão. Sem escolha, vale o idioma do navegador.
 - O seletor fica na entrada (login, comecar, convite) e no rodapé do menu lateral.
 - Datas e números seguem o idioma. A moeda é sempre o real (`R$`).
 - Continua em português o que vai para o devedor (templates da régua, mensagem padrão de aprovação, respostas do agente) e o que vem pronto da API (mensagens de erro e o motivo das exceções).
@@ -48,7 +48,7 @@ painel /login lê o fragmento, apaga da barra, grava a sessão e vai para /inici
 ```
 
 - O fragmento (`#…`) não vai para nenhum servidor nem para o log do Traefik.
-- O `lang` leva o idioma escolhido no site (`pt-BR`, `en-US` ou `es`). O painel grava em `settlr-lang` e abre nesse idioma.
+- O `lang` leva o idioma escolhido no site (`pt-BR`, `en-US` ou `es`). O painel grava em `kitou-lang` e abre nesse idioma.
 - O painel apaga o fragmento com `history.replaceState` antes de qualquer outra coisa. Com o refresh token, o Supabase renova a sessão no painel.
 - No modo local (sem Supabase), o form pede e-mail e apelido da empresa e chama `POST /auth/dev-login` na mesma origem. O nginx repassa só essa rota ao gateway. Em produção a API recusa o dev-login.
 - "Esqueci a senha" chama `resetPasswordForEmail` com retorno para `APP_URL/login`. A resposta na tela é a mesma exista ou não a conta.

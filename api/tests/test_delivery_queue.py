@@ -200,7 +200,7 @@ def _auth() -> dict[str, str]:
     token = jwt.encode(
         {
             "sub": "user-1",
-            "email": "operador@settlr.test",
+            "email": "operador@kitou.test",
             "aud": settings.jwt_audience,
             "app_metadata": {"role": "operador", "tenant_id": str(uuid4())},
         },

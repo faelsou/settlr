@@ -1,4 +1,4 @@
-# SDR do Settlr no n8n
+# SDR da Kitou no n8n
 
 Agente de pré-vendas no WhatsApp. Ele conversa com quem chegou pelo site ou chamou no número comercial, entende a operação de cobrança, qualifica, marca a conversa com o especialista no Google Agenda, faz follow-up de quem sumiu e lembra da reunião.
 
@@ -6,13 +6,13 @@ O roteiro de qualificação, o cliente ideal e as objeções saem de [JORNADA-VE
 
 ## Por que fica fora do produto
 
-O produto tirou o n8n do runtime: régua, conciliação e agente de cobrança são módulos Python ([TECNICA.md](../docs/TECNICA.md)). O SDR é ferramenta do comercial do próprio Settlr e não toca em dado de cliente:
+O produto tirou o n8n do runtime: régua, conciliação e agente de cobrança são módulos Python ([TECNICA.md](../docs/TECNICA.md)). O SDR é ferramenta do comercial da própria Kitou e não toca em dado de cliente:
 
 | | Produto | SDR |
 | --- | --- | --- |
-| Fala com | Devedor do cliente | Lead do Settlr |
-| WhatsApp | Instância da conta, template Meta | Instância própria, `settlr-sdr` |
-| Banco | Postgres do produto, RLS por tenant | Database `settlr_sdr`, sem tenant |
+| Fala com | Devedor do cliente | Lead da Kitou |
+| WhatsApp | Instância da conta, template Meta | Instância própria, `kitou-sdr` |
+| Banco | Postgres do produto, RLS por tenant | Database `kitou_sdr`, sem tenant |
 | Runtime | Swarm, `cobranca-api` | n8n |
 
 Nunca aponte o SDR para a instância Evolution de cobrança nem para o banco do produto.
@@ -66,18 +66,18 @@ WhatsApp do lead ──► Evolution ──► 01 Conversa ──► agente (Cla
 ### 1. Banco
 
 ```bash
-createdb settlr_sdr
-psql settlr_sdr -f sql/schema.sql
+createdb kitou_sdr
+psql kitou_sdr -f sql/schema.sql
 ```
 
 ### 2. Evolution
 
-Crie uma instância só do SDR (`settlr-sdr`), pareie o número comercial e aponte o webhook para o n8n:
+Crie uma instância só do SDR (`kitou-sdr`), pareie o número comercial e aponte o webhook para o n8n:
 
 ```bash
-curl -X POST "$EVOLUTION_URL/webhook/set/settlr-sdr" \
+curl -X POST "$EVOLUTION_URL/webhook/set/kitou-sdr" \
   -H "apikey: $EVOLUTION_API_KEY" -H 'content-type: application/json' \
-  -d '{"webhook":{"enabled":true,"url":"https://SEU-N8N/webhook/settlr-sdr/evolution","events":["MESSAGES_UPSERT"],"byEvents":false,"base64":false}}'
+  -d '{"webhook":{"enabled":true,"url":"https://SEU-N8N/webhook/kitou-sdr/evolution","events":["MESSAGES_UPSERT"],"byEvents":false,"base64":false}}'
 ```
 
 ### 3. Configuração
@@ -94,8 +94,8 @@ python3 gerar_workflows.py
 
 | Nome | Tipo | Conteúdo |
 | --- | --- | --- |
-| Settlr SDR Postgres | Postgres | Database `settlr_sdr` |
-| Settlr SDR Redis | Redis | Qualquer Redis. Chaves `sdr:*` com TTL |
+| Kitou SDR Postgres | Postgres | Database `kitou_sdr` |
+| Kitou SDR Redis | Redis | Qualquer Redis. Chaves `sdr:*` com TTL |
 | Anthropic | Anthropic | Chave da API |
 | Evolution SDR (apikey) | Header Auth | Nome `apikey`, valor: a chave da Evolution |
 | Google Calendar SDR | Google Calendar OAuth2 | Conta dona da agenda do especialista |
@@ -112,7 +112,7 @@ O script cria o 04 primeiro e grava o id dele nas sete ferramentas do 01. Se voc
 ### 6. Formulário do site
 
 ```bash
-curl -X POST https://SEU-N8N/webhook/settlr-sdr/lead \
+curl -X POST https://SEU-N8N/webhook/kitou-sdr/lead \
   -H 'x-sdr-token: SEU_SEGREDO' -H 'content-type: application/json' \
   -d '{"nome":"Marina Souza","telefone":"11 98888-7777","empresa":"Clínica Bem Viver","email":"marina@bemviver.com.br","segmento":"clinica","origem":"site","mensagem":"Quero parar de bater planilha de PIX"}'
 ```
@@ -122,8 +122,8 @@ curl -X POST https://SEU-N8N/webhook/settlr-sdr/lead \
 Simula uma mensagem do lead chegando pela Evolution:
 
 ```bash
-curl -X POST https://SEU-N8N/webhook/settlr-sdr/evolution -H 'content-type: application/json' -d '{
-  "event": "messages.upsert", "instance": "settlr-sdr",
+curl -X POST https://SEU-N8N/webhook/kitou-sdr/evolution -H 'content-type: application/json' -d '{
+  "event": "messages.upsert", "instance": "kitou-sdr",
   "data": { "key": { "remoteJid": "5511988887777@s.whatsapp.net", "fromMe": false, "id": "TESTE1" },
             "pushName": "Marina", "messageType": "conversation",
             "message": { "conversation": "Oi, vi o anúncio de vocês. Como funciona?" } } }'
@@ -133,7 +133,7 @@ Roteiro mínimo antes de ligar no número real:
 
 1. Rajada de três mensagens em 5 s gera uma resposta só.
 2. "Quanto custa?" não recebe número, e na segunda insistência vai para o especialista.
-3. "Vocês protestam o cliente?" recebe a explicação do que o Settlr não faz.
+3. "Vocês protestam o cliente?" recebe a explicação do que a Kitou não faz.
 4. "Pode ser terça às 10h": cria o evento com Meet, a reunião aparece em `sdr_meetings` e o lead vira `agendado`.
 5. "Preciso remarcar": cancela no Google e oferece novos horários.
 6. "Para de me mandar mensagem": opt-out, nenhum follow-up depois.

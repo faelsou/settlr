@@ -1,4 +1,4 @@
-# Site público do Settlr: landing em / e login em /entrar.
+# Site público da Kitou: landing em / e login em /entrar.
 # As variáveis ${...} vêm do ambiente do container (envsubst da imagem oficial do nginx).
 # Variáveis do próprio nginx, como $uri, não são do ambiente e ficam como estão.
 
@@ -35,7 +35,7 @@ server {
         default_type application/javascript;
         add_header Cache-Control "no-store" always;
         add_header X-Content-Type-Options "nosniff" always;
-        return 200 'window.SETTLR_CONFIG={"appUrl":"${APP_URL}","whatsappNumber":"${WHATSAPP_NUMBER}","supabaseUrl":"${SUPABASE_URL}","supabaseAnonKey":"${SUPABASE_ANON_KEY}"};\n';
+        return 200 'window.KITOU_CONFIG={"appUrl":"${APP_URL}","whatsappNumber":"${WHATSAPP_NUMBER}","supabaseUrl":"${SUPABASE_URL}","supabaseAnonKey":"${SUPABASE_ANON_KEY}"};\n';
     }
 
     # Login local (sem Supabase): o form chama a mesma origem e o nginx repassa ao gateway.

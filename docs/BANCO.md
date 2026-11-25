@@ -1,6 +1,6 @@
 # Criação do banco Postgres
 
-Como criar a instância do Settlr do zero: dois databases no mesmo Postgres 16, três roles, o schema da aplicação via Alembic e as tabelas do checkpointer. O modelo de negócio está na seção 5 de [`TECNICA.md`](./TECNICA.md). O runtime (rede, volume, secret) está na seção 6 de [`ARQUITETURA-DEPLOY.md`](../ARQUITETURA-DEPLOY.md).
+Como criar a instância da Kitou do zero: dois databases no mesmo Postgres 16, três roles, o schema da aplicação via Alembic e as tabelas do checkpointer. O modelo de negócio está na seção 5 de [`TECNICA.md`](./TECNICA.md). O runtime (rede, volume, secret) está na seção 6 de [`ARQUITETURA-DEPLOY.md`](../ARQUITETURA-DEPLOY.md).
 
 A imagem é `postgres:16`. Encoding `UTF8`. Timestamps de negócio são `timestamptz`. O fuso do cliente fica em `tenants.timezone` (padrão `America/Sao_Paulo`) e é aplicado na aplicação.
 

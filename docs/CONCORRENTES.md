@@ -1,26 +1,26 @@
-# Settlr — Análise de Concorrentes
+# Kitou — Análise de Concorrentes
 
 _Atualizado em 07/11/2026_
 
 ## 1. Resumo executivo
 
-Ninguém no mercado entrega hoje exatamente a combinação do Settlr para PME, BPO e banco: **régua determinística no WhatsApp + agente de IA que negocia só dentro da política + conciliação em camadas que não baixa título sem confirmação do banco + fila de exceções**. A PME é a primeira onda. BPO e banco entram na mesma oferta e ampliam o mercado. Mas cada peça tem concorrente forte, e dois players novos chegaram muito perto:
+Ninguém no mercado entrega hoje exatamente a combinação da Kitou para PME, BPO e banco: **régua determinística no WhatsApp + agente de IA que negocia só dentro da política + conciliação em camadas que não baixa título sem confirmação do banco + fila de exceções**. A PME é a primeira onda. BPO e banco entram na mesma oferta e ampliam o mercado. Mas cada peça tem concorrente forte, e dois players novos chegaram muito perto:
 
 - **FinanceiroAI** é o concorrente mais parecido: régua no WhatsApp, IA que lê comprovante e marca **"pago provisório"** até o banco confirmar, plano grátis e assinatura de R$ 99/mês. Ainda está em fila de espera e não mostra negociação estruturada nem matcher em camadas.
 - **Negocia.ai** tem bot generativo que negocia desconto e parcelamento, lê comprovante Pix e agrupa dívidas por CPF. Mas é caro (R$ 2.500 a R$ 6.000/mês) e voltado a operações de cobrança, não a PME.
 - **Kobana** é a ameaça de médio prazo: gateway com mais de 40 bancos, conciliação, régua com WhatsApp e acordos (Dunning) e um agente de IA de finanças (Kadu). Desde 2024 o foco é grande empresa.
-- **Asaas** é a ameaça estrutural: mais de 240 mil clientes PME, régua com WhatsApp a R$ 0,55 por envio e meta de R$ 1 bi de receita em 2026. Se lançar um agente de IA na régua, ocupa boa parte do espaço do Settlr dentro da própria base.
+- **Asaas** é a ameaça estrutural: mais de 240 mil clientes PME, régua com WhatsApp a R$ 0,55 por envio e meta de R$ 1 bi de receita em 2026. Se lançar um agente de IA na régua, ocupa boa parte do espaço da Kitou dentro da própria base.
 
-**Onde o Settlr ganha:** independência de banco e gateway (funciona sobre o que o cliente já usa), a regra "comprovante nunca quita", negociação limitada por política com aprovação humana, auditoria completa (`audit_log`) e métricas de recuperação, DSO e baixa automática.
+**Onde a Kitou ganha:** independência de banco e gateway (funciona sobre o que o cliente já usa), a regra "comprovante nunca quita", negociação limitada por política com aprovação humana, auditoria completa (`audit_log`) e métricas de recuperação, DSO e baixa automática.
 
 ## 2. Mapa do mercado
 
-| Grupo | Quem | O que disputa com o Settlr |
+| Grupo | Quem | O que disputa com a Kitou |
 | --- | --- | --- |
 | Concorrentes diretos (IA + WhatsApp + baixa) | FinanceiroAI, Negocia.ai, GestãoClick | A proposta inteira, em versões parciais |
 | Gateways / plataformas de cobrança | Asaas, iugu, Vindi, Conexa, Cobre Fácil, IRecebi | Régua e baixa automática dentro do próprio ecossistema |
 | Infraestrutura bancária + IA | Kobana, Celcoin | Conciliação multi-banco e régua; foco enterprise |
-| ERPs com conciliação nativa | Omie, Conta Azul | Fase 1 do Settlr (conciliação) |
+| ERPs com conciliação nativa | Omie, Conta Azul | Fase 1 da Kitou (conciliação) |
 | Recuperadoras com agente de IA | Monest (Mia), Belvo, Ligo, Bindflow | Agente negociador; carteira vencida de médias e grandes |
 | Camada de WhatsApp | Avisa App, SocialHub, Zenvia, Wati, Jota | Disparo da régua, sem conciliação de verdade |
 
@@ -30,7 +30,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 
 | Player | Régua WhatsApp | IA conversa / negocia | Lê comprovante | Comprovante não quita sem banco | Independe de gateway | Matcher + fila de exceções | Foco PME |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Settlr (proposta)** | ✅ | ✅ dentro da política | ✅ | ✅ | ✅ | ✅ 4 camadas | ✅ |
+| **Kitou (proposta)** | ✅ | ✅ dentro da política | ✅ | ✅ | ✅ | ✅ 4 camadas | ✅ |
 | FinanceiroAI | ✅ | ⚠️ atende, negociação vaga | ✅ | ✅ pago provisório | ⚠️ Asaas, Sicoob, Inter + Pix direto | ❌ | ✅ |
 | Negocia.ai | ✅ | ✅ desconto e parcelas | ✅ | ❌ baixa direto | ✅ | ⚠️ fila humana | ❌ |
 | GestãoClick | ✅ | ❌ IA só consulta | ❌ | ✅ baixa pelo banco | ⚠️ bancos integrados | ⚠️ sugere matching, aprova em lote | ✅ |
@@ -45,10 +45,10 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 ### 4.1 FinanceiroAI — o mais parecido
 
 - **O que é:** plataforma de recebíveis com IA. Notificações no WhatsApp oficial, follow-up com tom crescente, atendimento ao devedor e leitura de comprovante (confere valor, data e origem).
-- **Lógica de baixa:** comprovante válido vira **"pago provisório"**. Com Pix direto, o operador confirma com um clique. Com banco integrado, a baixa vem por webhook. É a mesma ideia do `aguardando_banco` do Settlr.
+- **Lógica de baixa:** comprovante válido vira **"pago provisório"**. Com Pix direto, o operador confirma com um clique. Com banco integrado, a baixa vem por webhook. É a mesma ideia do `aguardando_banco` da Kitou.
 - **Preço:** Free (5 faturas e 20 WhatsApp por ciclo). Assinatura de R$ 99/mês (50 faturas, 150 WhatsApp, módulo financeiro). Excedentes: R$ 0,80 por fatura e R$ 0,25 por WhatsApp. Add-ons de R$ 99/mês cada: banco integrado (por banco), número de WhatsApp próprio e NFS-e.
 - **Bancos:** Asaas, Sicoob e Inter; Sicredi, BB e Efí em liberação.
-- **Público:** escolas, academias, clínicas, condomínios, contadores, igrejas e SaaS — o mesmo ICP do Settlr.
+- **Público:** escolas, academias, clínicas, condomínios, contadores, igrejas e SaaS — o mesmo ICP da Kitou.
 - **Fraquezas:** acesso por fila de espera; negociação descrita só como "facilitação de condições"; sem matcher em camadas, sem fila de exceções e sem política de desconto ou parcelamento visível.
 - **Ameaça:** 🔴 alta no topo do funil (preço baixo e grátis).
 
@@ -57,7 +57,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 - **O que é:** bot generativo que negocia desconto e parcelas, lembra promessas e transfere para humano com resumo do caso. Tem console multi-operador, agrupamento de dívidas por CPF, leitura de comprovante Pix com baixa e auditoria por IA de 100% das conversas.
 - **Preço:** Essencial R$ 2.500/mês (até 5 mil mensagens, sem bot de IA listado). Profissional R$ 6.000/mês (até 50 mil mensagens, com bot, leitura de Pix e operadores ilimitados). Enterprise sob consulta. A tarifa da Meta é cobrada à parte, direto no CNPJ do cliente.
 - **Implantação:** cerca de 14 dias. Sede em Janaúba (MG).
-- **Fraquezas para o ICP do Settlr:** preço fora do alcance de PME e baixa direta pelo comprovante, sem esperar o banco (risco de fraude).
+- **Fraquezas para o ICP da Kitou:** preço fora do alcance de PME e baixa direta pelo comprovante, sem esperar o banco (risco de fraude).
 - **Ameaça:** 🟡 média; disputa mais as assessorias de cobrança do que PMEs.
 
 ### 4.3 Kobana
@@ -74,7 +74,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 - **Taxas (out/2026):** Pix ou boleto R$ 1,99 (R$ 0,99 nos 3 primeiros meses); cartão 2,99% + R$ 0,49. Parceiros têm tabelas menores.
 - **Régua:** WhatsApp R$ 0,55 por notificação; e-mail e SMS R$ 0,99; carta R$ 2,91; robô de voz após o vencimento; negativação Serasa.
 - **Limites:** régua só para cobranças emitidas pelo próprio Asaas; sem agente conversacional; não concilia dinheiro que entra em outro banco.
-- **Ameaça:** 🔴 estrutural. Ele é dono do canal. Estratégia sugerida: **integrar com o Asaas** (muitos clientes do Settlr vão emitir por lá) e vender o que ele não faz: conversa, negociação, conciliação de dinheiro que entra fora do Asaas e exceções.
+- **Ameaça:** 🔴 estrutural. Ele é dono do canal. Estratégia sugerida: **integrar com o Asaas** (muitos clientes da Kitou vão emitir por lá) e vender o que ele não faz: conversa, negociação, conciliação de dinheiro que entra fora do Asaas e exceções.
 
 ### 4.5 Monest (Mia)
 
@@ -118,7 +118,7 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 ### 4.12 Omie
 
 - ERP com conta própria (Omie.Cash): boleto a R$ 1,99 liquidado, baixa e conciliação automáticas, integração de extrato com Itaú, Bradesco, Santander e Caixa, OFX para os demais. Plano Multivarejo a partir de R$ 419/mês.
-- **Ponto fraco documentado:** a conciliação só olha 5 dias para trás, exige que o tipo de documento bata (boleto pago via Pix não concilia) e prioriza o título de valor exato. O matcher em camadas do Settlr resolve justamente esses casos.
+- **Ponto fraco documentado:** a conciliação só olha 5 dias para trás, exige que o tipo de documento bata (boleto pago via Pix não concilia) e prioriza o título de valor exato. O matcher em camadas da Kitou resolve justamente esses casos.
 - **Ameaça:** 🟡 média na fase 1.
 
 ### 4.13 Conta Azul
@@ -154,21 +154,21 @@ Legenda: ✅ tem · ⚠️ parcial ou não confirmado · ❌ não tem / não enc
 | Negocia.ai | R$ 2.500 / R$ 6.000 | mensagens Meta |
 | Kobana, Conexa, Monest, Celcoin | sob consulta | — |
 
-**Leitura para a precificação do Settlr:** existem duas âncoras. Embaixo, R$ 0 a R$ 99 (FinanceiroAI, Asaas, SocialHub). Em cima, R$ 2.500+ (Negocia.ai). Uma faixa de **R$ 300 a R$ 1.500/mês por volume de títulos + variável sobre o recuperado** fica no espaço vazio entre as duas, desde que o Settlr prove valor com a conciliação.
+**Leitura para a precificação da Kitou:** existem duas âncoras. Embaixo, R$ 0 a R$ 99 (FinanceiroAI, Asaas, SocialHub). Em cima, R$ 2.500+ (Negocia.ai). Uma faixa de **R$ 300 a R$ 1.500/mês por volume de títulos + variável sobre o recuperado** fica no espaço vazio entre as duas, desde que a Kitou prove valor com a conciliação.
 
 ## 6. Custos da Meta que afetam todos
 
 - Desde 1º/out/2026 a Meta cobra **mensagens de serviço** (respostas dentro da janela): ~R$ 0,035 por mensagem entregue depois de 1.000 grátis por mês por número.
 - Templates de **utilidade** (lembretes de cobrança): ~R$ 0,04–0,05. **Marketing:** até ~R$ 0,38.
-- Há uma tarifa de ~R$ 0,33 por mensagem para **chatbots de IA de uso geral** (ChatGPT, Luzia etc.), em discussão no Cade. Pela cobertura disponível, ela mira IA vendida como produto, não o bot de atendimento de uma empresa. **Vale acompanhar**, porque o agente do Settlr conversa em texto livre.
-- Consequência: a régua do Settlr deve usar templates de **utilidade** (não marketing), e o agente deve resolver em poucas mensagens.
+- Há uma tarifa de ~R$ 0,33 por mensagem para **chatbots de IA de uso geral** (ChatGPT, Luzia etc.), em discussão no Cade. Pela cobertura disponível, ela mira IA vendida como produto, não o bot de atendimento de uma empresa. **Vale acompanhar**, porque o agente da Kitou conversa em texto livre.
+- Consequência: a régua da Kitou deve usar templates de **utilidade** (não marketing), e o agente deve resolver em poucas mensagens.
 
 ## 7. Ameaças em ordem
 
 1. **Asaas lançar um agente de IA na régua.** Defesa: integração nativa com o Asaas, conciliação de outras contas por Open Finance ou arquivo, e exceções.
 2. **FinanceiroAI sair da fila de espera e escalar barato.** Defesa: negociação por política, matcher em camadas, painel de exceções e métricas que eles não mostram.
 3. **Kobana descer para PME** com Dunning + Kadu conversando com o devedor. Defesa: velocidade, foco no segmento e no WhatsApp; considerar parceria.
-4. **ERPs (Omie, Conta Azul) colocarem régua no WhatsApp nativa.** Defesa: o Settlr funciona por cima do ERP e do banco que o cliente já tem.
+4. **ERPs (Omie, Conta Azul) colocarem régua no WhatsApp nativa.** Defesa: a Kitou funciona por cima do ERP e do banco que o cliente já tem.
 5. **Custo da Meta** comprimindo margem de conversas longas.
 
 ## 8. Posicionamento recomendado

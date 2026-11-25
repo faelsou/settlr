@@ -1,6 +1,6 @@
 # Jornada de venda B2B
 
-Como uma PME entra no Settlr, do primeiro contato até a carteira cobrando. Esta jornada é a do piloto. O produto também atende BPO e banco, com a mesma regra de conta, régua e baixa, e com isso abrange o mercado além da PME. A conta nasce desligada. O piloto são 5 a 10 faturas de quem topou receber. O título só quita quando o banco confirma.
+Como uma PME entra na Kitou, do primeiro contato até a carteira cobrando. Esta jornada é a do piloto. O produto também atende BPO e banco, com a mesma regra de conta, régua e baixa, e com isso abrange o mercado além da PME. A conta nasce desligada. O piloto são 5 a 10 faturas de quem topou receber. O título só quita quando o banco confirma.
 
 O modelo desta jornada é o de 09/11/2026: fase 1 é conciliação em mensalidade fixa, Pix Automático só para pagador pessoa física, e a fatia B2B permanece na régua de PIX copia-e-cola e boleto. As regras estão em [PRODUTO.md](./PRODUTO.md) §5 e §12 e em [CONSELHO.md](./CONSELHO.md). O passo a passo da planilha está em [CADASTRAR-CLIENTE.md](./CADASTRAR-CLIENTE.md). Os fluxos de sistema estão em [FLUXOS.md](../FLUXOS.md).
 
@@ -10,7 +10,7 @@ O modelo desta jornada é o de 09/11/2026: fase 1 é conciliação em mensalidad
 
 | Quem | No sistema | No exemplo |
 | --- | --- | --- |
-| Settlr | Operador dos dados. A equipe (`agencia`) conduz o piloto. | Quem percorre estas nove etapas |
+| Kitou | Operador dos dados. A equipe (`agencia`) conduz o piloto. | Quem percorre estas nove etapas |
 | Empresa que contrata | Conta. Controladora dos clientes dela. | Software House Ltda |
 | Cliente dessa empresa | Devedor. Nunca vê o painel. | Padaria do João Ltda, CNPJ da nota |
 | Dono | Política, régua, horário, convite e aprovação. | Sócio que cria a conta |
@@ -37,7 +37,7 @@ No exemplo que percorre as etapas, a Software House cobra a Padaria. Essa fatia 
 - **Recuperação.** A variável sobre o valor recuperado só entra com grupo de controle: 10% dos títulos fora da régua.
 - **Quem já tem Pix Automático.** A ordem da venda é (1) conciliação de todo dinheiro que entra, em qualquer banco ou emissor, com o arquivo do contador; (2) a falha de débito tratada por conversa e acordo dentro da política. Dinheiro fora do Asaas faz parte de (1).
 - **Quem cobra outra empresa ou um condomínio.** A venda da régua é a de PIX copia-e-cola e boleto. Convite de adesão ao Pix Automático não entra nessa carteira.
-- **Distribuição.** O piloto é operado pela equipe do Settlr. A escala se confirma quando o primeiro contador pede o arquivo do período (`GET /payments/export`).
+- **Distribuição.** O piloto é operado pela equipe da Kitou. A escala se confirma quando o primeiro contador pede o arquivo do período (`GET /payments/export`).
 - **WhatsApp de produção.** `WHATSAPP-BUSINESS`, com sessão `open` e template aprovado. A instância lida em 09/11/2026 é `WHATSAPP-BAILEYS`. Com ela, a ativação não passa. Migrar antes do piloto. A trava fica.
 - **Custo na Meta.** No piloto, a mesma carteira compara dez etapas com quatro (D0, D+1, D+5, D+15) e mede a recuperação marginal de cada etapa.
 - **Dados entre empresas.** Fechados no MVP. Score, antecipação e régua que aprende entre contas ficam de fora ([CONTRATO.md](./CONTRATO.md) §9).
@@ -82,7 +82,7 @@ Para quem já tem Pix Automático, a proposta segue a ordem da seção 2. Para a
 
 ### 3. Contratar
 
-Antes de produção. A empresa que cobra é a controladora dos dados dos clientes dela. O Settlr é o operador: trata esses dados só para executar o contrato. Sem base legal declarada, a conta não ativa. Em produção, também não ativa sem o parecer registrado.
+Antes de produção. A empresa que cobra é a controladora dos dados dos clientes dela. A Kitou é o operador: trata esses dados só para executar o contrato. Sem base legal declarada, a conta não ativa. Em produção, também não ativa sem o parecer registrado.
 
 **O que falar.** Vocês declaram por que podem cobrar esse cliente. A gente cobra dentro do horário, sem grupo, sem ameaça, e para no instante em que a pessoa pede para parar.
 
@@ -108,7 +108,7 @@ Dia 0. A conta nasce desligada de propósito. Dá tempo de importar, conferir te
 | Dono | Cria a conta: nome, apelido (letras minúsculas, número e hífen) e e-mail do dono. | `/comecar` |
 | Sistema | Grava a política, a régua e o horário padrão. A conta fica inativa. | Cadastro |
 | Dono | Convida financeiro e atendente. Um link por pessoa, sem senha no e-mail, sem login compartilhado. | Convite |
-| Agência | No piloto, a equipe do Settlr cria a mesma conta pela API quando a empresa ainda não entra na tela. | `POST /admin/tenants` |
+| Agência | No piloto, a equipe da Kitou cria a mesma conta pela API quando a empresa ainda não entra na tela. | `POST /admin/tenants` |
 
 ### 5. Configurar
 

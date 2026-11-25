@@ -1,6 +1,6 @@
 # Produto e regras de negócio
 
-Documento do **Settlr** como produto: o que entrega, para quem, e as regras que o código aplica. O detalhe operacional dos fluxos está em [`FLUXOS.md`](../FLUXOS.md). A visão original está em [`Settlr — Arquitetura.md`](../Settlr%20%E2%80%94%20Arquitetura.md).
+Documento do **Kitou** como produto: o que entrega, para quem, e as regras que o código aplica. O detalhe operacional dos fluxos está em [`FLUXOS.md`](../FLUXOS.md). A visão original está em [`Kitou — Arquitetura.md`](../Kitou%20%E2%80%94%20Arquitetura.md).
 
 ---
 
@@ -14,7 +14,7 @@ O produto também atende BPO e banco. Com esses três compradores ele abrange o 
 
 | Comprador | Carteira | No produto |
 | --- | --- | --- |
-| PME | A própria | Primeira onda e piloto. A equipe do Settlr opera a conta |
+| PME | A própria | Primeira onda e piloto. A equipe da Kitou opera a conta |
 | BPO | Várias empresas | Cada empresa é uma conta. O BPO opera a cobrança; o dado de um cliente dele não cruza com o do outro |
 | Banco | A carteira do banco | A mesma régua e a mesma baixa. O banco é a conta, não um emissor a mais. Os adaptadores de emissor em `main` são Asaas e Inter |
 
@@ -25,7 +25,7 @@ Proposta registrada em [CONTRATO-BPO.md](./CONTRATO-BPO.md). Ainda depende do pa
 | Tema | Decisão proposta |
 | --- | --- |
 | Venda (SETL-35) | Direta ao BPO (parceiro operacional). White-label/revenda fora desta versão |
-| LGPD | Empresa da carteira = controladora; BPO = operador; Settlr = suboperador |
+| LGPD | Empresa da carteira = controladora; BPO = operador; Kitou = suboperador |
 | Login da empresa | Opcional (`dono`); BPO opera com `bpo_admin` / `bpo_operador` |
 | Preço | Mensalidade da organização + valor por empresa ativa |
 | WhatsApp | Uma instância por empresa; a trava `_ensure_unique_instances` permanece |
@@ -45,9 +45,9 @@ A jornada comercial, etapa por etapa, está em [JORNADA-VENDA-B2B.md](./JORNADA-
 | Caminho | Quem faz | Onde | Quem liga a conta |
 | --- | --- | --- | --- |
 | Pela tela | A própria empresa, que entra como dono | `/comecar` | O dono, em Configurações |
-| Pela API | A agência: a equipe do Settlr que opera várias contas (role `agencia`) | `POST /admin/tenants` | A agência, em `POST /admin/tenants/{id}/activate` |
+| Pela API | A agência: a equipe da Kitou que opera várias contas (role `agencia`) | `POST /admin/tenants` | A agência, em `POST /admin/tenants/{id}/activate` |
 
-A conta precisa de política, régua, horário, WhatsApp e base legal. Sem um deles, a ativação recusa. A agência é o próprio Settlr, operador dos dados no contrato, e não um intermediário entre o Settlr e a empresa. O piloto é operado por essa equipe. A tese de escala é o contador, e quem a valida é o primeiro contador que pedir o arquivo do período (`GET /payments/export`).
+A conta precisa de política, régua, horário, WhatsApp e base legal. Sem um deles, a ativação recusa. A agência é a própria Kitou, operadora dos dados no contrato, e não um intermediário entre a Kitou e a empresa. O piloto é operado por essa equipe. A tese de escala é o contador, e quem a valida é o primeiro contador que pedir o arquivo do período (`GET /payments/export`).
 
 | Papel | O que faz |
 | --- | --- |
@@ -99,7 +99,7 @@ A régua é **determinística** e dispara por cron. O agente de IA só entra qua
 
 ### Pix Automático
 
-Decisão: Settlr com Pix Automático ligado. Quando o débito automático quita, D-3 e D0 saem da régua do título. A régua ganha duas etapas: convite à adesão (no primeiro título ou no D+1 de quem não aderiu) e débito falhou (no dia em que o débito é recusado). O que vendemos para quem já tem Pix Automático é, nesta ordem: (1) conciliação de todo dinheiro que entra, em qualquer banco ou emissor, com o arquivo do contador; (2) a falha de débito tratada por conversa e acordo dentro da política. Dinheiro fora do Asaas é parte de (1).
+Decisão: Kitou com Pix Automático ligado. Quando o débito automático quita, D-3 e D0 saem da régua do título. A régua ganha duas etapas: convite à adesão (no primeiro título ou no D+1 de quem não aderiu) e débito falhou (no dia em que o débito é recusado). O que vendemos para quem já tem Pix Automático é, nesta ordem: (1) conciliação de todo dinheiro que entra, em qualquer banco ou emissor, com o arquivo do contador; (2) a falha de débito tratada por conversa e acordo dentro da política. Dinheiro fora do Asaas é parte de (1).
 
 O pagador do Pix Automático é pessoa física. O recebedor é pessoa jurídica com CNPJ ativo há pelo menos seis meses (Resolução BCB nº 482). Empresa com menos tempo de atividade fica de fora no início. Título cujo pagador é pessoa jurídica, a fatia B2B, permanece na régua de PIX copia-e-cola e boleto. Condomínios também permanecem nessa régua. Convite de adesão que o pagador não confirmou não se repete em menos de 30 dias: o Banco Central trata o reenvio idêntico nesse prazo como excesso.
 
@@ -187,7 +187,7 @@ Todo dinheiro que entra vira um `payment`. No caminho feliz isso acontece sem ar
 - **Diferença de valor:** juros/desconto dentro da regra do tenant aplica; parcial deixa o título `parcialmente_pago`; fora da regra vira exceção.
 - Um pagamento pode quitar vários títulos; vários pagamentos podem quitar um título (`matches` N:N).
 - Título que fica `pago` marca a cobrança como recebida no emissor (Asaas, id `pay_`; Inter, `codigoSolicitacao`). O devedor não recebe aviso novo do emissor. Cobrança que o próprio webhook do emissor já quitou não é marcada de novo. Referência de planilha não vai para o emissor.
-- Em `main` há dois adaptadores de emissor: Asaas e Inter. O Inter ainda não rodou em cliente vivo. Em produção, a baixa no Settlr cancela a cobrança no Inter; no sandbox ela simula o pagamento. Efí, iugu e Sicoob ficam no roadmap; até lá a planilha cobre esses títulos.
+- Em `main` há dois adaptadores de emissor: Asaas e Inter. O Inter ainda não rodou em cliente vivo. Em produção, a baixa na Kitou cancela a cobrança no Inter; no sandbox ela simula o pagamento. Efí, iugu e Sicoob ficam no roadmap; até lá a planilha cobre esses títulos.
 - O Open Finance é cliente genérico da API de contas. A conta informa `base_url`, `token` e `account_id` em `bank_feed.open_finance`. O código não nomeia um banco.
 - Em Pagamentos, o arquivo do período traz título, valor, data e identificador bancário (o E2E; se o banco não mandou, o txid). Só entra baixa definitiva. Comprovante ainda sem banco fica de fora.
 

@@ -13,12 +13,12 @@
 | [TEXTOS-REGUA.md](./TEXTOS-REGUA.md) | Textos versionados da régua, à espera do parecer do SETL-15 |
 | [TEMPLATES-WHATSAPP-META.md](./TEMPLATES-WHATSAPP-META.md) | 9 templates Meta (PME/BPO) para criar na WABA e gravar no onboarding |
 | [templates-whatsapp-meta.json](./templates-whatsapp-meta.json) | Nomes, params e payload pronto para `whatsapp_templates` |
-| [CONTRATO.md](./CONTRATO.md) | Minuta PME: base legal, retenção, CDC e LGPD (Settlr = operador) |
+| [CONTRATO.md](./CONTRATO.md) | Minuta PME: base legal, retenção, CDC e LGPD (Kitou = operador) |
 | [CONTRATO-BPO.md](./CONTRATO-BPO.md) | Minuta BPO: cadeia LGPD, preço, WhatsApp e termo de adesão da empresa (SETL-55) |
 | [TECNICA.md](./TECNICA.md) | O que foi implementado: gateway, cobrança, conciliação, cadastro, painel, OTLP e deploy |
 | [BANCO.md](./BANCO.md) | Criação do Postgres 16: databases, roles, Alembic, RLS e checkpointer |
 | [../FLUXOS.md](../FLUXOS.md) | Passo a passo dos 9 fluxos e qual serviço executa cada um |
-| [../Settlr — Arquitetura.md](../Settlr%20%E2%80%94%20Arquitetura.md) | Visão de produto e desenho dos serviços |
+| [../Kitou — Arquitetura.md](../Kitou%20%E2%80%94%20Arquitetura.md) | Visão de produto e desenho dos serviços |
 | [../ARQUITETURA-DEPLOY.md](../ARQUITETURA-DEPLOY.md) | Swarm, redes, secrets, `docker/stack.yml` e a stack de observabilidade |
 | [MINIKUBE.md](./MINIKUBE.md) | Subir a aplicação no Minikube e publicar o painel com port-forward |
 | [SITE.md](./SITE.md) | Serviço `site`: landing, login da área do cliente e a entrega da sessão ao painel |

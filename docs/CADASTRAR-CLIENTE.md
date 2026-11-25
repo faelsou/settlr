@@ -43,7 +43,7 @@ Política de negociação, régua e horário já nascem com um padrão sensato n
 Há dois caminhos. Nos dois a conta nasce desligada.
 
 - **A empresa cria sozinha**, em `/comecar` (link **Criar a conta** no login). Ela preenche nome, apelido, e-mail do dono, política, régua, horário, WhatsApp, base legal e o atraso médio de antes da implantação. O dono entra na hora e liga a conta em **Configurações**, quando estiver tudo pronto.
-- **A agência cria pela API**, com um usuário de role `agencia`. A agência é a equipe do Settlr que opera as contas, não um intermediário. Use esse caminho quando a empresa preferir que a gente monte a conta antes de entregar o painel. O resto deste passo descreve esse caminho.
+- **A agência cria pela API**, com um usuário de role `agencia`. A agência é a equipe da Kitou que opera as contas, não um intermediário. Use esse caminho quando a empresa preferir que a gente monte a conta antes de entregar o painel. O resto deste passo descreve esse caminho.
 
 Crie a conta com nome, um apelido curto (só letras minúsculas, números e hífen, por exemplo `software-house`) e, se já tiver, o WhatsApp e a base legal.
 

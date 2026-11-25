@@ -76,7 +76,7 @@ A fila de LLM da cobrança é `cobranca-llm` (agente e inbound). A do comprovant
 4. Role `agencia` acessa `/admin/tenants` sem RLS de um tenant só.
 5. Role da aplicação **não** é superuser nem dona das tabelas, para o RLS valer.
 
-Onboarding: criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → ativar. A empresa cria pela tela (`POST /onboarding`, entra como `dono`) e ativa em `POST /settings/activate`. A agência, equipe do Settlr com role `agencia`, cria em `POST /admin/tenants` e ativa em `POST /admin/tenants/{id}/activate`. As duas ativações usam a mesma checagem. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
+Onboarding: criar tenant → política/régua/horário/WhatsApp/base legal → cadastrar o nome do template oficial de cada etapa → importar base → ativar. A empresa cria pela tela (`POST /onboarding`, entra como `dono`) e ativa em `POST /settings/activate`. A agência, equipe da Kitou com role `agencia`, cria em `POST /admin/tenants` e ativa em `POST /admin/tenants/{id}/activate`. As duas ativações usam a mesma checagem. A ativação pergunta à Evolution se a sessão está `open` e se a Meta aprovou esses templates. Sem os campos, sem pareamento ou sem template aprovado, devolve 422 e a conta continua desligada. Em `ENV=prod` a mesma recusa inclui `parecer jurídico (SETL-15)` enquanto `LEGAL_OPINION_REF` estiver vazio.
 
 ## 5. Modelo de dados (Postgres `cobranca`)
 
@@ -172,7 +172,7 @@ Fora de produção, cada processo HTTP expõe `/docs` com as rotas que ele mesmo
 
 ## 8. Painel (`web/`)
 
-- Next.js 15 App Router, TypeScript, Tailwind, TanStack Query. A marca na tela e no título da aba é **Settlr**.
+- Next.js 15 App Router, TypeScript, Tailwind, TanStack Query. A marca na tela e no título da aba é **Kitou**.
 - `output: "standalone"` para a imagem Swarm.
 - Cliente em `web/lib/api.ts` — um fetch autenticado por rota.
 - A sidebar recolhe. O início junta as métricas dos últimos 30 dias e as filas que pedem gente: exceções abertas, conversas com humano, entregas que falharam e aprovações.
@@ -228,7 +228,7 @@ O Prometheus retém 6 horas. O datasource padrão do Grafana é o Thanos. Um log
 | Minikube | `kubectl apply -k k8s/observability` | `kubectl -n observability port-forward svc/grafana 3001:3000` |
 | Swarm | `BACKEND_NETWORK=cobranca_backend docker stack deploy -c observability/stack.yml cobranca-obs` | porta 3001 no nó de dados, sem router no Traefik |
 
-A pasta **Cobrança** tem o painel `Settlr — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) e o painel `WhatsApp — ponta a ponta` (mensagem aceita, roteada e enviada, por contexto, e arquivo recebido ou entregue com ok e falha) nos três ambientes. No Minikube a pasta **Kubernetes** separa os três sinais do cluster:
+A pasta **Cobrança** tem o painel `Kitou — aplicação` (HTTP, filas, Postgres/Redis, logs, traces e recursos) e o painel `WhatsApp — ponta a ponta` (mensagem aceita, roteada e enviada, por contexto, e arquivo recebido ou entregue com ok e falha) nos três ambientes. No Minikube a pasta **Kubernetes** separa os três sinais do cluster:
 
 | Painel | O que mostra |
 | --- | --- |

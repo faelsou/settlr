@@ -1,8 +1,8 @@
 {
-  "name": "Settlr SDR · 04 Ferramentas do agente",
+  "name": "Kitou SDR · 04 Ferramentas do agente",
   "nodes": [
     {
-      "id": "0c6653d3-a1cc-520d-bbd0-9d4fd9781e68",
+      "id": "bf8ce145-0021-5a85-abb3-6dd643169e93",
       "name": "Entrada",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -36,7 +36,7 @@
       }
     },
     {
-      "id": "69c70d5f-8208-5e30-9e06-7692b8bd9fb1",
+      "id": "0ac9664f-48dd-5ba8-a55f-20fc275b4fad",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -48,121 +48,121 @@
         "assignments": {
           "assignments": [
             {
-              "id": "5843bcdf-d039-5e20-a5f0-f4120724d482",
+              "id": "824c5871-c241-5b1a-bba9-efd3d36ad1d8",
               "name": "sdr_nome",
               "value": "Lia",
               "type": "string"
             },
             {
-              "id": "6d749198-d788-56c4-8a0e-5a7156b7ad4a",
+              "id": "755ed880-3b84-583f-979d-55de6bee6811",
               "name": "closer_nome",
               "value": "Rafael",
               "type": "string"
             },
             {
-              "id": "2d4e470d-cb44-5b5d-aaa5-13dcd3aa4d26",
+              "id": "d727032e-9486-5194-94fc-4558389c7d95",
               "name": "closer_email",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "ad46fd49-11e6-5fb7-a70c-ca8f62b5f95b",
+              "id": "5c072e0f-dc24-523e-8342-73ec311cae35",
               "name": "closer_whatsapp",
               "value": "5511900000000",
               "type": "string"
             },
             {
-              "id": "5afdef0f-f78e-5499-8c48-4b3810d5d3e7",
+              "id": "14410c32-41e5-5c21-bf3d-78f3a5f42f47",
               "name": "evolution_url",
               "value": "https://evolution.exemplo.com.br",
               "type": "string"
             },
             {
-              "id": "4cea8b22-2dbc-5bab-9bd0-fef0fa845533",
+              "id": "9931f46f-e43a-5e11-99e4-96118e708310",
               "name": "evolution_instance",
-              "value": "settlr-sdr",
+              "value": "kitou-sdr",
               "type": "string"
             },
             {
-              "id": "b6b49279-939e-5d74-be9b-622e7aebbb1a",
+              "id": "99982f1e-583b-5fe5-8f60-5e0774765839",
               "name": "calendar_id",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "f9aa2eaa-4965-5a20-b680-54f3e924f3fe",
+              "id": "9f1da175-2602-5f89-952e-0bea1ce55d2b",
               "name": "timezone",
               "value": "America/Sao_Paulo",
               "type": "string"
             },
             {
-              "id": "496df518-4c4e-5a77-bca6-4b4608c6c6c8",
+              "id": "9df39e17-5122-5de5-92bb-b8887c859946",
               "name": "duracao_reuniao_min",
               "value": 30,
               "type": "number"
             },
             {
-              "id": "a79dedb5-d11e-521e-902b-f6a1eef97aad",
+              "id": "b2f07a7f-6726-5149-bbd8-83407fc1e0d7",
               "name": "horario_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "c842fe7a-4792-512a-a92b-e6aea0f75427",
+              "id": "c75a65a6-76fd-5aba-8159-94b8551aa14f",
               "name": "horario_fim",
               "value": 18,
               "type": "number"
             },
             {
-              "id": "68bf6818-8624-592c-8b99-f3328ba4cc0c",
+              "id": "c57f687c-b073-58e3-a2b4-dca0a3615853",
               "name": "almoco_inicio",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "87e25922-967e-53de-a223-5130b8e9355b",
+              "id": "33a62081-558e-5158-bea1-428877cdb6de",
               "name": "almoco_fim",
               "value": 13,
               "type": "number"
             },
             {
-              "id": "701c8fd2-639c-5cd4-a795-52cbdcee9851",
+              "id": "672505ca-01b5-540d-8e47-d349facc981b",
               "name": "antecedencia_min_horas",
               "value": 2,
               "type": "number"
             },
             {
-              "id": "b385f93b-f059-5782-b803-6317e52b0e85",
+              "id": "d1b30a61-21c7-5a58-9554-4d94191f92b6",
               "name": "dias_busca",
               "value": 7,
               "type": "number"
             },
             {
-              "id": "a34e65fa-14f1-5821-af05-89781a5a55cb",
+              "id": "3f74ece0-2820-57c4-8c1f-9f6a87385826",
               "name": "debounce_segundos",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "84dc829f-3467-5bc7-8ec8-e5528a3195d8",
+              "id": "c65d814c-609e-5d20-abc0-c0d43ebe7177",
               "name": "pausa_humano_horas",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "6b654a2c-97f5-543f-b46e-b2d5d5506248",
+              "id": "7b7c82b6-64ce-51aa-a422-1e6e7c04a329",
               "name": "max_followups",
               "value": 4,
               "type": "number"
             },
             {
-              "id": "fe4c6551-61a3-5aab-a9f2-156d09576ccc",
+              "id": "855dd819-039d-5e51-beeb-84a8185d6fe1",
               "name": "followup_hora_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "36c0b5c3-9eaf-5077-9044-053d3d79be6b",
+              "id": "ef9203ac-5e02-55d9-8569-cd0c3baa9570",
               "name": "followup_hora_fim",
               "value": 18,
               "type": "number"
@@ -174,7 +174,7 @@
       }
     },
     {
-      "id": "f12b5dd5-54b9-52ea-8c59-f2a300e8ad3f",
+      "id": "219fbeb2-397b-57f8-969e-ac2993817266",
       "name": "Ação",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -195,7 +195,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "6b171e87-aba1-54a3-b753-b7964c7f1e45",
+                    "id": "3b717e0a-5178-58d2-8873-3977dc224fe0",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "horarios",
                     "operator": {
@@ -219,7 +219,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "087b86b2-2d75-5445-bf02-95a2dc7bc59d",
+                    "id": "1b8a23e1-8584-5eba-bbd8-74cc2b1f2ea3",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "agendar",
                     "operator": {
@@ -243,7 +243,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "02c3cb5d-167b-53b6-bdf5-01b3ae9aa399",
+                    "id": "be4c2f0f-c276-5128-bcc9-a55850a1992e",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "cancelar",
                     "operator": {
@@ -267,7 +267,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "b64d5af4-c523-5ade-85ec-e3325d6d7d88",
+                    "id": "b5572f5f-80ad-5985-bf06-0b1bd8baa9c8",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "confirmar",
                     "operator": {
@@ -291,7 +291,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "2c3481bf-f399-5cec-b911-0132c5025150",
+                    "id": "991b091d-8c6b-54b4-b4e8-04b94747e046",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "atualizar_lead",
                     "operator": {
@@ -315,7 +315,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "5f3e1496-b789-53ad-bc3f-943a5f68a6a3",
+                    "id": "d6ca4104-17a1-580d-a8d4-2898b167bd8f",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "transferir_humano",
                     "operator": {
@@ -339,7 +339,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "b1c25d55-ce13-505e-aac0-cde25830fc8e",
+                    "id": "28921fa1-2a22-55d0-b37b-6e1e8ed3bf57",
                     "leftValue": "={{ $('Entrada').first().json.acao }}",
                     "rightValue": "opt_out",
                     "operator": {
@@ -361,7 +361,7 @@
       }
     },
     {
-      "id": "ff6b540c-4fc9-5bd4-ab0e-e7035e963ea9",
+      "id": "a11a270c-1981-55e3-bfaa-99bb468464c1",
       "name": "Ação desconhecida",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -373,7 +373,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "8347cb00-1fb1-56c2-9a11-114515ab9520",
+              "id": "8357f141-97ee-51dc-a661-c7a7201d42c0",
               "name": "resposta",
               "value": "Ação desconhecida. Siga a conversa sem esta ferramenta.",
               "type": "string"
@@ -384,7 +384,7 @@
       }
     },
     {
-      "id": "e5c1fced-1ceb-569b-a74a-ba62ecb124ab",
+      "id": "0b2ffd0f-b2aa-54db-a11b-88f1caa26604",
       "name": "Janela de busca",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -397,7 +397,7 @@
       }
     },
     {
-      "id": "b6ccad2c-4641-55a2-b5b4-552a1fb061c3",
+      "id": "1b1b5f17-6f20-5360-bea3-33620d8b3d53",
       "name": "FreeBusy (semana)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -423,7 +423,7 @@
       }
     },
     {
-      "id": "9eabcb09-6f15-59d2-8564-0c41e5b820b0",
+      "id": "098c7c56-4dd9-5fbf-b01e-14b1fcd4b449",
       "name": "Calcular horários livres",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -436,7 +436,7 @@
       }
     },
     {
-      "id": "5151ccc4-9b51-5524-8f27-de4fdcb79759",
+      "id": "dcb890ca-48d2-542a-ba10-e1bee28190f8",
       "name": "Validar horário",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -449,7 +449,7 @@
       }
     },
     {
-      "id": "6fcecebf-5060-5806-afa1-6a103a1da9d6",
+      "id": "98d854c9-c66f-515b-878b-0bec2e14835e",
       "name": "Horário válido?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -467,7 +467,7 @@
           },
           "conditions": [
             {
-              "id": "227fd797-9adb-5931-9d8f-990a696fa227",
+              "id": "ed12de15-6e94-5806-a648-a6c197eceabb",
               "leftValue": "={{ $json.ok }}",
               "operator": {
                 "type": "boolean",
@@ -483,7 +483,7 @@
       }
     },
     {
-      "id": "dbe43866-681b-5ab6-91d1-94d934abab17",
+      "id": "0a3bd9bc-b99a-5250-a01d-9fb46f11e448",
       "name": "Dados do lead",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -501,12 +501,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "a41d1238-f54a-5469-bd9e-f2c158add177",
+      "id": "2328ddf8-02d5-58f3-8675-dfb310534611",
       "name": "Já tem reunião?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -524,7 +524,7 @@
           },
           "conditions": [
             {
-              "id": "b300c01f-cef0-546f-a9c0-160c59abbfc2",
+              "id": "8c1aa160-8da5-57e5-a287-de77528f4da8",
               "leftValue": "={{ $json.ja_marcada }}",
               "operator": {
                 "type": "string",
@@ -540,7 +540,7 @@
       }
     },
     {
-      "id": "187f9224-0d78-5cf6-aced-d48f15d31158",
+      "id": "a78b37c3-cac1-5d0f-82d3-67e4a065767f",
       "name": "Resposta: já marcada",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -552,7 +552,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "52dab453-fdb8-5b15-88d1-9a65a4a92721",
+              "id": "c853210c-41c2-5e42-8619-3baa81fabea2",
               "name": "resposta",
               "value": "=O lead já tem reunião em {{ $json.ja_marcada }}. Se ele quer mudar, chame cancelar_reuniao e depois agende de novo.",
               "type": "string"
@@ -563,7 +563,7 @@
       }
     },
     {
-      "id": "865177a7-9c3c-584a-b19e-dfbf37bc415a",
+      "id": "53466db8-d4e4-5e04-b6bc-a363e3d3fe1f",
       "name": "FreeBusy (slot)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -589,7 +589,7 @@
       }
     },
     {
-      "id": "a8a0d331-a6c3-59dd-a1b2-f2678b0e2a9b",
+      "id": "55e9d546-5b86-55f8-a8e2-8554a26b86ab",
       "name": "Slot livre?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -607,7 +607,7 @@
           },
           "conditions": [
             {
-              "id": "a2416b51-5d0e-566e-b574-97a4edb0fa9a",
+              "id": "b281db13-c0d1-52d4-ba60-de681e45f3f7",
               "leftValue": "={{ ((($json.calendars || {})[$('Config').first().json.calendar_id] || {}).busy ?? [null]).length === 0 }}",
               "operator": {
                 "type": "boolean",
@@ -623,7 +623,7 @@
       }
     },
     {
-      "id": "55dffdde-3b5d-52e3-932a-17d27e892309",
+      "id": "4131d3fd-1823-560a-82e2-d0def7bfcea6",
       "name": "Resposta: ocupado",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -635,7 +635,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "cb8f1b19-1b4c-5415-8643-f460d8aa689e",
+              "id": "b93bf517-bdeb-504b-9a4a-793c3607e183",
               "name": "resposta",
               "value": "Esse horário acabou de ser ocupado. Chame ver_horarios e ofereça os mais próximos.",
               "type": "string"
@@ -646,7 +646,7 @@
       }
     },
     {
-      "id": "1c8c873b-d844-57f9-ba4b-7b7295045ea3",
+      "id": "3984edf6-507b-5796-bfb9-23147cdc861c",
       "name": "Montar evento",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -655,11 +655,11 @@
         300
       ],
       "parameters": {
-        "jsCode": "const cfg = $('Config').first().json;\nconst v = $('Validar horário').first().json;\nconst l = $('Dados do lead').first().json;\nconst email = v.email || l.email || '';\nconst quem = l.company || l.name || ('+' + l.phone);\nconst descr = [\n  `Conversa de ${cfg.duracao_reuniao_min} min com ${cfg.closer_nome}, do Settlr.`,\n  '',\n  'Pré-atendimento (SDR):',\n  `Contato: ${l.name || '?'} | WhatsApp +${l.phone}`,\n  `Segmento: ${l.segment || '?'} | cobranças/mês: ${l.monthly_charges ?? '?'} | emissor: ${l.issuer || '?'} | fit: ${l.fit}`,\n  `Dor: ${l.pain || '?'}`,\n  `Resumo: ${l.summary || '?'}`,\n].join('\\n');\nconst attendees = [{ email: cfg.closer_email }];\nif (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) attendees.push({ email, displayName: l.name || undefined });\nreturn [{ json: {\n  email_valido: attendees.length > 1 ? email : '',\n  evento: {\n    summary: `Settlr × ${quem}: cobrança e conciliação`,\n    description: descr,\n    start: { dateTime: v.start, timeZone: cfg.timezone },\n    end: { dateTime: v.end, timeZone: cfg.timezone },\n    attendees,\n    conferenceData: { createRequest: { requestId: `sdr-${l.phone}-${Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } } },\n    reminders: { useDefault: true },\n  },\n} }];\n"
+        "jsCode": "const cfg = $('Config').first().json;\nconst v = $('Validar horário').first().json;\nconst l = $('Dados do lead').first().json;\nconst email = v.email || l.email || '';\nconst quem = l.company || l.name || ('+' + l.phone);\nconst descr = [\n  `Conversa de ${cfg.duracao_reuniao_min} min com ${cfg.closer_nome}, da Kitou.`,\n  '',\n  'Pré-atendimento (SDR):',\n  `Contato: ${l.name || '?'} | WhatsApp +${l.phone}`,\n  `Segmento: ${l.segment || '?'} | cobranças/mês: ${l.monthly_charges ?? '?'} | emissor: ${l.issuer || '?'} | fit: ${l.fit}`,\n  `Dor: ${l.pain || '?'}`,\n  `Resumo: ${l.summary || '?'}`,\n].join('\\n');\nconst attendees = [{ email: cfg.closer_email }];\nif (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) attendees.push({ email, displayName: l.name || undefined });\nreturn [{ json: {\n  email_valido: attendees.length > 1 ? email : '',\n  evento: {\n    summary: `Kitou × ${quem}: cobrança e conciliação`,\n    description: descr,\n    start: { dateTime: v.start, timeZone: cfg.timezone },\n    end: { dateTime: v.end, timeZone: cfg.timezone },\n    attendees,\n    conferenceData: { createRequest: { requestId: `sdr-${l.phone}-${Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } } },\n    reminders: { useDefault: true },\n  },\n} }];\n"
       }
     },
     {
-      "id": "71d9fc44-809c-5130-b3a8-3ef25991d121",
+      "id": "54d469d9-08de-5a9f-8b2c-9d1dc140fd57",
       "name": "Criar evento",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -685,7 +685,7 @@
       }
     },
     {
-      "id": "397c1839-d1ef-573e-886c-0220033a926c",
+      "id": "0c3c9318-4396-5ace-8c4c-20a579eea641",
       "name": "Salvar reunião",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -703,12 +703,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "2a697a51-fc16-5ba1-aad9-aae6eb6db19b",
+      "id": "b91ca710-8b7e-56aa-8284-9dd77aef339f",
       "name": "Resposta: agendado",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -720,7 +720,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "674aaae6-1a44-556a-a464-04a9698814c8",
+              "id": "78c5bcbd-1dd7-5c8e-ad7a-029c968b7cb4",
               "name": "resposta",
               "value": "=Reunião marcada para {{ DateTime.fromISO($('Validar horário').first().json.start).setZone($('Config').first().json.timezone).setLocale('pt-BR').toFormat(\"cccc, dd/LL 'às' HH'h'mm\") }} (Brasília) com {{ $('Config').first().json.closer_nome }}. Link: {{ $('Criar evento').first().json.hangoutLink || 'vai no convite' }}. {{ $('Montar evento').first().json.email_valido ? 'Convite enviado para ' + $('Montar evento').first().json.email_valido + '.' : 'O lead não passou e-mail: o link fica só aqui no WhatsApp.' }} Confirme ao lead dia, hora e link, e diga que você manda um lembrete antes.",
               "type": "string"
@@ -731,7 +731,7 @@
       }
     },
     {
-      "id": "44397ad1-6c74-5c86-ab9a-62bc8fd6dab2",
+      "id": "ce875d8f-ecef-5993-a11d-0f58e58a0626",
       "name": "Resposta: horário inválido",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -743,7 +743,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "ce65190f-5407-53c2-b51b-c3f9e6d4fb8a",
+              "id": "bf8f08fb-a993-5be8-bf58-095a48ea8122",
               "name": "resposta",
               "value": "={{ $json.resposta }}",
               "type": "string"
@@ -754,7 +754,7 @@
       }
     },
     {
-      "id": "efd5214b-df2f-5489-97d5-1c8ff4602de9",
+      "id": "3bcfb26c-2c73-5a8b-b3b5-f6462af1049c",
       "name": "Reunião ativa",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -772,13 +772,13 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       },
       "alwaysOutputData": true
     },
     {
-      "id": "010891c7-77f8-5c39-aeb9-9991b4ae6704",
+      "id": "ed452d2d-1018-5042-8b68-2b3d9d9a2b1f",
       "name": "Tem reunião?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -796,7 +796,7 @@
           },
           "conditions": [
             {
-              "id": "fdab08a8-f420-59ef-80f8-3ba39d1f58a4",
+              "id": "3d922f82-8696-513e-8411-30f75bdc6e39",
               "leftValue": "={{ !!$json.id }}",
               "operator": {
                 "type": "boolean",
@@ -812,7 +812,7 @@
       }
     },
     {
-      "id": "e38936d0-60db-5bab-a6d0-ffd01f7ed056",
+      "id": "bc11ff5f-03a0-5a16-9c60-0240f5507d09",
       "name": "Cancelar no Google",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -836,7 +836,7 @@
       "onError": "continueRegularOutput"
     },
     {
-      "id": "095d86d0-5ee6-5beb-8fb6-976003d9fdba",
+      "id": "0ddec04f-a39d-54ec-a342-5df13dec3188",
       "name": "Marcar cancelada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -854,12 +854,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "50f94a65-77a8-529c-8dc6-5e0fda0a1ef7",
+      "id": "e0bd537e-bbad-5101-91e5-ca1c539ad35d",
       "name": "Resposta: cancelada",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -871,7 +871,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "58ec1214-521e-5736-9e02-385427e79ed7",
+              "id": "5a6008f6-b95c-5f86-aebf-8b42b1b07919",
               "name": "resposta",
               "value": "Reunião cancelada e convite retirado. Se o lead quer remarcar, chame ver_horarios.",
               "type": "string"
@@ -882,7 +882,7 @@
       }
     },
     {
-      "id": "48de62bc-b6af-5e2e-ad4e-c64ea4e20a20",
+      "id": "90b11522-80dc-50fa-aa45-b0537e19336e",
       "name": "Resposta: sem reunião",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -894,7 +894,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "a7e4fb17-c314-510e-9e9b-9196d42ba68e",
+              "id": "616252ec-34e3-5e08-ab00-b40cf38a61ef",
               "name": "resposta",
               "value": "Não há reunião futura marcada para este lead.",
               "type": "string"
@@ -905,7 +905,7 @@
       }
     },
     {
-      "id": "c75d8886-ce8e-5df3-89ac-ee295a0aa19f",
+      "id": "4cfb4217-63a8-5316-955e-76b405f689ae",
       "name": "Confirmar presença",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -923,13 +923,13 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       },
       "alwaysOutputData": true
     },
     {
-      "id": "fb3f05df-1397-5f39-a17f-1154f340d118",
+      "id": "8eb48d2f-34cc-5407-88c1-b0c754259a3c",
       "name": "Resposta: confirmada",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -941,7 +941,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "6ac1b331-69f8-5fed-85eb-b0a2d7a5a2b7",
+              "id": "c00b9975-1111-58a4-96f8-347ef09df551",
               "name": "resposta",
               "value": "={{ $json.id ? 'Presença confirmada. Agradeça em uma frase curta.' : 'Não havia reunião pendente de confirmação.' }}",
               "type": "string"
@@ -952,7 +952,7 @@
       }
     },
     {
-      "id": "aec2d8cb-6aff-5e8c-9d8b-7dcf96fdc3ce",
+      "id": "a5f9bec8-c981-5672-85bb-60cd2a609a6e",
       "name": "Filtrar campos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -965,7 +965,7 @@
       }
     },
     {
-      "id": "80ed36e9-e9bb-590c-9c63-51e660b184ec",
+      "id": "31a688b6-2b71-5391-be5f-e1f20a8ab610",
       "name": "Gravar campos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -983,13 +983,13 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       },
       "alwaysOutputData": true
     },
     {
-      "id": "2b176171-874e-5b53-9573-acd5e4eb4fd2",
+      "id": "bed1395e-0aac-5aa9-8f58-01d1d6a8f047",
       "name": "Resposta: lead atualizado",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1001,7 +1001,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "3ec641dd-8e2d-590c-8179-a8dca4a08737",
+              "id": "1c0834ba-a9da-505c-8a72-93a880fd078d",
               "name": "resposta",
               "value": "={{ $('Filtrar campos').first().json.resposta }}",
               "type": "string"
@@ -1012,7 +1012,7 @@
       }
     },
     {
-      "id": "f6f7fa53-7ea1-5fe3-814e-15d75003716c",
+      "id": "b7c3f01a-74b7-5308-88ed-15388fd6013d",
       "name": "Pausar e marcar humano",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -1030,12 +1030,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "b50bd1f8-623d-509d-9eb5-c9c3d8fc4930",
+      "id": "432a482e-c3b1-5320-9234-fb1c8b134878",
       "name": "Aviso ao especialista",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1048,7 +1048,7 @@
       }
     },
     {
-      "id": "2ce2a8d1-4653-565b-9f49-896b006f629b",
+      "id": "a20e8e42-19d9-5423-9f5e-621c3af8a8aa",
       "name": "Avisar especialista",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -1083,7 +1083,7 @@
       "onError": "continueRegularOutput"
     },
     {
-      "id": "ccd7af9c-007d-5243-90a5-bef30b49f86f",
+      "id": "cf3612af-0dfb-5855-9538-17558ea8490f",
       "name": "Resposta: transferido",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1095,7 +1095,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "db5df247-6540-5458-9c2c-50b2bce9d1ec",
+              "id": "170cf769-9769-50e1-a580-ab04ca87f505",
               "name": "resposta",
               "value": "=Transferido. Diga ao lead, em uma frase, que Rafael segue a conversa por aqui no horário comercial. Depois disso não faça mais perguntas.",
               "type": "string"
@@ -1106,7 +1106,7 @@
       }
     },
     {
-      "id": "db81a1ab-aa7a-5a57-8547-8c5b28540014",
+      "id": "f58e319d-6050-5d83-ae75-0b2315166c56",
       "name": "Registrar opt-out",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -1124,13 +1124,13 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       },
       "alwaysOutputData": true
     },
     {
-      "id": "f5085c19-3d55-5b7b-97ed-3b6ff93770da",
+      "id": "4664ef78-e87a-5d60-a698-be66daed69ec",
       "name": "Resposta: opt-out",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1142,7 +1142,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7f9472eb-38a8-54f0-b8a3-9e6918b13bb3",
+              "id": "83cc4276-5f36-562b-8902-0cbef7b6acbd",
               "name": "resposta",
               "value": "Registrado. Responda uma frase curta e educada confirmando que não vai mais mandar mensagem. Não tente reverter.",
               "type": "string"

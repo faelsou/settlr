@@ -9,7 +9,7 @@
  */
 (function () {
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches, root = document.documentElement;
-  var CFG = window.SETTLR_CONFIG || {};
+  var CFG = window.KITOU_CONFIG || {};
   var APP_URL = String(CFG.appUrl || "").replace(/\/$/, "");
   var WA_NUMBER = String(CFG.whatsappNumber || "").replace(/\D/g, "");
   var MODE = CFG.supabaseUrl && CFG.supabaseAnonKey ? "supabase" : "dev";
@@ -77,7 +77,7 @@
       root.classList.remove("swapping");
     }
     if (animate && !reduce) { root.classList.add("swapping"); setTimeout(run, 160); } else run();
-    try { localStorage.setItem("settlr-lang", lang); } catch (e) {}
+    try { localStorage.setItem("kitou-lang", lang); } catch (e) {}
   }
 
   /* Menu do idioma */
@@ -197,6 +197,6 @@
   }
   size(); window.addEventListener("resize", size); requestAnimationFrame(draw);
 
-  var saved = null; try { saved = localStorage.getItem("settlr-lang"); } catch (e) {}
+  var saved = null; try { saved = localStorage.getItem("kitou-lang"); } catch (e) {}
   apply(I18N[saved] || saved === "pt-BR" ? saved : "pt-BR", false);
 })();

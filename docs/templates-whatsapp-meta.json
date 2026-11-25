@@ -5,63 +5,63 @@
   "nota": "Mesmos templates para PME e BPO. Uma conta por empresa. Colar whatsapp_templates em Configurações / API após aprovação na Meta.",
   "whatsapp_templates": {
     "lembrete": {
-      "name": "settlr_lembrete",
+      "name": "kitou_lembrete",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"],
       "body_meta": "Olá, {{1}}! Passando para lembrar que o pagamento de {{2}} no valor de {{3}} vence em {{4}}. PIX copia e cola: {{5}}",
       "etapa": "D-3"
     },
     "vencimento_hoje": {
-      "name": "settlr_vencimento_hoje",
+      "name": "kitou_vencimento_hoje",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{pix}"],
       "body_meta": "Olá, {{1}}. O pagamento de {{2}} ({{3}}) vence hoje. PIX: {{4}}",
       "etapa": "D0"
     },
     "segunda_via": {
-      "name": "settlr_segunda_via",
+      "name": "kitou_segunda_via",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{link}"],
       "body_meta": "Olá, {{1}}. Ainda não identificamos o pagamento de {{2}} ({{3}}), vencido em {{4}}. Segue a segunda via: {{5}}. Se já pagou, é só responder com o comprovante.",
       "etapa": "D+1"
     },
     "convite_quitar": {
-      "name": "settlr_convite_quitar",
+      "name": "kitou_convite_quitar",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"],
       "body_meta": "Olá, {{1}}. {{2}} ({{3}}) venceu em {{4}}. O PIX para quitar é {{5}}. Se precisar de outra forma, responda esta mensagem.",
       "etapa": "D+3"
     },
     "oferta_negociacao": {
-      "name": "settlr_oferta_negociacao",
+      "name": "kitou_oferta_negociacao",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}"],
       "body_meta": "Olá, {{1}}. Sabemos que imprevistos acontecem. Se precisar, podemos combinar uma forma de pagamento para {{2}}. É só responder esta mensagem.",
       "etapa": "D+5"
     },
     "convite_conversa": {
-      "name": "settlr_convite_conversa",
+      "name": "kitou_convite_conversa",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"],
       "body_meta": "Olá, {{1}}. {{2}} ({{3}}) segue em aberto desde {{4}}. Se quiser conversar sobre o pagamento, responda esta mensagem. O PIX para quitar é {{5}}.",
       "etapa": "D+7"
     },
     "lembrete_aberto": {
-      "name": "settlr_lembrete_aberto",
+      "name": "kitou_lembrete_aberto",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"],
       "body_meta": "Olá, {{1}}. {{2}} ({{3}}) segue em aberto desde {{4}}. O PIX para quitar é {{5}}. Se a forma precisar ser outra, responda esta mensagem.",
       "etapa": "D+10"
     },
     "ultima_tentativa": {
-      "name": "settlr_ultima_tentativa",
+      "name": "kitou_ultima_tentativa",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}"],
       "body_meta": "Olá, {{1}}. Esta é nossa última mensagem automática sobre {{2}} ({{3}}). Depois dela, o atendimento passa para nossa equipe.",
       "etapa": "D+15"
     },
     "aviso_equipe": {
-      "name": "settlr_aviso_equipe",
+      "name": "kitou_aviso_equipe",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"],
       "body_meta": "Olá, {{1}}. {{2}} ({{3}}) segue em aberto desde {{4}}. Esta mensagem é automática. Depois dela, a equipe assume o atendimento. Quite pelo PIX {{5}} ou responda se quiser conversar.",
@@ -70,47 +70,47 @@
   },
   "settings_payload_whatsapp_templates": {
     "lembrete": {
-      "name": "settlr_lembrete",
+      "name": "kitou_lembrete",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"]
     },
     "vencimento_hoje": {
-      "name": "settlr_vencimento_hoje",
+      "name": "kitou_vencimento_hoje",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{pix}"]
     },
     "segunda_via": {
-      "name": "settlr_segunda_via",
+      "name": "kitou_segunda_via",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{link}"]
     },
     "convite_quitar": {
-      "name": "settlr_convite_quitar",
+      "name": "kitou_convite_quitar",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"]
     },
     "oferta_negociacao": {
-      "name": "settlr_oferta_negociacao",
+      "name": "kitou_oferta_negociacao",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}"]
     },
     "convite_conversa": {
-      "name": "settlr_convite_conversa",
+      "name": "kitou_convite_conversa",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"]
     },
     "lembrete_aberto": {
-      "name": "settlr_lembrete_aberto",
+      "name": "kitou_lembrete_aberto",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"]
     },
     "ultima_tentativa": {
-      "name": "settlr_ultima_tentativa",
+      "name": "kitou_ultima_tentativa",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}"]
     },
     "aviso_equipe": {
-      "name": "settlr_aviso_equipe",
+      "name": "kitou_aviso_equipe",
       "language": "pt_BR",
       "params": ["{nome}", "{descricao}", "{valor}", "{vencimento}", "{pix}"]
     }

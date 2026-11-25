@@ -1,8 +1,8 @@
 {
-  "name": "Settlr SDR · 02 Follow-up",
+  "name": "Kitou SDR · 02 Follow-up",
   "nodes": [
     {
-      "id": "6a4542bb-2aaf-5240-b3f6-4b18b248088c",
+      "id": "0a6eb693-3082-5952-8f6a-5ab237a963e4",
       "name": "A cada 30 min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -22,7 +22,7 @@
       }
     },
     {
-      "id": "4e729913-0d36-5f0b-8c4f-5f0c0e62b700",
+      "id": "2a78f88b-20e4-598c-87c7-8308134c3f06",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -34,121 +34,121 @@
         "assignments": {
           "assignments": [
             {
-              "id": "f5a7425f-5d69-5003-a77d-7550ae2519a5",
+              "id": "40fcd126-14cc-545e-b5b6-d6785a4ffa42",
               "name": "sdr_nome",
               "value": "Lia",
               "type": "string"
             },
             {
-              "id": "9c8698b6-9cf3-5ca3-bd9d-fe20773a79d1",
+              "id": "a765c286-5eb7-519e-9409-bf7ee155a5b2",
               "name": "closer_nome",
               "value": "Rafael",
               "type": "string"
             },
             {
-              "id": "dcf34fcc-db90-56c5-9b7e-03aab1238677",
+              "id": "cc476042-0fe5-58b9-9796-42d571f6b414",
               "name": "closer_email",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "d7ca7f4d-2fad-587f-b76f-2516a0a1d627",
+              "id": "e065ed3d-1274-5b84-a919-eb809c602d80",
               "name": "closer_whatsapp",
               "value": "5511900000000",
               "type": "string"
             },
             {
-              "id": "35c12b0a-2113-59b6-9524-4f87cb774d5a",
+              "id": "cd32f17d-295e-57c1-a44a-89383a5cc5a4",
               "name": "evolution_url",
               "value": "https://evolution.exemplo.com.br",
               "type": "string"
             },
             {
-              "id": "857d3995-a270-51c5-ae6f-7172c7e7b1db",
+              "id": "6be20357-445f-5532-b1d8-6bc7e39ee27d",
               "name": "evolution_instance",
-              "value": "settlr-sdr",
+              "value": "kitou-sdr",
               "type": "string"
             },
             {
-              "id": "93f331e1-7f8c-5d76-a62b-9616997172dd",
+              "id": "041dd346-0bdd-5b74-bb2f-4fb934f0d8cf",
               "name": "calendar_id",
-              "value": "comercial@settlr.com.br",
+              "value": "comercial@kitou.com.br",
               "type": "string"
             },
             {
-              "id": "44c5ab8b-97bf-5973-91f9-ec714dda0cb4",
+              "id": "2256e27d-1fa5-5a6d-870f-4a9b5c5fea9e",
               "name": "timezone",
               "value": "America/Sao_Paulo",
               "type": "string"
             },
             {
-              "id": "6acb1fe2-3d6d-5624-b1dd-26a0ebe514ce",
+              "id": "301a8013-c229-5507-a3ef-f12e0348e250",
               "name": "duracao_reuniao_min",
               "value": 30,
               "type": "number"
             },
             {
-              "id": "d23db206-b48c-5d33-bdff-b6ba748d633f",
+              "id": "b5d0d4a4-8447-569a-8a3d-75289143c0b9",
               "name": "horario_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "29b831f4-4e15-571c-9589-58f610c47bfe",
+              "id": "6384cb1d-c056-51c4-bfce-9ee7cf6cbcae",
               "name": "horario_fim",
               "value": 18,
               "type": "number"
             },
             {
-              "id": "75a08397-9ebf-5f74-afde-9cbea25f61ef",
+              "id": "ecd650f4-3db2-5364-a585-209f76730299",
               "name": "almoco_inicio",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "a77d8474-726d-5b75-bd94-b14391417c0f",
+              "id": "36d051c7-a80a-5c71-91ff-72ab218446ce",
               "name": "almoco_fim",
               "value": 13,
               "type": "number"
             },
             {
-              "id": "d886664c-f14e-5af3-b3fb-ce301c04286f",
+              "id": "d3c927ea-a2be-5f7d-9623-a9c3de3ec05f",
               "name": "antecedencia_min_horas",
               "value": 2,
               "type": "number"
             },
             {
-              "id": "2ee3fbf6-f307-5255-9e50-d3907262ee28",
+              "id": "a180f57a-f45a-5b88-9eb2-0c5788a09547",
               "name": "dias_busca",
               "value": 7,
               "type": "number"
             },
             {
-              "id": "7be24b6c-b3b2-57e7-9492-ce24e0b945e4",
+              "id": "a2147706-4ca2-5f68-8415-f0c640c63772",
               "name": "debounce_segundos",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "0a498d27-794f-559a-9c3b-1258c500e5d0",
+              "id": "46f82f81-540d-55e8-8a9c-4756247c0e0f",
               "name": "pausa_humano_horas",
               "value": 12,
               "type": "number"
             },
             {
-              "id": "38af81c2-f8e2-5550-9277-8144cb54fe84",
+              "id": "a2d91016-f07c-5874-9f89-a519931777dd",
               "name": "max_followups",
               "value": 4,
               "type": "number"
             },
             {
-              "id": "117f7f1b-b251-59f7-9628-ae4253b4a96c",
+              "id": "32d40dc3-f04a-5d03-a681-db3eac6bed3e",
               "name": "followup_hora_inicio",
               "value": 9,
               "type": "number"
             },
             {
-              "id": "6ce50e2c-1a34-539b-b0a3-dd44b4590ec7",
+              "id": "506c609f-11bb-519a-a82f-0fbd21e31f26",
               "name": "followup_hora_fim",
               "value": 18,
               "type": "number"
@@ -160,7 +160,7 @@
       }
     },
     {
-      "id": "9ec6dd20-ce1a-5a16-9d74-84c94161bd13",
+      "id": "c4333dfe-d030-5688-b484-68134f09d519",
       "name": "Horário comercial?",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -173,7 +173,7 @@
       }
     },
     {
-      "id": "9c41d9fa-eda8-5147-962b-aa75d338849d",
+      "id": "e9935b21-d411-5d21-974c-2a1bfe556ae2",
       "name": "Leads devidos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -191,12 +191,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "6f7fd4ef-744e-517f-b398-1857ecbfb22f",
+      "id": "36e4aa63-57e4-50a2-8d6a-77c0094056eb",
       "name": "Histórico",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -214,12 +214,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "06213b0d-b23e-513d-9978-8a9de5d0eb9d",
+      "id": "4a65aed2-e690-5268-a076-4f0de64c975d",
       "name": "Escrever follow-up",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
@@ -229,11 +229,11 @@
       ],
       "parameters": {
         "promptType": "define",
-        "text": "=Você é Lia, assistente virtual do time comercial do Settlr. Escreva UMA mensagem de follow-up de WhatsApp para um lead que parou de responder.\n\nO Settlr é um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que confere cada PIX e boleto que entrou contra o que foi vendido. A primeira entrega é a conciliação: o dinheiro que entrou e a planilha não fechou, mais o arquivo do período para o contador. O título só quita quando o banco confirma. O piloto começa com 5 a 10 faturas reais. Não invente nada além disso. Não passe preço.\n\nEste é o follow-up número {{ $('Leads devidos').item.json.followup_count + 1 }} de 4.\n\n- 1: retome de onde a conversa parou, com uma pergunta simples e fácil de responder. Nada de \"só passando para saber\".\n- 2: traga um ponto de valor ligado ao que o lead contou (segmento, emissor ou dor). Por exemplo, o PIX que entrou sem dono, ou as horas do financeiro batendo planilha. Termine com uma pergunta.\n- 3: convide direto para 30 minutos com Rafael, que mostra na tela com um caso parecido. Pergunte se prefere manhã ou tarde.\n- 4: despedida leve. Diga que não vai mais insistir e que a porta fica aberta. Sem culpa, sem pressão.\n\nRegras:\n- Uma mensagem, até 280 caracteres, sem markdown, sem lista, no máximo um emoji.\n- Use o primeiro nome, se souber. Não comece com \"Oi, tudo bem?\" se a conversa já começou.\n- Não repita frase que já está no histórico.\n- Sem urgência falsa, sem desconto, sem promessa.\n\nSe o histórico mostra que o lead disse que não tem interesse, pediu para parar, ou pediu para falar só numa data futura, responda apenas PULAR.\n\nDados do lead:\nNome: {{ $('Leads devidos').item.json.name || '?' }} | Empresa: {{ $('Leads devidos').item.json.company || '?' }}\nSegmento: {{ $('Leads devidos').item.json.segment || '?' }} | cobranças/mês: {{ $('Leads devidos').item.json.monthly_charges || '?' }} | emissor: {{ $('Leads devidos').item.json.issuer || '?' }}\nDor: {{ $('Leads devidos').item.json.pain || '?' }}\nResumo: {{ $('Leads devidos').item.json.summary || '?' }}\n\nÚltimas mensagens (a mais recente por último):\n{{ $json.historico }}\n\nResponda só com o texto da mensagem, ou PULAR.\n"
+        "text": "=Você é Lia, assistente virtual do time comercial da Kitou. Escreva UMA mensagem de follow-up de WhatsApp para um lead que parou de responder.\n\nA Kitou é um agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que confere cada PIX e boleto que entrou contra o que foi vendido. A primeira entrega é a conciliação: o dinheiro que entrou e a planilha não fechou, mais o arquivo do período para o contador. O título só quita quando o banco confirma. O piloto começa com 5 a 10 faturas reais. Não invente nada além disso. Não passe preço.\n\nEste é o follow-up número {{ $('Leads devidos').item.json.followup_count + 1 }} de 4.\n\n- 1: retome de onde a conversa parou, com uma pergunta simples e fácil de responder. Nada de \"só passando para saber\".\n- 2: traga um ponto de valor ligado ao que o lead contou (segmento, emissor ou dor). Por exemplo, o PIX que entrou sem dono, ou as horas do financeiro batendo planilha. Termine com uma pergunta.\n- 3: convide direto para 30 minutos com Rafael, que mostra na tela com um caso parecido. Pergunte se prefere manhã ou tarde.\n- 4: despedida leve. Diga que não vai mais insistir e que a porta fica aberta. Sem culpa, sem pressão.\n\nRegras:\n- Uma mensagem, até 280 caracteres, sem markdown, sem lista, no máximo um emoji.\n- Use o primeiro nome, se souber. Não comece com \"Oi, tudo bem?\" se a conversa já começou.\n- Não repita frase que já está no histórico.\n- Sem urgência falsa, sem desconto, sem promessa.\n\nSe o histórico mostra que o lead disse que não tem interesse, pediu para parar, ou pediu para falar só numa data futura, responda apenas PULAR.\n\nDados do lead:\nNome: {{ $('Leads devidos').item.json.name || '?' }} | Empresa: {{ $('Leads devidos').item.json.company || '?' }}\nSegmento: {{ $('Leads devidos').item.json.segment || '?' }} | cobranças/mês: {{ $('Leads devidos').item.json.monthly_charges || '?' }} | emissor: {{ $('Leads devidos').item.json.issuer || '?' }}\nDor: {{ $('Leads devidos').item.json.pain || '?' }}\nResumo: {{ $('Leads devidos').item.json.summary || '?' }}\n\nÚltimas mensagens (a mais recente por último):\n{{ $json.historico }}\n\nResponda só com o texto da mensagem, ou PULAR.\n"
       }
     },
     {
-      "id": "a820eaea-8524-5f17-bc40-6e3bf57e32b5",
+      "id": "b7dc33d0-086c-5367-a592-b4b6f632f98a",
       "name": "Claude",
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
@@ -259,7 +259,7 @@
       }
     },
     {
-      "id": "59ed3b0e-1a5c-5dc9-9e26-cc044a433c5f",
+      "id": "3dbcba64-deba-580f-b970-ddfeabd26a2e",
       "name": "Preparar envio",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -272,7 +272,7 @@
       }
     },
     {
-      "id": "e4ca41e2-a17c-57ca-88cf-3a7cf418837f",
+      "id": "d352e47c-1c58-57b1-a2af-41bd69e64d3c",
       "name": "Pular?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -290,7 +290,7 @@
           },
           "conditions": [
             {
-              "id": "bef3c2cf-f3d3-5d97-b883-cd97957741e4",
+              "id": "f42d2d15-8f1e-59b0-95f4-683fff0c92fe",
               "leftValue": "={{ $json.pular }}",
               "operator": {
                 "type": "boolean",
@@ -306,7 +306,7 @@
       }
     },
     {
-      "id": "81f66d23-a96d-5e2c-85b5-55568e8a3059",
+      "id": "5a08d6e6-dba4-5674-a5ea-67b34642c44e",
       "name": "Encerrar cadência",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -324,12 +324,12 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     },
     {
-      "id": "33e2b548-06f6-59e5-b209-86eba89592b9",
+      "id": "22c10d3a-d504-5330-a846-8c720de4fea9",
       "name": "Enviar follow-up",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -364,7 +364,7 @@
       "onError": "continueRegularOutput"
     },
     {
-      "id": "d6923362-e1b6-5bc2-a467-353cccc01ec7",
+      "id": "06e115d4-fb98-5311-a1df-f955a46296cc",
       "name": "Marcar como do bot",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -383,13 +383,13 @@
       "credentials": {
         "redis": {
           "id": "SDR_CRED_REDIS",
-          "name": "Settlr SDR Redis"
+          "name": "Kitou SDR Redis"
         }
       },
       "onError": "continueRegularOutput"
     },
     {
-      "id": "0f59a106-1586-5226-b4ad-8acf9fa12b8d",
+      "id": "128955d3-b411-5c76-98ee-15e91e46c0ff",
       "name": "Avançar cadência",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -407,7 +407,7 @@
       "credentials": {
         "postgres": {
           "id": "SDR_CRED_PG",
-          "name": "Settlr SDR Postgres"
+          "name": "Kitou SDR Postgres"
         }
       }
     }

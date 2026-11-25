@@ -1,6 +1,6 @@
 # Infra por porte
 
-Como o Settlr atende cliente B2B pequeno, médio e grande. O runtime de uma célula está em [`ARQUITETURA-DEPLOY.md`](../ARQUITETURA-DEPLOY.md). O gatilho medido para mudar uma peça está em [`DESENHO.md`](./DESENHO.md). O SLO está em [`SRE.md`](./SRE.md).
+Como a Kitou atende cliente B2B pequeno, médio e grande. O runtime de uma célula está em [`ARQUITETURA-DEPLOY.md`](../ARQUITETURA-DEPLOY.md). O gatilho medido para mudar uma peça está em [`DESENHO.md`](./DESENHO.md). O SLO está em [`SRE.md`](./SRE.md).
 
 A primeira onda do produto tem 100 a 5.000 cobranças por mês. As faixas desta página são planejamento de capacidade. O piloto está decidido abaixo. Tamanho do bucket e chamadas de LLM por título continuam sem medição.
 
@@ -13,9 +13,9 @@ A primeira onda do produto tem 100 a 5.000 cobranças por mês. As faixas desta 
 | Tenants | 1 |
 | Teto de mensagens por dia | 100 templates, uma etapa vigente por título. No primeiro ciclo o teto efetivo é 10 |
 | Provedor | AWS, `sa-east-1`, RDS PostgreSQL Multi-AZ. A célula é a da seção 5, R$ 14.800 por mês nesta página |
-| Domínio | `settlr.com.br`. Produção: `app.settlr.com.br`, `api.settlr.com.br`, `wa.settlr.com.br`. Homologação: `app-hml.settlr.com.br`, `api-hml.settlr.com.br`, `wa-hml.settlr.com.br` |
+| Domínio | `kitou.com.br`. Produção: `app.kitou.com.br`, `api.kitou.com.br`, `wa.kitou.com.br`. Homologação: `app-hml.kitou.com.br`, `api-hml.kitou.com.br`, `wa-hml.kitou.com.br` |
 
-A premissa desta página é residência em São Paulo e failover do Postgres fora do plantão. O RDS Multi-AZ cumpre as duas, e o `DOMAIN` do deploy é `settlr.com.br`. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle deixa o failover com a gente. A Hetzner continua laboratório: o dado mora na Alemanha.
+A premissa desta página é residência em São Paulo e failover do Postgres fora do plantão. O RDS Multi-AZ cumpre as duas, e o `DOMAIN` do deploy é `kitou.com.br`. A GCP repete o desenho a R$ 14.460 e não foi a escolhida. A Azure sai mais cara no Brasil Sul. A Oracle deixa o failover com a gente. A Hetzner continua laboratório: o dado mora na Alemanha.
 
 ---
 

@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str | None = None
     smtp_password: str = ""
-    smtp_from: str = "settlr.ss@gmail.com"
+    smtp_from: str = "kitou.ss@gmail.com"
 
     jwt_secret: str = "dev-secret-change-me"
     jwt_audience: str = "authenticated"

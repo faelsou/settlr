@@ -344,7 +344,7 @@ def _token(role: str, tenant_id) -> str:
     return jwt.encode(
         {
             "sub": "user-1",
-            "email": "agencia@settlr.test",
+            "email": "agencia@kitou.test",
             "aud": settings.jwt_audience,
             "app_metadata": {"role": role, "tenant_id": str(tenant_id) if tenant_id else None},
         },

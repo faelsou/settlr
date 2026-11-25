@@ -1,6 +1,6 @@
 -- Banco do SDR. Fica fora do Postgres do produto (sem RLS, sem tenant):
--- é a carteira comercial do próprio Settlr, não dado de cliente.
---   createdb settlr_sdr && psql settlr_sdr -f sql/schema.sql
+-- é a carteira comercial da própria Kitou, não dado de cliente.
+--   createdb kitou_sdr && psql kitou_sdr -f sql/schema.sql
 
 create table if not exists sdr_leads (
   id                  bigserial primary key,

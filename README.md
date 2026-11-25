@@ -1,4 +1,4 @@
-# Settlr
+# Kitou
 
 Agente de WhatsApp que cobra, negocia e confirma pagamentos, e um motor que confere cada entrada contra o que foi vendido.
 
@@ -12,7 +12,7 @@ Documentação do que foi implementado:
 - AIOps no Slack (alerta → diagnóstico → remediação aprovada): [`docs/AIOPS.md`](./docs/AIOPS.md)
 - Índice: [`docs/README.md`](./docs/README.md)
 
-A fonte de verdade dos fluxos está em [`FLUXOS.md`](./FLUXOS.md). O desenho original está em [`Settlr — Arquitetura.md`](./Settlr%20%E2%80%94%20Arquitetura.md). O runtime (Swarm, redes, secrets) está em [`ARQUITETURA-DEPLOY.md`](./ARQUITETURA-DEPLOY.md).
+A fonte de verdade dos fluxos está em [`FLUXOS.md`](./FLUXOS.md). O desenho original está em [`Kitou — Arquitetura.md`](./Kitou%20%E2%80%94%20Arquitetura.md). O runtime (Swarm, redes, secrets) está em [`ARQUITETURA-DEPLOY.md`](./ARQUITETURA-DEPLOY.md).
 
 **Regra de ouro:** o LLM só lê comprovante, classifica intenção e conversa na negociação. Régua, matching e baixa são código determinístico.
 
@@ -139,9 +139,9 @@ A stack Swarm de referência é `docker/stack.yml`, alinhada à seção 9 de `AR
 
 CI em pull request (`.github/workflows/ci.yml`): pytest, ruff na API inteira e tipos do painel. Na `main`, `.github/workflows/release.yml` publica `cobranca-api` e `cobranca-web` no GHCR com o SHA do commit e roda `docker/release.sh` no manager. Se a tag nova não ficar saudável, o script republica a anterior. Para voltar uma tag já publicada: Actions → Release → `rollback_to` = SHA. Sem `DEPLOY_HOST`, a pipeline só publica as imagens.
 
-- Painel: `app.settlr.com.br`
-- API: `api.settlr.com.br` (`/health`, `/webhooks/evolution`, `/webhooks/emissor`, `/webhooks/banco`)
-- WhatsApp: `wa.settlr.com.br`
+- Painel: `app.kitou.com.br`
+- API: `api.kitou.com.br` (`/health`, `/webhooks/evolution`, `/webhooks/emissor`, `/webhooks/banco`)
+- WhatsApp: `wa.kitou.com.br`
 - Auth do painel: Supabase Auth. O JWT precisa de `app_metadata.tenant_id`.
 - Migração: job one-off `alembic upgrade head` **antes** de atualizar os serviços da API. Nenhum deles migra no entrypoint.
 

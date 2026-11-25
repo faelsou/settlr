@@ -385,7 +385,7 @@ class InterAdapter:
             payment_url=None,
         )
 
-    def cancel(self, payment_id: str, reason: str = "Cancelado pelo Settlr") -> None:
+    def cancel(self, payment_id: str, reason: str = "Cancelado pela Kitou") -> None:
         """Levanta httpx.HTTPError se o Inter não cancelar: quem chama decide o que fazer."""
         self._request(
             "POST",
@@ -394,7 +394,7 @@ class InterAdapter:
         )
 
     def mark_paid(self, payment_id: str, paid_on: date, value: Decimal) -> str:
-        """Fecha a cobrança no Inter depois da baixa no Settlr.
+        """Fecha a cobrança no Inter depois da baixa na Kitou.
 
         Produção: o dinheiro entrou por outro canal, então a cobrança é cancelada
         (`/cancelar`). O Inter não tem "recebido em dinheiro". Se o Inter disser
