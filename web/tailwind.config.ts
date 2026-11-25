@@ -5,38 +5,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /* Paleta Kitou (manual Pulso): Tinta #0E0F1A, Limão #C6F432, Violeta #7B61FF, Gelo #F4F5F0, Grafite #5A5F73.
+           Limão é o sinal de "pago" e a ação principal; Violeta é apoio; texto em Tinta ou branco, Grafite só auxiliar. */
         ink: {
-          950: "#12101f",
-          900: "#12101f",
-          800: "#26223d",
-          700: "#5f5a78",
+          950: "#0e0f1a",
+          900: "#0e0f1a",
+          800: "#23263a",
+          700: "#5a5f73",
         },
         paper: {
-          50: "#f7f6fc",
-          100: "#eeeafe",
-          200: "#e3def7",
+          50: "#f4f5f0",
+          100: "#ebede5",
+          200: "#dfe1d8",
         },
         brand: {
-          700: "#5b3df5",
-          600: "#4b2fe0",
-          500: "#7c5cff",
-          300: "#b7a8ff",
-          100: "#eeeafe",
+          700: "#5b43e6",
+          600: "#6a52f5",
+          500: "#7b61ff",
+          300: "#b5a6ff",
+          100: "#ece8ff",
         },
         /* Superfícies escuras do site (landing e /entrar): entrada do painel e menu lateral. */
         night: {
-          950: "#09080f",
-          900: "#0e0c18",
-          800: "#12101f",
-          700: "#171429",
-          field: "#0d0b17",
-          fg: "#f4f2ff",
-          muted: "#9b96b6",
-          dim: "#6c6789",
+          950: "#0e0f1a",
+          900: "#121423",
+          800: "#161829",
+          700: "#1c1f32",
+          field: "#10121e",
+          fg: "#f4f5f0",
+          muted: "#a0a4b5",
+          dim: "#6e7387",
         },
         signal: {
+          500: "#b4e01f",
           400: "#c6f432",
-          100: "#f1fccb",
+          100: "#eefbc6",
         },
       },
       fontFamily: {
@@ -46,7 +49,7 @@ const config: Config = {
         mark: ["var(--font-mark)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 1px 0 rgba(18, 16, 31, 0.05), 0 12px 32px -18px rgba(18, 16, 31, 0.2)",
+        card: "0 1px 0 rgba(14, 15, 26, 0.05), 0 12px 32px -18px rgba(14, 15, 26, 0.2)",
       },
     },
   },

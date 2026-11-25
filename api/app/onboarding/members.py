@@ -71,9 +71,9 @@ def ensure_active_member(session: Session, tenant_id: UUID, email: str, role: st
 
 
 def invite_copy(company: str, role: str, link: str) -> tuple[str, str]:
-    subject = f"Convite para {company} no Settlr"
+    subject = f"Convite para {company} na Kitou"
     body = (
-        f"{company} convidou você para o Settlr como {role}.\n\n"
+        f"{company} convidou você para a Kitou como {role}.\n\n"
         "Abra o link abaixo. Ele é só seu. Não há credencial para repassar: "
         "cada pessoa entra pelo próprio convite.\n\n"
         f"{link}\n"

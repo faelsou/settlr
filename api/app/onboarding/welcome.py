@@ -9,15 +9,18 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 
-_INK = "#12101f"
-_BRAND = "#5b3df5"
+# Paleta Kitou (manual Pulso): Tinta, Limão, Violeta, Gelo. O cabeçalho usa o logo monocromático branco sobre Violeta,
+# a ação principal é Limão com texto Tinta e os links usam um Violeta mais escuro, legível sobre branco.
+_INK = "#0e0f1a"
+_VIOLET = "#7b61ff"
+_BRAND = "#5b43e6"
 _LIME = "#c6f432"
-_PAPER = "#f7f6fc"
-_LINE = "#e3def7"
-_LOGO_CID = "settlr-logo"
-_LOGO_PATH = Path(__file__).with_name("settlr-logo.png")
-_SANS = "'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
-_SERIF = "Georgia,'Times New Roman',serif"
+_PAPER = "#f4f5f0"
+_LINE = "#dfe1d8"
+_LOGO_CID = "kitou-logo"
+_LOGO_PATH = Path(__file__).with_name("kitou-logo.png")
+_SANS = "'Space Grotesk','Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+_DISPLAY = _SANS
 
 
 def welcome_copy(company: str, panel_url: str) -> tuple[str, str, str]:
@@ -57,7 +60,7 @@ def deliver_welcome(company: str, to: str, panel_url: str | None = None) -> bool
 
 def _text(name: str, login: str, settings: str, titles: str, home: str) -> str:
     return (
-        f"A conta {name} entrou no Settlr.\n\n"
+        f"A conta {name} entrou na Kitou.\n\n"
         "A cobrança ainda não dispara. A conta nasce desligada para você conferir a carteira "
         "antes de qualquer mensagem.\n\n"
         f"1. Entre no painel\n{login}\n"
@@ -176,21 +179,21 @@ def _html(name: str, login: str, settings: str, titles: str, home: str) -> str:
 </head>
 <body bgcolor="{_PAPER}" style="margin:0;padding:0;background-color:{_PAPER};color:{_INK};">
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;mso-hide:all;overflow:hidden;">
-    A conta {safe} está no Settlr. A cobrança só começa depois que você conferir a carteira e ligar a conta.
+    A conta {safe} está na Kitou. A cobrança só começa depois que você conferir a carteira e ligar a conta.
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{_PAPER}" style="background-color:{_PAPER};">
     <tr>
       <td align="center" bgcolor="{_PAPER}" style="padding:32px 16px;background-color:{_PAPER};color:{_INK};">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;">
           <tr>
-            <td align="center" bgcolor="{_BRAND}" style="background-color:{_BRAND};border-radius:28px 28px 0 0;padding:28px 36px;">
-              <img src="cid:{_LOGO_CID}" width="320" alt="Settlr" style="display:block;width:320px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;">
+            <td align="center" bgcolor="{_VIOLET}" style="background-color:{_VIOLET};border-radius:28px 28px 0 0;padding:28px 36px;">
+              <img src="cid:{_LOGO_CID}" width="320" alt="Kitou" style="display:block;width:320px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;">
             </td>
           </tr>
           <tr>
             <td bgcolor="#ffffff" style="background-color:#ffffff;padding:28px 36px 8px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};color:{_INK};">
-              <p style="margin:0;font-family:{_SERIF};font-size:32px;line-height:1.2;color:{_INK};">
-                Cobrou, recebeu, conciliou.
+              <p style="margin:0;font-family:{_DISPLAY};font-size:32px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:{_INK};">
+                Cobrou. Recebeu. Conferiu.
               </p>
               <p style="margin:14px 0 0;font-family:{_SANS};font-size:16px;line-height:1.55;color:{_INK};">
                 A conta {safe} entrou no painel. Estes são os passos até a primeira cobrança sair sozinha.
@@ -215,8 +218,8 @@ def _html(name: str, login: str, settings: str, titles: str, home: str) -> str:
             <td align="center" bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 36px 36px;border-left:1px solid {_LINE};border-right:1px solid {_LINE};border-bottom:1px solid {_LINE};border-radius:0 0 28px 28px;">
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" bgcolor="{_BRAND}" style="background-color:{_BRAND};border-radius:999px;">
-                    <a href="{escape(login, quote=True)}" style="display:inline-block;padding:14px 28px;font-family:{_SANS};font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                  <td align="center" bgcolor="{_LIME}" style="background-color:{_LIME};border-radius:999px;">
+                    <a href="{escape(login, quote=True)}" style="display:inline-block;padding:14px 28px;font-family:{_SANS};font-size:15px;font-weight:700;color:{_INK};text-decoration:none;">
                       Abrir o painel
                     </a>
                   </td>
@@ -227,7 +230,7 @@ def _html(name: str, login: str, settings: str, titles: str, home: str) -> str:
           <tr>
             <td style="padding:18px 8px 0;color:{_INK};">
               <p style="margin:0;font-family:{_SANS};font-size:13px;line-height:1.5;color:{_INK};">
-                Settlr enviou este guia porque a conta {safe} foi cadastrada. O financeiro confirma a baixa. O atendente acompanha a fila. O dono configura a política.
+                A Kitou enviou este guia porque a conta {safe} foi cadastrada. O financeiro confirma a baixa. O atendente acompanha a fila. O dono configura a política.
               </p>
             </td>
           </tr>
@@ -255,7 +258,7 @@ def _step_row(number: str, title: str, body: str, href: str, label: str) -> str:
                     </table>
                   </td>
                   <td valign="top" style="padding:0 0 8px 12px;color:{_INK};">
-                    <p style="margin:0;font-family:{_SERIF};font-size:20px;line-height:1.3;color:{_INK};">{escape(title)}</p>
+                    <p style="margin:0;font-family:{_DISPLAY};font-size:20px;font-weight:700;line-height:1.3;color:{_INK};">{escape(title)}</p>
                     <p style="margin:6px 0 0;font-family:{_SANS};font-size:15px;line-height:1.6;color:{_INK};">{escape(body)}</p>
                     <p style="margin:8px 0 0;">
                       <a href="{escape(href, quote=True)}" style="font-family:{_SANS};font-size:14px;font-weight:700;color:{_BRAND};text-decoration:none;">{escape(label)}</a>

@@ -153,10 +153,10 @@ export function Shell({ children }: { children: ReactNode }) {
                 className={clsx(
                   "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
                   compact && "justify-center px-0",
-                  active ? "bg-brand-700 text-white" : "text-paper-200/80 hover:bg-white/5 hover:text-white",
+                  active ? "bg-white/10 font-semibold text-white" : "text-paper-200/80 hover:bg-white/5 hover:text-white",
                 )}
               >
-                <Icon size={18} />
+                <Icon size={18} className={active ? "text-signal-400" : undefined} />
                 {compact ? null : <span className="flex-1 font-medium">{t(item.label)}</span>}
                 {count ? (
                   compact ? (

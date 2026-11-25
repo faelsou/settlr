@@ -1,29 +1,32 @@
 import { clsx } from "@/lib/format";
 
-/** A mesma marca do site público: círculo lima com o S violeta. */
-export function LogoMark({ className }: { className?: string }) {
+/**
+ * Símbolo Kitou (manual Pulso): círculo cheio com o check de pontas arredondadas, traço de 11% do diâmetro.
+ * Por padrão, círculo Limão e check Tinta. `inverse` troca para círculo Tinta e check Limão.
+ */
+export function LogoMark({ className, inverse = false }: { className?: string; inverse?: boolean }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <circle cx="16" cy="16" r="16" fill="#c6f432" />
+      <circle cx="16" cy="16" r="16" fill={inverse ? "#0E0F1A" : "#C6F432"} />
       <path
-        d="M21 9.5h-7a3.6 3.6 0 0 0 0 7.2h4a3.6 3.6 0 0 1 0 7.2H11"
+        d="M9.6 16.6 L14.1 21 L22.6 11.4"
         fill="none"
-        stroke="#5b3df5"
-        strokeWidth="3"
+        stroke={inverse ? "#C6F432" : "#0E0F1A"}
+        strokeWidth="3.52"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="24" cy="23.6" r="1.8" fill="#12101f" />
     </svg>
   );
 }
 
+/** Logo horizontal: símbolo + "kitou" em Space Grotesk Bold, sempre em minúsculas. Branco por padrão (fundo Tinta). */
 export function Logo({ className, wordClassName }: { className?: string; wordClassName?: string }) {
   return (
-    <span className={clsx("inline-flex items-center gap-2.5", className)}>
+    <span className={clsx("inline-flex items-center gap-2", className)}>
       <LogoMark className="h-7 w-7 shrink-0" />
-      <span className={clsx("font-mark text-xl font-bold leading-none tracking-[-0.03em] text-white", wordClassName)}>
-        Settlr
+      <span className={clsx("font-mark text-[1.55rem] font-bold leading-none tracking-[-0.02em] text-white", wordClassName)}>
+        kitou
       </span>
     </span>
   );

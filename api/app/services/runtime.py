@@ -33,7 +33,7 @@ def create_service(
     configure_logging()
     settings = get_settings()
     app = FastAPI(
-        title=title or f"Settlr — {name}",
+        title=title or f"Kitou — {name}",
         version="0.1.0",
         docs_url="/docs" if settings.env != "prod" else None,
         lifespan=lifespan or _flush_on_shutdown,
