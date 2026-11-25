@@ -595,7 +595,7 @@ Notas ao lado de `docker/stack.yml`:
 7. One-off: `alembic upgrade head`.
 8. Criar o bucket `comprovantes` no MinIO.
 9. Parear o número na Evolution (QR) e gravar o webhook global para
-   `https://api.kitou.app.br/webhooks/evolution`.
+   `https://api.settlr.com.br/webhooks/evolution` (URL antiga, mantida: não alterar o webhook da Evolution).
 10. Cadastrar o tenant piloto: política, régua, horário, número e emissor.
 
 ### Atualização de release

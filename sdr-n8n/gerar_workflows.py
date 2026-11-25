@@ -207,7 +207,7 @@ def wf_inbound():
     wf = WF("Kitou SDR · 01 Conversa (WhatsApp)", "01-sdr-conversa")
     wf.add("Webhook Evolution", "n8n-nodes-base.webhook", 2, {
         "httpMethod": "POST",
-        "path": "kitou-sdr/evolution",
+        "path": "settlr-sdr/evolution",
         "responseMode": "onReceived",
         "options": {},
     }, [0, 300], webhookId=nid("webhook", "evolution"))

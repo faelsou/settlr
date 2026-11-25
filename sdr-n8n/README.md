@@ -77,7 +77,7 @@ Crie uma instância só do SDR (`kitou-sdr`), pareie o número comercial e apont
 ```bash
 curl -X POST "$EVOLUTION_URL/webhook/set/kitou-sdr" \
   -H "apikey: $EVOLUTION_API_KEY" -H 'content-type: application/json' \
-  -d '{"webhook":{"enabled":true,"url":"https://SEU-N8N/webhook/kitou-sdr/evolution","events":["MESSAGES_UPSERT"],"byEvents":false,"base64":false}}'
+  -d '{"webhook":{"enabled":true,"url":"https://SEU-N8N/webhook/settlr-sdr/evolution","events":["MESSAGES_UPSERT"],"byEvents":false,"base64":false}}'
 ```
 
 ### 3. Configuração
@@ -122,7 +122,7 @@ curl -X POST https://SEU-N8N/webhook/kitou-sdr/lead \
 Simula uma mensagem do lead chegando pela Evolution:
 
 ```bash
-curl -X POST https://SEU-N8N/webhook/kitou-sdr/evolution -H 'content-type: application/json' -d '{
+curl -X POST https://SEU-N8N/webhook/settlr-sdr/evolution -H 'content-type: application/json' -d '{
   "event": "messages.upsert", "instance": "kitou-sdr",
   "data": { "key": { "remoteJid": "5511988887777@s.whatsapp.net", "fromMe": false, "id": "TESTE1" },
             "pushName": "Marina", "messageType": "conversation",

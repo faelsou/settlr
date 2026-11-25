@@ -12,7 +12,7 @@
       ],
       "parameters": {
         "httpMethod": "POST",
-        "path": "kitou-sdr/evolution",
+        "path": "settlr-sdr/evolution",
         "responseMode": "onReceived",
         "options": {}
       },
